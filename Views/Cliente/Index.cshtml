@@ -1,0 +1,97 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Clientes";
+}
+
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h3>Clientes</h3>
+        <p class="text-muted">Gestiona el directorio de tus clientes.</p>
+    </div>
+
+    <!-- ✅ BOTÓN CORRECTO -->
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#clienteModal">
+        + Nuevo Cliente
+    </button>
+</div>
+
+<div class="card-box mt-3">
+
+    <input class="form-control mb-3" placeholder="Buscar por nombre o teléfono..." />
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Dirección</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody id="tablaClientes">
+            <tr>
+                <td>Jacqueline Cortez</td>
+                <td>79258997</td>
+                <td>San Salvador</td>
+                <td>✏️ 🗑️</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- MODAL -->
+<div class="modal fade" id="clienteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5>Nuevo Cliente</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input id="nombre" class="form-control mb-2" placeholder="Nombre completo" />
+                <input id="telefono" class="form-control mb-2" placeholder="Teléfono" />
+                <textarea id="direccion" class="form-control" placeholder="Dirección"></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" onclick="agregarCliente()">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        function agregarCliente() {
+
+            let nombre = document.getElementById("nombre").value;
+            let telefono = document.getElementById("telefono").value;
+            let direccion = document.getElementById("direccion").value;
+
+            if (!nombre || !telefono) {
+                alert("Completa los campos");
+                return;
+            }
+
+            let tabla = document.getElementById("tablaClientes");
+
+            tabla.innerHTML += `
+            <tr>
+                <td>${nombre}</td>
+                <td>${telefono}</td>
+                <td>${direccion}</td>
+                <td>✏️ 🗑️</td>
+            </tr>
+        `;
+
+            document.getElementById("nombre").value = "";
+            document.getElementById("telefono").value = "";
+            document.getElementById("direccion").value = "";
+        }
+    </script>
+}

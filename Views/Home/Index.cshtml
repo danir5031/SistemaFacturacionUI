@@ -1,0 +1,97 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Dashboard";
+}
+
+<h3>Dashboard</h3>
+<p class="text-muted">Resumen general de tu negocio y reportes financieros.</p>
+
+<div class="row mt-4">
+
+    <div class="col-md-4">
+        <div class="card-box d-flex justify-content-between">
+            <div>
+                <p>Ventas Totales</p>
+                <h4>$0.00</h4>
+            </div>
+            <div class="icon" style="background:#d4f8e8;color:green">$</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-box d-flex justify-content-between">
+            <div>
+                <p>Ganancia Neta</p>
+                <h4>$0.00</h4>
+            </div>
+            <div class="icon" style="background:#dbeafe;color:#2563eb">📈</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-box d-flex justify-content-between">
+            <div>
+                <p>Gastos de Envío</p>
+                <h4>$0.00</h4>
+            </div>
+            <div class="icon" style="background:#ffe8cc;color:orange">🚚</div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row mt-3">
+
+    <div class="col-md-4">
+        <div class="card-box d-flex justify-content-between">
+            <div>
+                <p>Costo / Reinversión</p>
+                <h4>$0.00</h4>
+            </div>
+            <div class="icon" style="background:#ffd6d6;color:red">📉</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-box d-flex justify-content-between">
+            <div>
+                <p>Clientes Registrados</p>
+                <h4>2</h4>
+            </div>
+            <div class="icon" style="background:#eee0ff;color:purple">👤</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-box d-flex justify-content-between">
+            <div>
+                <p>Productos en Catálogo</p>
+                <h4>2</h4>
+            </div>
+            <div class="icon" style="background:#dbeafe;color:#2563eb">📦</div>
+        </div>
+    </div>
+
+</div>
+
+<div class="card-box mt-4">
+    <h5>Ventas y Ganancias (Últimos 7 días)</h5>
+    <canvas id="chart"></canvas>
+</div>
+
+@section Scripts{
+    <script>
+        const ctx = document.getElementById('chart');
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['MA', 'MI', 'JU', 'VI', 'SA', 'DO', 'LU'],
+                datasets: [
+                    { label: 'Ventas', data: [0, 0, 0, 0, 0, 0, 0], backgroundColor: '#3b6df6' },
+                    { label: 'Ganancias', data: [0, 0, 0, 0, 0, 0, 0], backgroundColor: '#22c55e' }
+                ]
+            }
+        });
+    </script>
+}

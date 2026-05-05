@@ -1,0 +1,340 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Facturación";
+}
+
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h3>Facturas</h3>
+        <p class="text-muted">Historial de ventas y pedidos.</p>
+    </div>
+
+    <button class="btn btn-primary" onclick="abrirFormulario()">
+        + Nueva Factura
+    </button>
+</div>
+
+<!-- ================= FORMULARIO ================= -->
+<div id="formFactura" style="display:none;" class="mt-4">
+
+    <h4>Crear Factura</h4>
+    <p class="text-muted">Ingresa los datos manualmente o usa lectura inteligente.</p>
+
+    <!-- 🔥 LECTURA INTELIGENTE -->
+    <div class="card-box mb-3" style="background:#eef2ff; border:1px solid #dbeafe;">
+        <label><b>⚡ Lectura Inteligente</b></label>
+
+        <div class="d-flex gap-2 mt-2">
+            <textarea id="mensajeIA" class="form-control"
+                      placeholder="Pega el mensaje del cliente aquí"></textarea>
+
+            <button class="btn btn-primary" onclick="procesarMensaje()">
+                Procesar
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <!-- IZQUIERDA -->
+        <div class="col-md-8">
+
+            <div class="card-box mb-3">
+
+                <h5>Datos del Envío</h5>
+
+                <div class="mt-3">
+                    <label>Nombre del Cliente</label>
+                    <input id="nombreCliente" class="form-control" />
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <label>Teléfono</label>
+                        <input id="telefono" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label>Horario</label>
+                        <select id="horario" class="form-control" onchange="cambiarHorario()">
+                            <option value="TM">TM</option>
+                            <option value="TT">TT</option>
+                            <option value="PR">PR</option>
+                            <option value="EXACTO">Hora exacta</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="horaExactaDiv" class="mt-2" style="display:none;">
+                    <label>Hora exacta</label>
+                    <input type="time" id="horaExacta" class="form-control" />
+                </div>
+
+                <div class="mt-2">
+                    <label>Fecha de Envío</label>
+                    <input type="date" class="form-control" />
+                </div>
+
+                <div class="mt-2">
+                    <label>Dirección</label>
+                    <textarea id="direccion" class="form-control"></textarea>
+                </div>
+
+            </div>
+
+            <!-- PRODUCTOS -->
+            <div class="card-box">
+                <h5>Productos</h5>
+
+                <!-- 🔥 BUSCADOR -->
+                <input class="form-control mt-2"
+                       placeholder="Buscar producto para agregar..."
+                       onkeyup="buscarProducto(this.value)" />
+
+                <table class="table mt-3">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tablaProductosFactura">
+                        <!-- VACÍO -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- DERECHA -->
+        <div class="col-md-4">
+
+            <div class="card-box">
+
+                <h5>Resumen</h5>
+
+                <div class="d-flex justify-content-between mt-3">
+                    <span>Subtotal</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+
+                <div class="d-flex justify-content-between mt-2">
+                    <span>Envío</span>
+                    <input type="number" id="envio" value="2.85"
+                           class="form-control" style="width:100px"
+                           onchange="calcularTotal()" />
+                </div>
+
+                <!-- DESCUENTO -->
+                <div class="mt-3">
+                    <label>Descuento</label>
+
+                    <div class="d-flex gap-2">
+                        <select id="tipoDescuento" class="form-control" onchange="calcularTotal()">
+                            <option value="0">Sin</option>
+                            <option value="porcentaje">%</option>
+                            <option value="fijo">$</option>
+                        </select>
+
+                        <input type="number" id="valorDescuento"
+                               class="form-control"
+                               placeholder="0"
+                               onchange="calcularTotal()" />
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-between">
+                    <b>Total</b>
+                    <h4 id="totalFinal">$0.00</h4>
+                </div>
+
+                <div class="mt-3">
+                    <label>Método de Pago</label>
+
+                    <div class="d-flex gap-2 mt-2">
+                        <button class="btn btn-outline-primary w-50">Efectivo</button>
+                        <button class="btn btn-outline-secondary w-50">Transferencia</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary w-100 mt-4">
+                    Confirmar e Imprimir Factura
+                </button>
+
+                <button class="btn btn-light w-100 mt-2" onclick="cancelar()">
+                    Cancelar
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================= LISTA ================= -->
+<div id="listaFacturas" class="card-box mt-3">
+
+    <input class="form-control mb-3" placeholder="Buscar..." />
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Factura</th>
+                <th>Cliente</th>
+                <th>Estado</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>FAC-001</td>
+                <td>Juan Pérez</td>
+                <td><span class="badge bg-success">Completada</span></td>
+                <td>$25.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+@section Scripts{
+    <script>
+
+        let subtotalGlobal = 0;
+
+        function abrirFormulario() {
+            document.getElementById("formFactura").style.display = "block";
+            document.getElementById("listaFacturas").style.display = "none";
+        }
+
+        function cancelar() {
+            document.getElementById("formFactura").style.display = "none";
+            document.getElementById("listaFacturas").style.display = "block";
+        }
+
+        function cambiarHorario() {
+
+            let horario = document.getElementById("horario").value;
+
+            if (horario === "EXACTO") {
+                document.getElementById("horaExactaDiv").style.display = "block";
+                document.getElementById("envio").value = 2.85;
+            } else {
+                document.getElementById("horaExactaDiv").style.display = "none";
+
+                if (horario === "PR") {
+                    document.getElementById("envio").value = 5.10;
+                } else {
+                    document.getElementById("envio").value = 2.85;
+                }
+            }
+
+            calcularTotal();
+        }
+
+        function calcularTotal() {
+
+            let envio = parseFloat(document.getElementById("envio").value) || 0;
+            let tipo = document.getElementById("tipoDescuento").value;
+            let valor = parseFloat(document.getElementById("valorDescuento").value) || 0;
+
+            let descuento = 0;
+
+            if (tipo === "porcentaje") {
+                descuento = subtotalGlobal * (valor / 100);
+            }
+
+            if (tipo === "fijo") {
+                descuento = valor;
+            }
+
+            let total = subtotalGlobal + envio - descuento;
+
+            if (total < 0) total = 0;
+
+            document.getElementById("totalFinal").innerText = "$" + total.toFixed(2);
+        }
+
+        //////////////////////////////////////////////////
+        // 🔥 LECTURA INTELIGENTE
+        //////////////////////////////////////////////////
+
+        function procesarMensaje() {
+
+            let texto = document.getElementById("mensajeIA").value;
+            let lineas = texto.split("\n");
+
+            document.getElementById("nombreCliente").value = lineas[0] || "";
+            document.getElementById("direccion").value = lineas[2] || "";
+            document.getElementById("telefono").value = lineas[3] || "";
+
+            let horarioTexto = lineas[1] || "";
+
+            if (horarioTexto.includes("TT")) document.getElementById("horario").value = "TT";
+            else if (horarioTexto.includes("PR")) document.getElementById("horario").value = "PR";
+            else document.getElementById("horario").value = "TM";
+
+            if (horarioTexto.includes(":")) {
+                document.getElementById("horario").value = "EXACTO";
+                document.getElementById("horaExactaDiv").style.display = "block";
+
+                let hora = horarioTexto.match(/\d{1,2}:\d{2}/);
+                if (hora) document.getElementById("horaExacta").value = hora[0];
+            }
+
+            cambiarHorario();
+        }
+
+        //////////////////////////////////////////////////
+        // 🔥 PRODUCTOS (SIMULADO)
+        //////////////////////////////////////////////////
+
+        let productosDemo = [
+            { nombre: "Taza Snoopy Happy", precio: 11, img: "https://via.placeholder.com/40" },
+            { nombre: "Peluche Jesús Rojo", precio: 17.5, img: "https://via.placeholder.com/40" }
+        ];
+
+        function buscarProducto(valor) {
+
+            if (!valor) return;
+
+            let prod = productosDemo.find(p =>
+                p.nombre.toLowerCase().includes(valor.toLowerCase())
+            );
+
+            if (prod) {
+                agregarProductoFactura(prod);
+            }
+        }
+
+        function agregarProductoFactura(prod) {
+
+            let tabla = document.getElementById("tablaProductosFactura");
+
+            tabla.innerHTML += `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="${prod.img}" width="40" style="border-radius:8px;">
+                        <span>${prod.nombre}</span>
+                    </div>
+                </td>
+                <td><input type="number" value="1" class="form-control" style="width:80px;"></td>
+                <td>$${prod.precio}</td>
+            </tr>
+        `;
+
+            subtotalGlobal += prod.precio;
+            document.getElementById("subtotal").innerText = "$" + subtotalGlobal.toFixed(2);
+            calcularTotal();
+        }
+
+    </script>
+}

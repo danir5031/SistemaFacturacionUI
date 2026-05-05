@@ -1,0 +1,116 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Login</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <style>
+        body {
+            background: #f2f4f7;
+            font-family: 'Segoe UI';
+        }
+
+        .login-container {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-login {
+            width: 420px;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.1);
+            background: white;
+        }
+
+        .icon-box {
+            width: 70px;
+            height: 70px;
+            background: #3b6df6;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: auto;
+            margin-bottom: 20px;
+        }
+
+            .icon-box i {
+                color: white;
+                font-size: 30px;
+            }
+
+        .btn-login {
+            background: #3b6df6;
+            border-radius: 10px;
+            height: 45px;
+        }
+
+        .form-control {
+            height: 45px;
+            border-radius: 10px;
+        }
+
+        h2 {
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-container">
+
+        <div>
+            <div class="text-center mb-4">
+                <div class="icon-box">
+
+                    <img src="~/img/loo.png" width="200" height="150"/>
+                </div>
+
+                <h2>Iniciar Sesion</h2>
+                
+            </div>
+
+            <div class="card-login">
+
+                <form method="post" action="/Login/Index">
+
+                    <div class="mb-3">
+                        <label>Usuario</label>
+                        <input name="user" type="text" class="form-control" placeholder="Ingresa tu usuario">
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Contraseña</label>
+                        <input name="password" type="password" class="form-control" placeholder="••••••••">
+                    </div>
+
+                    <button type="submit" class="btn btn-login text-white w-100">
+                        Entrar al sistema
+                    </button>
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="text-danger mt-2 text-center">
+                            @ViewBag.Error
+                        </div>
+                    }
+
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
