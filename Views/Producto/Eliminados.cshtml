@@ -1,0 +1,128 @@
+﻿@model List<SistemaFacturacionUI.Models.Producto>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h3>Productos Eliminados</h3>
+<p class="text-muted">Recupera o elimina definitivamente productos</p>
+
+<input id="buscador" class="form-control mb-3"
+       placeholder="Buscar producto..."
+       onkeyup="buscar()" />
+
+<a href="/Producto/Index" class="btn btn-outline-primary w-100 mb-3">
+    ⬅️ Volver
+</a>
+
+<table class="table align-middle">
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Stock</th>
+            <th>Precio</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+
+    <tbody id="tablaProductos">
+        @foreach (var item in Model)
+        {
+            <tr id="fila_@item.IdProducto">
+
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+
+                        @if (item.Imagen != null)
+                        {
+                            <img src="/Producto/VerImagen/@item.IdProducto"
+                                 width="50"
+                                 style="border-radius:8px;" />
+                        }
+                        else if (!string.IsNullOrEmpty(item.ImagenUrl))
+                        {
+                            <img src="@item.ImagenUrl"
+                                 width="50"
+                                 style="border-radius:8px;" />
+                        }
+                        else
+                        {
+                            <img src="https://via.placeholder.com/50" />
+                        }
+
+                        <div>
+                            <b>@item.Nombre</b><br />
+                            <small>@item.Categoria</small>
+                        </div>
+                    </div>
+                </td>
+
+                <td>@item.Stock</td>
+
+                <td>$@item.PrecioVenta</td>
+
+                <td>
+                    <span class="badge @(item.Disponible ? "bg-success" : "bg-danger")">
+                        @(item.Disponible ? "Disponible" : "No disponible")
+                    </span>
+                </td>
+
+                <td>@item.FechaRegistro.ToString("dd/MM/yyyy")</td>
+
+                <td>
+                    <!-- 🔄 RESTAURAR -->
+                    <button class="btn btn-success btn-sm"
+                            onclick="restaurar(@item.IdProducto)">
+                        🔄 Restaurar
+                    </button>
+
+                    <!-- ❌ BORRAR DEFINITIVO -->
+                    <button class="btn btn-danger btn-sm"
+                            onclick="eliminarDefinitivo(@item.IdProducto)">
+                        ❌ Borrar
+                    </button>
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+
+        // 🔄 RESTAURAR
+        function restaurar(id) {
+
+            if (!confirm("¿Restaurar este producto?")) return;
+
+            fetch('/Producto/Restaurar?id=' + id, { method: 'POST' })
+            .then(() => {
+                document.getElementById("fila_" + id).remove();
+            });
+        }
+
+        // ❌ ELIMINAR DEFINITIVO
+        function eliminarDefinitivo(id) {
+
+            if (!confirm("Esto eliminará permanentemente el producto")) return;
+
+            fetch('/Producto/EliminarDefinitivo?id=' + id, { method: 'POST' })
+            .then(() => {
+                document.getElementById("fila_" + id).remove();
+            });
+        }
+
+        // 🔍 BUSCADOR
+        function buscar() {
+            let input = document.getElementById("buscador").value.toLowerCase();
+
+            document.querySelectorAll("#tablaProductos tr").forEach(fila => {
+                fila.style.display = fila.innerText.toLowerCase().includes(input) ? "" : "none";
+            });
+        }
+
+    </script>
+}

@@ -1,0 +1,491 @@
+﻿@model List<SistemaFacturacionUI.Models.Producto>
+@using Microsoft.AspNetCore.Http
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var rol = (Context.Session.GetString("rol") ?? "").ToUpper();
+}
+
+<style>
+.img-producto{
+    width:70px;
+    height:70px;
+    object-fit:cover;
+    border-radius:10px;
+    cursor:pointer;
+    transition:0.3s;
+}
+.img-producto:hover{
+    transform:scale(1.6);
+}
+</style>
+
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h3>Productos</h3>
+        <p class="text-muted">Inventario y catálogo de productos.</p>
+    </div>
+
+    @if (rol == "ADMIN")
+    {
+        <div>
+            <button class="btn btn-primary" onclick="abrirModal()">+ Nuevo Producto</button>
+
+            <a href="/Producto/Eliminados" class="btn btn-outline-danger">
+                🗑️ Eliminados
+            </a>
+        </div>
+    }
+</div>
+
+<div class="card-box mt-3">
+
+    <!-- 🔥 FILTROS -->
+    <div class="row mb-3">
+
+        <div class="col-md-4">
+            <input id="buscador" class="form-control"
+                   placeholder="Buscar por nombre o categoría..."
+                   onkeyup="filtrar()" />
+        </div>
+
+        <div class="col-md-2">
+            <select id="filtroCategoria" class="form-control" onchange="filtrar()">
+                <option value="">Categoría</option>
+                @foreach (var cat in Model.Select(x => x.Categoria).Distinct())
+                {
+                    <option value="@cat">@cat</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <select id="filtroStock" class="form-control" onchange="filtrar()">
+                <option value="">Stock</option>
+                <option value="bajo">Bajo (&lt;5)</option>
+                <option value="medio">Medio (5-20)</option>
+                <option value="alto">Alto (&gt;20)</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <select id="filtroEstado" class="form-control" onchange="filtrar()">
+                <option value="">Estado</option>
+                <option value="true">Disponible</option>
+                <option value="false">No disponible</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <input type="date" id="filtroFecha" class="form-control" onchange="filtrar()" />
+        </div>
+
+    </div>
+
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Stock</th>
+                <th>Precio</th>
+                <th>Estado</th>
+
+                @if (rol == "ADMIN")
+                {
+                    <th>Acciones</th>
+                }
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                if(item.Activo) // 🔥 SOLO ACTIVOS
+                {
+                    <tr data-nombre="@item.Nombre.ToLower()"
+                        data-categoria="@item.Categoria.ToLower()"
+                        data-stock="@item.Stock"
+                        data-estado="@item.Disponible.ToString().ToLower()"
+                        data-fecha="@item.FechaRegistro.ToString("yyyy-MM-dd")">
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+
+                                @if (item.Imagen != null)
+                                {
+                                    <img src="/Producto/VerImagen/@item.IdProducto"
+                                         class="img-producto"
+                                         onclick="verImagen(this.src)" />
+                                }
+                                else if (!string.IsNullOrEmpty(item.ImagenUrl))
+                                {
+                                    <img src="@item.ImagenUrl"
+                                         class="img-producto"
+                                         onclick="verImagen(this.src)" />
+                                }
+                                else
+                                {
+                                    <img src="https://via.placeholder.com/70"
+                                         class="img-producto" />
+                                }
+
+                                <div>
+                                    <b>@item.Nombre</b><br />
+                                    <small>@item.Categoria</small>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            @{
+                                string color = "bg-success";
+
+                                if (item.Stock < 10)
+                                    color = "bg-danger";
+                                else if (item.Stock <= 20)
+                                    color = "bg-warning";
+                            }
+
+                            <span class="badge @color">
+                                @item.Stock unid.
+                            </span>
+                        </td>
+
+                        <td>
+                            <b>$@item.PrecioVenta</b><br />
+                            <small>Costo: $@item.Costo</small><br />
+
+                            @{
+                                decimal margen = 0;
+                                decimal markup = 0;
+
+                                // 🔥 MARGEN (correcto)
+                                if (item.PrecioVenta > 0)
+                                {
+                                    margen = ((item.PrecioVenta - item.Costo) / item.PrecioVenta) * 100;
+                                }
+
+                                // 🔥 MARKUP (limitado a 100%)
+                                if (item.Costo > 0)
+                                {
+                                    markup = ((item.PrecioVenta - item.Costo) / item.Costo) * 100;
+
+                                    if (markup > 100)
+                                    {
+                                        markup = 100;
+                                    }
+                                }
+                                string colorMargen = "green";
+
+                                if (margen < 30)
+                                    colorMargen = "red";
+                                else if (margen <= 60)
+                                    colorMargen = "orange";
+                            }
+
+                            
+                            <small style="color:@colorMargen; font-weight:bold;">
+                                Margen: @Math.Round(margen, 1)%
+                            
+                            </small><br />
+
+                            <small style="color:#6c757d;">
+                                Markup: @Math.Round(markup, 1)%
+                            </small>
+                        </td>
+
+                        <td>
+                            <span class="badge @(item.Disponible ? "bg-success" : "bg-danger")">
+                                @(item.Disponible ? "Disponible" : "No disponible")
+                            </span>
+                        </td>
+
+                        @if (rol == "ADMIN")
+                        {
+                            <td>
+                                <button class="btn btn-warning btn-sm"
+                                        onclick='editar(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(item)))'>
+                                    ✏️
+                                </button>
+
+                                <button class="btn btn-danger btn-sm"
+                                        onclick="eliminar(@item.IdProducto)">
+                                    🗑️
+                                </button>
+                            </td>
+                        }
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- 🔥 MODAL IMAGEN -->
+<div class="modal fade" id="imgModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <img id="imgGrande" style="width:100%" />
+        </div>
+    </div>
+</div>
+
+<!-- 🔥 MODAL PRODUCTO (TU DISEÑO ORIGINAL) -->
+<div class="modal fade" id="productoModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5>Nuevo Producto</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="idProducto" />
+
+                <!-- NOMBRE -->
+                <label>Nombre</label>
+                <input id="nombre" class="form-control mb-3" />
+
+                <!-- CATEGORIA + STOCK -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>Categoría</label>
+                        <input id="categoria" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label>Stock Inicial</label>
+                        <input id="stock" type="number" class="form-control" value="0" />
+                    </div>
+                </div>
+
+                <!-- PRECIOS -->
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label>Precio Venta ($)</label>
+                        <input id="precio" type="number" class="form-control" value="0" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label>Costo ($)</label>
+                        <input id="costo" type="number" class="form-control" value="0" />
+                    </div>
+                </div>
+
+                <!-- URL -->
+                <div class="mt-3">
+                    <label>URL de Imagen</label>
+                    <input id="imagenUrl" class="form-control" placeholder="https://..." />
+                </div>
+
+                <!-- FILE -->
+                <div class="mt-2">
+                    <input id="imagenFile" type="file" class="form-control" />
+                </div>
+
+                <!-- 🔥 PREVIEW DISCRETO -->
+                <div class="text-center mt-3">
+                    <img id="previewImagen"
+                         src="https://via.placeholder.com/120"
+                         style="width:120px; height:120px; object-fit:cover; border-radius:10px; opacity:0.9;" />
+                </div>
+
+                <!-- DESCRIPCIÓN -->
+                <div class="mt-3">
+                    <label>Descripción</label>
+                    <textarea id="descripcion" class="form-control"></textarea>
+                </div>
+
+                <!-- DISPONIBLE -->
+                <div class="mt-2">
+                    <input id="disponible" type="checkbox" checked />
+                    <label>Producto disponible para la venta</label>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarProducto()">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+<script>
+
+function verImagen(src){
+    document.getElementById("imgGrande").src = src;
+    new bootstrap.Modal(document.getElementById('imgModal')).show();
+}
+
+function abrirModal(){
+    limpiar();
+    new bootstrap.Modal(document.getElementById('productoModal')).show();
+}
+
+function cerrarModal(){
+    bootstrap.Modal.getInstance(document.getElementById('productoModal')).hide();
+}
+
+function limpiar(){
+    document.getElementById("idProducto").value="";
+    document.getElementById("nombre").value="";
+    document.getElementById("categoria").value="";
+    document.getElementById("descripcion").value="";
+    document.getElementById("precio").value="";
+    document.getElementById("costo").value="";
+    document.getElementById("stock").value="";
+    document.getElementById("imagenUrl").value="";
+    document.getElementById("disponible").checked=true;
+            document.getElementById("previewImagen").src = "https://via.placeholder.com/150";
+}
+
+                        function editar(p){
+
+            document.getElementById("idProducto").value = p.IdProducto;
+            document.getElementById("nombre").value = p.Nombre;
+            document.getElementById("categoria").value = p.Categoria;
+            document.getElementById("descripcion").value = p.Descripcion;
+            document.getElementById("precio").value = p.PrecioVenta;
+            document.getElementById("costo").value = p.Costo;
+            document.getElementById("stock").value = p.Stock;
+            document.getElementById("imagenUrl").value = p.ImagenUrl || "";
+            document.getElementById("disponible").checked = p.Disponible;
+
+            let preview = document.getElementById("previewImagen");
+
+            // 🔥 PRIORIDAD: imagen BD → url → placeholder
+            if (p.IdProducto) {
+                preview.src = "/Producto/VerImagen/" + p.IdProducto;
+            }
+
+            if (p.ImagenUrl && p.ImagenUrl !== "") {
+                preview.src = p.ImagenUrl;
+            }
+
+            new bootstrap.Modal(document.getElementById('productoModal')).show();
+        }
+
+function guardarProducto(){
+
+    let formData=new FormData();
+
+    formData.append("IdProducto",document.getElementById("idProducto").value);
+    formData.append("Nombre",document.getElementById("nombre").value);
+    formData.append("Categoria",document.getElementById("categoria").value);
+    formData.append("Descripcion",document.getElementById("descripcion").value);
+    formData.append("PrecioVenta",document.getElementById("precio").value);
+    formData.append("Costo",document.getElementById("costo").value);
+    formData.append("Stock",document.getElementById("stock").value);
+    formData.append("ImagenUrl",document.getElementById("imagenUrl").value);
+    formData.append("Disponible",document.getElementById("disponible").checked);
+
+    let file=document.getElementById("imagenFile").files[0];
+
+    if(file){
+        formData.append("imagenFile",file);
+    }
+
+    fetch('/Producto/Guardar',{
+        method:'POST',
+        body:formData
+    })
+    .then(res=>res.json())
+    .then(data=>{
+
+        if(data==="duplicado"){
+            alert("Producto ya existe");
+            return;
+        }
+
+        location.reload();
+    });
+}
+
+function eliminar(id){
+    if(!confirm("¿Enviar a eliminados?")) return;
+
+    fetch('/Producto/Eliminar?id='+id,{method:'POST'})
+    .then(()=>location.reload());
+}
+
+        document.getElementById("imagenUrl").addEventListener("input", function () {
+            let url = this.value;
+
+            if (url) {
+                document.getElementById("previewImagen").src = url;
+            }
+        });
+
+                // 🔥 PREVIEW DESDE ARCHIVO
+        document.getElementById("imagenFile").addEventListener("change", function () {
+
+            let file = this.files[0];
+
+            if (file) {
+                let reader = new FileReader();
+
+                reader.onload = function (e) {
+                    document.getElementById("previewImagen").src = e.target.result;
+                };
+
+                reader.readAsDataURL(file);
+            }
+        });
+
+                function filtrar(){
+
+            let texto = document.getElementById("buscador").value.toLowerCase();
+            let categoria = document.getElementById("filtroCategoria").value.toLowerCase();
+            let estado = document.getElementById("filtroEstado").value;
+            let stock = document.getElementById("filtroStock").value;
+            let fecha = document.getElementById("filtroFecha").value;
+
+            document.querySelectorAll("tbody tr").forEach(fila => {
+
+                let nombre = fila.dataset.nombre;
+                let cat = fila.dataset.categoria;
+                let stk = parseInt(fila.dataset.stock);
+                let est = fila.dataset.estado;
+                let fec = fila.dataset.fecha;
+
+                let mostrar = true;
+
+                // 🔍 BUSCADOR
+                if(texto && !(nombre.includes(texto) || cat.includes(texto))){
+                    mostrar = false;
+                }
+
+                // 📂 CATEGORIA
+                if(categoria && cat !== categoria){
+                    mostrar = false;
+                }
+
+                // 🟢 ESTADO
+                if(estado && est !== estado){
+                    mostrar = false;
+                }
+
+                // 📦 STOCK
+                if(stock){
+                    if(stock === "bajo" && stk >= 5) mostrar = false;
+                    if(stock === "medio" && (stk < 5 || stk > 20)) mostrar = false;
+                    if(stock === "alto" && stk <= 20) mostrar = false;
+                }
+
+                // 📅 FECHA
+                if(fecha && fec !== fecha){
+                    mostrar = false;
+                }
+
+                fila.style.display = mostrar ? "" : "none";
+
+            });
+        }
+
+</script>
+}

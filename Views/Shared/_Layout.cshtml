@@ -108,7 +108,7 @@
                     👤 <span>Clientes</span>
                 </a>
 
-                <a href="/Productos" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Productos" ? "active" : "")">
+                <a href="/Producto" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Producto" ? "active" : "")">
                     📦 <span>Productos</span>
                 </a>
 
@@ -120,7 +120,11 @@
             <!-- 🔥 EMPLEADO -->
             @if (rol == "EMPLEADO")
             {
-                <a href="/Productos" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Productos" ? "active" : "")">
+                <a href="/Cliente" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Cliente" ? "active" : "")">
+                    👤 <span>Clientes</span>
+                </a>
+
+                <a href="/Producto" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Producto" ? "active" : "")">
                     📦 <span>Productos</span>
                 </a>
 

@@ -1,0 +1,87 @@
+﻿@model List<SistemaFacturacionUI.Models.Cliente>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h3>Clientes Eliminados</h3>
+<p class="text-muted">Recupera o elimina definitivamente clientes</p>
+
+<input id="buscador" class="form-control mb-3"
+       placeholder="Buscar cliente..."
+       onkeyup="buscar()" />
+<a href="/Cliente/Index" class="btn btn-outline-danger w-100 mt-2">
+    🗑️ Volver
+</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Dirección</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+
+    <tbody id="tablaClientes">
+        @foreach (var item in Model)
+        {
+            <tr id="fila_@item.Idcliente">
+                <td>@item.Nombre</td>
+                <td>@item.Telefono</td>
+                <td>@item.Direccion</td>
+                <td>@item.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <button class="btn btn-success btn-sm"
+                            onclick="restaurar(@item.Idcliente)">
+                        🔄 Restaurar
+                    </button>
+
+                    <button class="btn btn-danger btn-sm"
+                            onclick="eliminarDefinitivo(@item.Idcliente)">
+                        ❌ Borrar
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+
+        // 🔄 RESTAURAR
+        function restaurar(id) {
+
+            if (!confirm("¿Restaurar este cliente?")) return;
+
+            fetch('/Cliente/Restaurar?id=' + id, { method: 'POST' })
+            .then(() => {
+                document.getElementById("fila_" + id).remove();
+            });
+        }
+
+        // ❌ ELIMINAR DEFINITIVO
+        function eliminarDefinitivo(id) {
+
+            if (!confirm("Esto eliminará permanentemente el cliente")) return;
+
+            fetch('/Cliente/EliminarDefinitivo?id=' + id, { method: 'POST' })
+            .then(() => {
+                document.getElementById("fila_" + id).remove();
+            });
+        }
+
+        // 🔍 BUSCADOR
+        function buscar() {
+            let input = document.getElementById("buscador").value.toLowerCase();
+
+            document.querySelectorAll("#tablaClientes tr").forEach(fila => {
+                fila.style.display = fila.innerText.toLowerCase().includes(input) ? "" : "none";
+            });
+        }
+
+    </script>
+}

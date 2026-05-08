@@ -1,87 +1,133 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using SistemaFacturacionUI.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace SistemaFacturacionUI.Controllers
 {
     public class ClienteController : Controller
     {
-        // GET: ClienteController
-        public ActionResult Index()
+        private readonly AppDbContext _context;
+
+        public ClienteController(AppDbContext context)
         {
-            return View();
+            _context = context;
         }
 
-        // GET: ClienteController/Details/5
-        public ActionResult Details(int id)
+        // 🔥 CLIENTES ACTIVOS
+        public IActionResult Index()
         {
-            return View();
+            var clientes = _context.Clientes
+                .Where(x => x.Activo == true)
+                .OrderByDescending(x => x.FechaRegistro)
+                .ToList();
+
+            return View(clientes);
         }
 
-        // GET: ClienteController/Create
-        public ActionResult Create()
+        // 🔥 CLIENTES ELIMINADOS
+        public IActionResult Eliminados()
         {
-            return View();
+            var clientes = _context.Clientes
+                .Where(x => x.Activo == false)
+                .OrderByDescending(x => x.FechaRegistro)
+                .ToList();
+
+            return View(clientes);
         }
 
-        // POST: ClienteController/Create
+        // 🔥 CREAR
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public JsonResult Crear([FromBody] Cliente cliente)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            if (cliente == null) return Json(null);
+
+            cliente.FechaRegistro = DateTime.Now;
+            cliente.Activo = true;
+
+            _context.Clientes.Add(cliente);
+            _context.SaveChanges();
+
+            return Json(cliente);
         }
 
-        // GET: ClienteController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: ClienteController/Edit/5
+        // 🔥 EDITAR
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public JsonResult Editar([FromBody] Cliente cliente)
         {
-            try
+            var db = _context.Clientes.Find(cliente.Idcliente);
+
+            if (db != null)
             {
-                return RedirectToAction(nameof(Index));
+                db.Nombre = cliente.Nombre;
+                db.Telefono = cliente.Telefono;
+                db.Direccion = cliente.Direccion;
+
+                _context.SaveChanges();
             }
-            catch
-            {
-                return View();
-            }
+
+            return Json(db);
         }
 
-        // GET: ClienteController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: ClienteController/Delete/5
+        // 🔥 ELIMINAR (SOFT DELETE)
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public JsonResult Eliminar(int id)
         {
-            try
+            var cliente = _context.Clientes.Find(id);
+
+            if (cliente != null)
             {
-                return RedirectToAction(nameof(Index));
+                cliente.Activo = false;
+                _context.SaveChanges();
             }
-            catch
+
+            return Json(true);
+        }
+
+        // 🔥 ELIMINAR MÚLTIPLE
+        [HttpPost]
+        public JsonResult EliminarMultiple([FromBody] int[] ids)
+        {
+            var clientes = _context.Clientes.Where(x => ids.Contains(x.Idcliente)).ToList();
+
+            foreach (var c in clientes)
             {
-                return View();
+                c.Activo = false;
             }
+
+            _context.SaveChanges();
+
+            return Json(true);
+        }
+
+        // 🔥 RESTAURAR
+        [HttpPost]
+        public JsonResult Restaurar(int id)
+        {
+            var cliente = _context.Clientes.Find(id);
+
+            if (cliente != null)
+            {
+                cliente.Activo = true;
+                _context.SaveChanges();
+            }
+
+            return Json(true);
+        }
+
+        // 🔥 ELIMINAR DEFINITIVO
+        [HttpPost]
+        public JsonResult EliminarDefinitivo(int id)
+        {
+            var cliente = _context.Clientes.Find(id);
+
+            if (cliente != null)
+            {
+                _context.Clientes.Remove(cliente);
+                _context.SaveChanges();
+            }
+
+            return Json(true);
         }
     }
 }
