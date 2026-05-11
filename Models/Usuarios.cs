@@ -6,7 +6,7 @@ namespace SistemaFacturacionUI.Models
     public class Usuario
     {
         [Key]
-        public int Idusuario { get; set; }
+        public int IdUsuario { get; set; }  // 🔥 ESTO ES LO QUE TE FALT
         public string Nombre { get; set; }
         [Column("usuario")]
         public string Usuario1 { get; set; } // ojo si así viene de DB

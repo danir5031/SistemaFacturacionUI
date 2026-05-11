@@ -1,4 +1,6 @@
-﻿@{
+﻿@model List<SistemaFacturacionUI.Models.Factura>
+
+@{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Facturación";
 }
@@ -9,8 +11,12 @@
         <p class="text-muted">Historial de ventas y pedidos.</p>
     </div>
 
-    <button class="btn btn-primary" onclick="abrirFormulario()">
+    <button type="button"
+            class="btn btn-primary"
+            onclick="abrirFormulario()">
+
         + Nueva Factura
+
     </button>
 </div>
 
@@ -20,18 +26,27 @@
     <h4>Crear Factura</h4>
     <p class="text-muted">Ingresa los datos manualmente o usa lectura inteligente.</p>
 
-    <!-- 🔥 LECTURA INTELIGENTE -->
+    <!-- LECTURA INTELIGENTE -->
     <div class="card-box mb-3" style="background:#eef2ff; border:1px solid #dbeafe;">
+
         <label><b>⚡ Lectura Inteligente</b></label>
 
         <div class="d-flex gap-2 mt-2">
-            <textarea id="mensajeIA" class="form-control"
+
+            <textarea id="mensajeIA"
+                      class="form-control"
                       placeholder="Pega el mensaje del cliente aquí"></textarea>
 
-            <button class="btn btn-primary" onclick="procesarMensaje()">
+            <button type="button"
+                    class="btn btn-primary"
+                    onclick="procesarMensaje()">
+
                 Procesar
+
             </button>
+
         </div>
+
     </div>
 
     <div class="row">
@@ -44,66 +59,145 @@
                 <h5>Datos del Envío</h5>
 
                 <div class="mt-3">
+
                     <label>Nombre del Cliente</label>
-                    <input id="nombreCliente" class="form-control" />
+
+                    <input id="nombreCliente"
+                           class="form-control" />
+
                 </div>
 
                 <div class="row mt-2">
+
                     <div class="col-md-6">
+
                         <label>Teléfono</label>
-                        <input id="telefono" class="form-control" />
+
+                        <input id="telefono"
+                               class="form-control" />
+
                     </div>
 
                     <div class="col-md-6">
+
                         <label>Horario</label>
-                        <select id="horario" class="form-control" onchange="cambiarHorario()">
+
+                        <select id="horario"
+                                class="form-control"
+                                onchange="cambiarHorario()">
+
                             <option value="TM">TM</option>
                             <option value="TT">TT</option>
                             <option value="PR">PR</option>
                             <option value="EXACTO">Hora exacta</option>
+
                         </select>
+
                     </div>
+
                 </div>
 
-                <div id="horaExactaDiv" class="mt-2" style="display:none;">
+                <div id="horaExactaDiv"
+                     class="mt-2"
+                     style="display:none;">
+
                     <label>Hora exacta</label>
-                    <input type="time" id="horaExacta" class="form-control" />
+
+                    <input type="time"
+                           id="horaExacta"
+                           class="form-control" />
+
                 </div>
 
                 <div class="mt-2">
+
                     <label>Fecha de Envío</label>
-                    <input type="date" class="form-control" />
+
+                    <input type="date"
+                           id="fechaEnvio"
+                           class="form-control" />
+
                 </div>
 
                 <div class="mt-2">
+
                     <label>Dirección</label>
-                    <textarea id="direccion" class="form-control"></textarea>
+
+                    <textarea id="direccion"
+                              class="form-control"></textarea>
+
+                </div>
+
+                <!-- NUEVOS CAMPOS -->
+                <div class="row mt-2">
+
+                    <div class="col-md-6">
+
+                        <label>Departamento</label>
+
+                        <select id="departamento"
+                                class="form-control">
+
+                            <option value="">Seleccione</option>
+
+                            <option>San Salvador</option>
+                            <option>La Libertad</option>
+                            <option>Santa Ana</option>
+                            <option>San Miguel</option>
+                            <option>Sonsonate</option>
+                            <option>Usulután</option>
+                            <option>La Paz</option>
+                            <option>Chalatenango</option>
+                            <option>Ahuachapán</option>
+                            <option>Cuscatlán</option>
+                            <option>Morazán</option>
+                            <option>Cabañas</option>
+                            <option>San Vicente</option>
+                            <option>La Unión</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label>Municipio</label>
+
+                        <input id="municipio"
+                               class="form-control" />
+
+                    </div>
+
                 </div>
 
             </div>
 
             <!-- PRODUCTOS -->
             <div class="card-box">
+
                 <h5>Productos</h5>
 
-                <!-- 🔥 BUSCADOR -->
                 <input class="form-control mt-2"
+                       id="buscadorProducto"
                        placeholder="Buscar producto para agregar..."
                        onkeyup="buscarProducto(this.value)" />
 
                 <table class="table mt-3">
+
                     <thead>
                         <tr>
                             <th>Producto</th>
                             <th>Cantidad</th>
                             <th>Precio</th>
+                            <th></th>
                         </tr>
                     </thead>
 
                     <tbody id="tablaProductosFactura">
-                        <!-- VACÍO -->
                     </tbody>
+
                 </table>
+
             </div>
 
         </div>
@@ -116,57 +210,107 @@
                 <h5>Resumen</h5>
 
                 <div class="d-flex justify-content-between mt-3">
+
                     <span>Subtotal</span>
+
                     <span id="subtotal">$0.00</span>
+
                 </div>
 
                 <div class="d-flex justify-content-between mt-2">
+
                     <span>Envío</span>
-                    <input type="number" id="envio" value="2.85"
-                           class="form-control" style="width:100px"
-                           onchange="calcularTotal()" />
+
+                    <input type="number"
+                           id="envio"
+                           value="2.85"
+                           step="0.01"
+                           class="form-control"
+                           style="width:100px"
+                           oninput="calcularTotal()" />
+
                 </div>
 
                 <!-- DESCUENTO -->
                 <div class="mt-3">
+
                     <label>Descuento</label>
 
                     <div class="d-flex gap-2">
-                        <select id="tipoDescuento" class="form-control" onchange="calcularTotal()">
+
+                        <select id="tipoDescuento"
+                                class="form-control"
+                                onchange="calcularTotal()">
+
                             <option value="0">Sin</option>
                             <option value="porcentaje">%</option>
                             <option value="fijo">$</option>
+
                         </select>
 
-                        <input type="number" id="valorDescuento"
+                        <input type="number"
+                               id="valorDescuento"
                                class="form-control"
                                placeholder="0"
-                               onchange="calcularTotal()" />
+                               step="0.01"
+                               oninput="calcularTotal()" />
+
                     </div>
+
                 </div>
 
                 <hr />
 
                 <div class="d-flex justify-content-between">
+
                     <b>Total</b>
+
                     <h4 id="totalFinal">$0.00</h4>
+
                 </div>
 
                 <div class="mt-3">
+
                     <label>Método de Pago</label>
 
                     <div class="d-flex gap-2 mt-2">
-                        <button class="btn btn-outline-primary w-50">Efectivo</button>
-                        <button class="btn btn-outline-secondary w-50">Transferencia</button>
+
+                        <button type="button"
+                                id="btnEfectivo"
+                                class="btn btn-outline-primary w-50 active"
+                                onclick="seleccionarPago('Efectivo')">
+
+                            Efectivo
+
+                        </button>
+
+                        <button type="button"
+                                id="btnTransferencia"
+                                class="btn btn-outline-secondary w-50"
+                                onclick="seleccionarPago('Transferencia')">
+
+                            Transferencia
+
+                        </button>
+
                     </div>
+
                 </div>
 
-                <button class="btn btn-primary w-100 mt-4">
+                <button type="button"
+                        class="btn btn-primary w-100 mt-4"
+                        onclick="confirmarFactura()">
+
                     Confirmar e Imprimir Factura
+
                 </button>
 
-                <button class="btn btn-light w-100 mt-2" onclick="cancelar()">
+                <button type="button"
+                        class="btn btn-light w-100 mt-2"
+                        onclick="cancelar()">
+
                     Cancelar
+
                 </button>
 
             </div>
@@ -178,163 +322,662 @@
 </div>
 
 <!-- ================= LISTA ================= -->
-<div id="listaFacturas" class="card-box mt-3">
+<div id="listaFacturas"
+     class="card-box mt-3">
 
-    <input class="form-control mb-3" placeholder="Buscar..." />
+    <input class="form-control mb-3"
+           placeholder="Buscar..." />
 
     <table class="table">
+
         <thead>
             <tr>
+
                 <th>Factura</th>
+
                 <th>Cliente</th>
+
+                <th>Fecha Envío</th>
+
+                <th>Fecha Registro</th>
+
+                <th>Horario</th>
+
+                <th>Pago</th>
+
                 <th>Estado</th>
+
                 <th>Total</th>
+
             </tr>
         </thead>
 
         <tbody>
-            <tr>
-                <td>FAC-001</td>
-                <td>Juan Pérez</td>
-                <td><span class="badge bg-success">Completada</span></td>
-                <td>$25.00</td>
-            </tr>
+
+            @foreach (var f in Model)
+            {
+                <tr>
+
+                    <!-- FACTURA -->
+                    <td>
+
+                        @f.NumeroFactura
+
+                    </td>
+
+                    <!-- CLIENTE -->
+                    <td>
+
+                        @f.NombreCliente
+
+                    </td>
+
+                    <!-- FECHA ENVÍO -->
+                    <td>
+
+                        @(f.FechaEnvio.HasValue
+                            ? f.FechaEnvio.Value.ToString("dd/MM/yyyy")
+                            : "-")
+
+                    </td>
+
+                    <!-- FECHA REGISTRO -->
+                    <td>
+
+                        @f.FechaRegistro.ToString("dd/MM/yyyy hh:mm tt")
+
+                    </td>
+
+                    <!-- HORARIO -->
+                    <td>
+
+                        @if (f.Horario == "EXACTO")
+                        {
+                            <span>
+
+                                @f.HoraExacta
+
+                            </span>
+                        }
+                        else
+                        {
+                            @f.Horario
+                        }
+
+                    </td>
+
+                    <!-- MÉTODO PAGO -->
+                    <td>
+
+                        @if (f.MetodoPago == "Transferencia")
+                        {
+                            <span class="badge bg-primary">
+                                Transferencia
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">
+                                Efectivo
+                            </span>
+                        }
+
+                    </td>
+
+                    <!-- ESTADO -->
+                    <td>
+
+                        <span class="badge bg-success">
+
+                            @f.Estado
+
+                        </span>
+
+                    </td>
+
+                    <!-- TOTAL -->
+                    <td>
+
+                        $@f.Total
+
+                    </td>
+
+                </tr>
+            }
+
         </tbody>
+
     </table>
 
 </div>
 
-@section Scripts{
+@section Scripts {
+
     <script>
 
         let subtotalGlobal = 0;
+        let metodoPago = "Efectivo";
 
-        function abrirFormulario() {
-            document.getElementById("formFactura").style.display = "block";
-            document.getElementById("listaFacturas").style.display = "none";
-        }
+        //////////////////////////////////////////////////////
+        // BUSCAR PRODUCTOS
+        //////////////////////////////////////////////////////
 
-        function cancelar() {
-            document.getElementById("formFactura").style.display = "none";
-            document.getElementById("listaFacturas").style.display = "block";
-        }
+                function buscarProducto(valor) {
 
-        function cambiarHorario() {
+            let tabla = document.getElementById("tablaProductosFactura");
 
-            let horario = document.getElementById("horario").value;
+            //////////////////////////////////////////////////////
+            // LIMPIAR BÚSQUEDAS ANTERIORES
+            //////////////////////////////////////////////////////
 
-            if (horario === "EXACTO") {
-                document.getElementById("horaExactaDiv").style.display = "block";
-                document.getElementById("envio").value = 2.85;
-            } else {
-                document.getElementById("horaExactaDiv").style.display = "none";
+            document.querySelectorAll(".busqueda")
+                .forEach(x => x.remove());
 
-                if (horario === "PR") {
-                    document.getElementById("envio").value = 5.10;
-                } else {
-                    document.getElementById("envio").value = 2.85;
+            //////////////////////////////////////////////////////
+            // SI ESTÁ VACÍO
+            //////////////////////////////////////////////////////
+
+            if (valor.trim().length < 2)
+                return;
+
+            //////////////////////////////////////////////////////
+            // FETCH
+            //////////////////////////////////////////////////////
+
+            fetch('/Facturacion/ObtenerProductos?filtro=' + encodeURIComponent(valor))
+
+            .then(res => res.json())
+
+            .then(data => {
+
+                //////////////////////////////////////////////////////
+                // SI NO HAY RESULTADOS
+                //////////////////////////////////////////////////////
+
+                if (!data || data.length === 0)
+                {
+                    tabla.innerHTML += `
+                    <tr class="busqueda">
+
+                        <td colspan="4"
+                            style="color:#64748b;">
+
+                            No se encontraron productos
+
+                        </td>
+
+                    </tr>
+                    `;
+
+                    return;
                 }
+
+                //////////////////////////////////////////////////////
+                // RECORRER PRODUCTOS
+                //////////////////////////////////////////////////////
+
+                data.forEach(p => {
+
+                    tabla.innerHTML += `
+                    <tr class="busqueda"
+                        style="cursor:pointer; background:#f8fafc;"
+                        onclick="agregarProducto(
+                            ${p.idProducto},
+                            '${p.nombre.replace(/'/g, "\\'")}',
+                            ${p.precioVenta},
+                            '${p.imagenUrl || ''}',
+                            ${p.stock}
+                        )">
+
+                        <td colspan="4">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+
+                                    🔍 ${p.nombre}
+
+                                    <br>
+
+                                    <small style="color:#64748b;">
+                                        Stock disponible: ${p.stock}
+                                    </small>
+
+                                </div>
+
+                                <div>
+                                    $${parseFloat(p.precioVenta).toFixed(2)}
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+                    `;
+                });
+
+            })
+
+            .catch(error => {
+
+                console.log(error);
+
+            });
+        }
+
+        //////////////////////////////////////////////////////
+        // AGREGAR PRODUCTO
+        //////////////////////////////////////////////////////
+
+                function agregarProducto(id, nombre, precio, imagen, stock) {
+
+            //////////////////////////////////////////////////////
+            // LIMPIAR BÚSQUEDA
+            //////////////////////////////////////////////////////
+
+            document.querySelectorAll(".busqueda")
+                .forEach(x => x.remove());
+
+            document.getElementById("buscadorProducto").value = "";
+
+            //////////////////////////////////////////////////////
+            // VALIDAR EXISTE
+            //////////////////////////////////////////////////////
+
+            let inputExistente = document.querySelector(`.cantidad[data-id="${id}"]`);
+
+            if (inputExistente)
+            {
+                let actual = parseInt(inputExistente.value);
+
+                if (actual < stock)
+                {
+                    inputExistente.value = actual + 1;
+                }
+                else
+                {
+                    alert("No hay más stock disponible");
+                }
+
+                actualizarSubtotal();
+
+                return;
             }
+
+            //////////////////////////////////////////////////////
+            // AGREGAR FILA
+            //////////////////////////////////////////////////////
+
+            let tabla = document.getElementById("tablaProductosFactura");
+
+            tabla.innerHTML += `
+            <tr id="fila_${id}">
+
+                <td>
+
+                    <div class="d-flex align-items-center gap-2">
+
+                        <img src="${imagen && imagen !== '' ? imagen : '/Producto/VerImagen/' + id}"
+                             width="40"
+                             height="40"
+                             style="border-radius:8px; object-fit:cover;">
+
+                        <div>
+
+                            ${nombre}
+
+                            <br>
+
+                            <small style="color:#64748b;">
+                                Stock: ${stock}
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </td>
+
+                <td>
+
+                    <input type="number"
+                           value="1"
+                           min="1"
+                           max="${stock}"
+                           class="form-control cantidad"
+                           data-id="${id}"
+                           data-precio="${precio}"
+                           style="width:80px;"
+                           oninput="validarCantidad(this, ${stock})">
+
+                </td>
+
+                <td>
+
+                    $${parseFloat(precio).toFixed(2)}
+
+                </td>
+
+                <td>
+
+                    <button type="button"
+                            class="btn btn-sm btn-danger"
+                            onclick="eliminarProducto(${id})">
+
+                        X
+
+                    </button>
+
+                </td>
+
+            </tr>
+            `;
+
+            actualizarSubtotal();
+        }
+
+                function validarCantidad(input, stock) {
+
+            let valor = parseInt(input.value) || 1;
+
+            if (valor > stock)
+            {
+                input.value = stock;
+
+                alert("Stock máximo disponible: " + stock);
+            }
+
+            if (valor < 1)
+            {
+                input.value = 1;
+            }
+
+            actualizarSubtotal();
+        }
+
+        //////////////////////////////////////////////////////
+        // ELIMINAR PRODUCTO
+        //////////////////////////////////////////////////////
+
+                function eliminarProducto(id) {
+
+            let fila = document.getElementById("fila_" + id);
+
+            if (fila)
+            {
+                fila.remove();
+            }
+
+            //////////////////////////////////////////////////////
+            // LIMPIAR BÚSQUEDA BUG
+            //////////////////////////////////////////////////////
+
+            document.querySelectorAll(".busqueda")
+                .forEach(x => x.remove());
+
+            document.getElementById("buscadorProducto").value = "";
+
+            actualizarSubtotal();
+        }
+
+        //////////////////////////////////////////////////////
+        // SELECCIONAR PAGO
+        //////////////////////////////////////////////////////
+
+        function seleccionarPago(tipo) {
+
+            metodoPago = tipo;
+
+            document.getElementById("btnEfectivo")
+                .classList.remove("active");
+
+            document.getElementById("btnTransferencia")
+                .classList.remove("active");
+
+            if (tipo === "Efectivo")
+            {
+                document.getElementById("btnEfectivo")
+                    .classList.add("active");
+            }
+            else
+            {
+                document.getElementById("btnTransferencia")
+                    .classList.add("active");
+            }
+        }
+
+        //////////////////////////////////////////////////////
+        // SUBTOTAL
+        //////////////////////////////////////////////////////
+
+        function actualizarSubtotal() {
+
+            let total = 0;
+
+            document.querySelectorAll(".cantidad").forEach(input => {
+
+                let cantidad = parseInt(input.value) || 0;
+
+                let precio = parseFloat(input.dataset.precio) || 0;
+
+                total += cantidad * precio;
+            });
+
+            subtotalGlobal = total;
+
+            document.getElementById("subtotal").innerText =
+                "$" + total.toFixed(2);
 
             calcularTotal();
         }
 
+        //////////////////////////////////////////////////////
+        // TOTAL
+        //////////////////////////////////////////////////////
+
         function calcularTotal() {
 
-            let envio = parseFloat(document.getElementById("envio").value) || 0;
-            let tipo = document.getElementById("tipoDescuento").value;
-            let valor = parseFloat(document.getElementById("valorDescuento").value) || 0;
+            let envio =
+                parseFloat(document.getElementById("envio").value) || 0;
+
+            let tipo =
+                document.getElementById("tipoDescuento").value;
+
+            let valor =
+                parseFloat(document.getElementById("valorDescuento").value) || 0;
 
             let descuento = 0;
 
-            if (tipo === "porcentaje") {
+            if (tipo === "porcentaje")
+            {
                 descuento = subtotalGlobal * (valor / 100);
             }
 
-            if (tipo === "fijo") {
+            if (tipo === "fijo")
+            {
                 descuento = valor;
             }
 
             let total = subtotalGlobal + envio - descuento;
 
-            if (total < 0) total = 0;
+            if (total < 0)
+                total = 0;
 
-            document.getElementById("totalFinal").innerText = "$" + total.toFixed(2);
+            document.getElementById("totalFinal").innerText =
+                "$" + total.toFixed(2);
         }
 
-        //////////////////////////////////////////////////
-        // 🔥 LECTURA INTELIGENTE
-        //////////////////////////////////////////////////
+        //////////////////////////////////////////////////////
+        // HORARIO
+        //////////////////////////////////////////////////////
 
-        function procesarMensaje() {
+        function cambiarHorario() {
 
-            let texto = document.getElementById("mensajeIA").value;
-            let lineas = texto.split("\n");
+            let horario =
+                document.getElementById("horario").value;
 
-            document.getElementById("nombreCliente").value = lineas[0] || "";
-            document.getElementById("direccion").value = lineas[2] || "";
-            document.getElementById("telefono").value = lineas[3] || "";
+            let div =
+                document.getElementById("horaExactaDiv");
 
-            let horarioTexto = lineas[1] || "";
-
-            if (horarioTexto.includes("TT")) document.getElementById("horario").value = "TT";
-            else if (horarioTexto.includes("PR")) document.getElementById("horario").value = "PR";
-            else document.getElementById("horario").value = "TM";
-
-            if (horarioTexto.includes(":")) {
-                document.getElementById("horario").value = "EXACTO";
-                document.getElementById("horaExactaDiv").style.display = "block";
-
-                let hora = horarioTexto.match(/\d{1,2}:\d{2}/);
-                if (hora) document.getElementById("horaExacta").value = hora[0];
+            if (horario === "EXACTO")
+            {
+                div.style.display = "block";
             }
-
-            cambiarHorario();
-        }
-
-        //////////////////////////////////////////////////
-        // 🔥 PRODUCTOS (SIMULADO)
-        //////////////////////////////////////////////////
-
-        let productosDemo = [
-            { nombre: "Taza Snoopy Happy", precio: 11, img: "https://via.placeholder.com/40" },
-            { nombre: "Peluche Jesús Rojo", precio: 17.5, img: "https://via.placeholder.com/40" }
-        ];
-
-        function buscarProducto(valor) {
-
-            if (!valor) return;
-
-            let prod = productosDemo.find(p =>
-                p.nombre.toLowerCase().includes(valor.toLowerCase())
-            );
-
-            if (prod) {
-                agregarProductoFactura(prod);
+            else
+            {
+                div.style.display = "none";
             }
         }
 
-        function agregarProductoFactura(prod) {
+        //////////////////////////////////////////////////////
+        // GUARDAR FACTURA
+        //////////////////////////////////////////////////////
 
-            let tabla = document.getElementById("tablaProductosFactura");
+        function confirmarFactura() {
 
-            tabla.innerHTML += `
-            <tr>
-                <td>
-                    <div class="d-flex align-items-center gap-2">
-                        <img src="${prod.img}" width="40" style="border-radius:8px;">
-                        <span>${prod.nombre}</span>
-                    </div>
-                </td>
-                <td><input type="number" value="1" class="form-control" style="width:80px;"></td>
-                <td>$${prod.precio}</td>
-            </tr>
-        `;
+            let detalles = [];
 
-            subtotalGlobal += prod.precio;
-            document.getElementById("subtotal").innerText = "$" + subtotalGlobal.toFixed(2);
-            calcularTotal();
+            document.querySelectorAll(".cantidad").forEach(input => {
+
+                detalles.push({
+
+                    IdProducto: parseInt(input.dataset.id),
+
+                    Cantidad: parseInt(input.value),
+
+                    Precio: parseFloat(input.dataset.precio)
+
+                });
+
+            });
+
+            if (detalles.length === 0)
+            {
+                alert("Agrega productos");
+                return;
+            }
+
+            let data = {
+
+                NombreCliente:
+                    document.getElementById("nombreCliente").value,
+
+                Telefono:
+                    document.getElementById("telefono").value,
+
+                Direccion:
+                    document.getElementById("direccion").value,
+
+                Departamento:
+                    document.getElementById("departamento").value,
+
+                Municipio:
+                    document.getElementById("municipio").value,
+
+                Horario:
+                    document.getElementById("horario").value,
+
+                HoraExacta:
+                    document.getElementById("horaExacta").value,
+
+                FechaEnvio:
+                    document.getElementById("fechaEnvio").value,
+
+                Subtotal:
+                    subtotalGlobal,
+
+                Envio:
+                    parseFloat(document.getElementById("envio").value) || 0,
+
+                Descuento:
+                    parseFloat(document.getElementById("valorDescuento").value) || 0,
+
+                Total:
+                    parseFloat(
+                        document.getElementById("totalFinal")
+                        .innerText
+                        .replace("$", "")
+                    ),
+
+                MetodoPago:
+                    metodoPago,
+
+                Estado:
+                    "Completada",
+
+                Detalles:
+                    detalles
+            };
+
+            console.log(data);
+
+            fetch('/Facturacion/GuardarFactura', {
+
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify(data)
+
+            })
+
+            .then(res => res.json())
+
+            .then(r => {
+
+                console.log(r);
+
+                if (r === true)
+                {
+                    alert("Factura guardada correctamente 🔥");
+
+                    location.reload();
+                }
+                else
+                {
+                    alert("Error: " + r);
+                }
+
+            })
+
+            .catch(error => {
+
+                console.log(error);
+
+                alert("Ocurrió un error al guardar");
+
+            });
+        }
+
+        //////////////////////////////////////////////////////
+        // MOSTRAR FORM
+        //////////////////////////////////////////////////////
+
+        function abrirFormulario() {
+
+            let form = document.getElementById("formFactura");
+
+            let lista = document.getElementById("listaFacturas");
+
+            form.style.display = "block";
+
+            lista.style.display = "none";
+        }
+
+        //////////////////////////////////////////////////////
+        // CANCELAR
+        //////////////////////////////////////////////////////
+
+        function cancelar() {
+
+            document.getElementById("formFactura").style.display = "none";
+
+            document.getElementById("listaFacturas").style.display = "block";
         }
 
     </script>
+
 }
