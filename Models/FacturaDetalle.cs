@@ -19,5 +19,8 @@ namespace SistemaFacturacionUI.Models
 
         [ForeignKey("IdFactura")]
         public virtual Factura Factura { get; set; }
+
+        [ForeignKey("IdProducto")]
+        public virtual Producto Producto { get; set; }
     }
 }

@@ -1,8 +1,11 @@
-﻿@model List<SistemaFacturacionUI.Models.Factura>
+﻿@using Microsoft.AspNetCore.Http
+@model List<SistemaFacturacionUI.Models.Factura>
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Facturación";
+
+    var rol = Context.Session.GetString("rol");
 }
 
 <div class="d-flex justify-content-between align-items-center">
@@ -169,6 +172,16 @@
                     </div>
 
                 </div>
+                <div class="mt-2">
+
+                    <label>Comentario</label>
+
+                    <textarea id="comentario"
+                              class="form-control"
+                              rows="3"
+                              placeholder="Comentario adicional de la entrega..."></textarea>
+
+                </div>
 
             </div>
 
@@ -325,17 +338,182 @@
 <div id="listaFacturas"
      class="card-box mt-3">
 
-    <input class="form-control mb-3"
-           placeholder="Buscar..." />
+    <!-- 🔥 FILTROS -->
+    <div class="d-flex flex-wrap gap-2 mb-3 align-items-end">
+
+        <!-- BUSCADOR -->
+        <div style="min-width:320px;">
+
+            <label class="mb-1 fw-semibold">
+                Buscar
+            </label>
+
+            <div class="d-flex gap-2">
+
+                <input id="buscadorFacturas"
+                       class="form-control"
+                       placeholder="Buscar nombre, teléfono o factura..."
+                       onkeydown="detenerEnter(event)" />
+
+                <button class="btn btn-primary"
+                        type="button"
+                        onclick="buscarGeneral()">
+
+                    🔍
+
+                </button>
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        onclick="limpiarBusqueda()">
+
+                    ✖
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- FECHA ENVÍO -->
+        <div style="min-width:180px;">
+
+            <label class="mb-1 fw-semibold">
+                Fecha Envío
+            </label>
+
+            <input type="date"
+                   id="filtroFechaEnvio"
+                   class="form-control"
+                   oninput="filtrarPorFechaEnvio()" />
+
+        </div>
+
+        <!-- FECHA REGISTRO -->
+        <div style="min-width:180px;">
+
+            <label class="mb-1 fw-semibold">
+                Fecha Registro
+            </label>
+
+            <input type="date"
+                   id="filtroFechaRegistro"
+                   class="form-control"
+                   oninput="filtrarPorFechaRegistro()" />
+
+        </div>
+
+        <!-- HORARIO -->
+        <div style="min-width:140px;">
+
+            <label class="mb-1 fw-semibold">
+                Horario
+            </label>
+
+            <select id="filtroHorario"
+                    class="form-control"
+                    onchange="filtrarFacturas()">
+
+                <option value="">Todos</option>
+                <option value="TM">TM</option>
+                <option value="TT">TT</option>
+                <option value="PR">PR</option>
+                <option value="EXACTO">Exacto</option>
+
+            </select>
+
+        </div>
+
+        <!-- PAGO -->
+        <div style="min-width:160px;">
+
+            <label class="mb-1 fw-semibold">
+                Pago
+            </label>
+
+            <select id="filtroPago"
+                    class="form-control"
+                    onchange="filtrarFacturas()">
+
+                <option value="">Todos</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
+
+            </select>
+
+        </div>
+
+        <!-- ESTADO -->
+        <div style="min-width:160px;">
+
+            <label class="mb-1 fw-semibold">
+                Estado
+            </label>
+
+            <select id="filtroEstado"
+                    class="form-control"
+                    onchange="filtrarFacturas()">
+
+                <option value="">Todos</option>
+                <option value="Completada">Completada</option>
+                <option value="Cancelada">Cancelada</option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+    @if (rol == "ADMIN")
+    {
+        <div class="d-flex gap-2 mb-3">
+
+            <button class="btn btn-dark"
+                    onclick="generarEtiquetas()">
+
+                🖨 Generar Etiquetas
+
+            </button>
+
+            <button class="btn btn-success"
+                    onclick="exportarExcel()">
+
+                📥 Exportar Excel
+
+            </button>
+
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+
+            @TempData["Error"]
+
+        </div>
+    }
 
     <table class="table">
 
         <thead>
             <tr>
+                @if (rol == "ADMIN")
+                {
+                    <th style="width:50px;">
 
+                        <input type="checkbox"
+                               id="checkTodos"
+                               onclick="seleccionarTodos()" />
+
+                    </th>
+                }
                 <th>Factura</th>
 
                 <th>Cliente</th>
+                <th>Teléfono</th>
+
+                <th>Usuario</th>
 
                 <th>Fecha Envío</th>
 
@@ -348,6 +526,14 @@
                 <th>Estado</th>
 
                 <th>Total</th>
+                @if (rol == "ADMIN")
+                {
+                    <th style="width:50px; text-align:center;">
+                        TQ
+                    </th>
+                }
+
+                <th>Acciones</th>
 
             </tr>
         </thead>
@@ -356,12 +542,38 @@
 
             @foreach (var f in Model)
             {
-                <tr>
+                <tr data-cliente="@f.NombreCliente"
+                    data-telefono="@f.Telefono"
+                    data-factura="@f.NumeroFactura"
+                    data-horario="@f.Horario"
+                    data-pago="@f.MetodoPago"
+                    data-estado="@f.Estado"
+                    data-fechaenvio="@(f.FechaEnvio.HasValue ? f.FechaEnvio.Value.ToString("yyyy-MM-dd") : "")">
+                    
+                    @if (rol == "ADMIN")
+                    {
+                        <td>
 
+                            <input type="checkbox"
+                                   class="checkFactura"
+                                   value="@f.IdFactura" />
+
+                        </td>
+                    }
                     <!-- FACTURA -->
-                    <td>
+                    <td style="font-size:12px; max-width:120px;">
 
-                        @f.NumeroFactura
+                        <span style="
+                            background:#f1f5f9;
+                            padding:4px 8px;
+                            border-radius:8px;
+                            font-size:11px;
+                            color:#475569;
+                            display:inline-block;">
+
+                            @f.NumeroFactura
+
+                        </span>
 
                     </td>
 
@@ -370,6 +582,15 @@
 
                         @f.NombreCliente
 
+                    </td>
+                    <!-- TELÉFONO -->
+                    <td>
+                        @f.Telefono
+                    </td>
+
+                    <!-- USUARIO -->
+                    <td>
+                        @(f.Usuario != null ? f.Usuario.Usuario1 : "-")
                     </td>
 
                     <!-- FECHA ENVÍO -->
@@ -427,11 +648,24 @@
                     <!-- ESTADO -->
                     <td>
 
-                        <span class="badge bg-success">
-
-                            @f.Estado
-
-                        </span>
+                        @if (f.Estado == "Cancelada")
+                        {
+                            <span class="badge bg-danger">
+                                Cancelada
+                            </span>
+                        }
+                        else if (f.Estado == "Pendiente")
+                        {
+                            <span class="badge bg-warning text-dark">
+                                Pendiente
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">
+                                Completada
+                            </span>
+                        }
 
                     </td>
 
@@ -439,6 +673,72 @@
                     <td>
 
                         $@f.Total
+
+                    </td>
+                    @if (rol == "ADMIN")
+                    {
+                        <td style="text-align:center;">
+
+                            @if (f.TicketGenerado)
+                            {
+                                <span style="
+                                width:15px;
+                                height:15px;
+                                background:#22c55e;
+                                border-radius:50%;
+                                display:inline-block;
+                                "></span>
+                            }
+                            else
+                            {
+                                <span style="
+                                width:15px;
+                                height:15px;
+                                background:#ef4444;
+                                border-radius:50%;
+                                display:inline-block;
+                                "></span>
+                            }
+
+                        </td>
+                    }
+
+                    <td>
+
+                        <div class="d-flex gap-1 align-items-center">
+
+                            <!-- VER -->
+                            <a href="/Facturacion/Ticket/@f.IdFactura"
+                                   target="_blank"
+                                   class="btn btn-sm btn-dark">
+
+                                👁
+
+                            </a>
+
+                            <!-- EDITAR -->
+                            <button class="btn btn-sm btn-warning"
+                                    onclick="editarFactura(@f.IdFactura)">
+
+                                ✏️
+
+                            </button>
+
+                            <!-- CANCELAR -->
+                            @if (rol == "ADMIN")
+                            {
+                                @if (f.Estado != "Cancelada")
+                                {
+                                    <button class="btn btn-sm btn-danger"
+                                            onclick="cancelarFactura(@f.IdFactura)">
+
+                                        🗑️
+
+                                    </button>
+                                }
+                            }
+
+                        </div>
 
                     </td>
 
@@ -457,6 +757,7 @@
 
         let subtotalGlobal = 0;
         let metodoPago = "Efectivo";
+        let facturaEditando = 0;
 
         //////////////////////////////////////////////////////
         // BUSCAR PRODUCTOS
@@ -830,6 +1131,8 @@
             }
         }
 
+
+
         //////////////////////////////////////////////////////
         // GUARDAR FACTURA
         //////////////////////////////////////////////////////
@@ -859,6 +1162,7 @@
             }
 
             let data = {
+                 IdFactura: facturaEditando,
 
                 NombreCliente:
                     document.getElementById("nombreCliente").value,
@@ -874,6 +1178,9 @@
 
                 Municipio:
                     document.getElementById("municipio").value,
+
+                Comentario:
+                    document.getElementById("comentario").value,
 
                 Horario:
                     document.getElementById("horario").value,
@@ -912,7 +1219,9 @@
 
             console.log(data);
 
-            fetch('/Facturacion/GuardarFactura', {
+            fetch(facturaEditando > 0
+        ? '/Facturacion/ActualizarFactura'
+        : '/Facturacion/GuardarFactura', {
 
                 method: 'POST',
 
@@ -971,12 +1280,529 @@
         // CANCELAR
         //////////////////////////////////////////////////////
 
-        function cancelar() {
+                function cancelar() {
+
+            facturaEditando = 0;
+            document.getElementById("nombreCliente").readOnly = false;
+
+            //////////////////////////////////////////////////////
+            // LIMPIAR CAMPOS
+            //////////////////////////////////////////////////////
+
+            document.getElementById("nombreCliente").value = "";
+            document.getElementById("telefono").value = "";
+            document.getElementById("direccion").value = "";
+            document.getElementById("comentario").value = "";
+            document.getElementById("municipio").value = "";
+            document.getElementById("fechaEnvio").value = "";
+            document.getElementById("horaExacta").value = "";
+
+            document.getElementById("departamento").selectedIndex = 0;
+            document.getElementById("horario").selectedIndex = 0;
+
+            //////////////////////////////////////////////////////
+            // TABLA
+            //////////////////////////////////////////////////////
+
+            document.getElementById("tablaProductosFactura").innerHTML = "";
+
+            //////////////////////////////////////////////////////
+            // TOTALES
+            //////////////////////////////////////////////////////
+
+            subtotalGlobal = 0;
+
+            document.getElementById("subtotal").innerText = "$0.00";
+            document.getElementById("totalFinal").innerText = "$0.00";
+
+            //////////////////////////////////////////////////////
+            // MOSTRAR LISTA
+            //////////////////////////////////////////////////////
 
             document.getElementById("formFactura").style.display = "none";
 
             document.getElementById("listaFacturas").style.display = "block";
+
+            //////////////////////////////////////////////////////
+            // BOTÓN
+            //////////////////////////////////////////////////////
+
+            document.querySelector(
+                '.btn.btn-primary.w-100.mt-4'
+            ).innerText = "Confirmar e Imprimir Factura";
         }
+
+                //////////////////////////////////////////////////////
+        // FILTRAR FACTURAS
+        //////////////////////////////////////////////////////
+
+                function filtrarFacturas() {
+
+            let texto =
+                document.getElementById("buscadorFacturas")
+                .value
+                .toLowerCase()
+                .trim();
+
+            let fecha =
+                document.getElementById("filtroFechaEnvio").value;
+
+            let horario =
+                document.getElementById("filtroHorario").value
+                .toLowerCase();
+
+            let pago =
+                document.getElementById("filtroPago").value
+                .toLowerCase();
+
+            let estado =
+                document.getElementById("filtroEstado").value
+                .toLowerCase();
+
+            document.querySelectorAll("#listaFacturas tbody tr")
+                .forEach(fila => {
+
+                    let cliente =
+                        (fila.dataset.cliente || "").toLowerCase();
+
+                    let telefono =
+                        (fila.dataset.telefono || "").toLowerCase();
+
+                    let factura =
+                        (fila.dataset.factura || "").toLowerCase();
+
+                    let horarioFila =
+                        (fila.dataset.horario || "").toLowerCase();
+
+                    let pagoFila =
+                        (fila.dataset.pago || "").toLowerCase();
+
+                    let estadoFila =
+                        (fila.dataset.estado || "").toLowerCase();
+
+                    let fechaFila =
+                        fila.dataset.fechaenvio || "";
+
+                    let mostrar = true;
+
+                    //////////////////////////////////////////////////////
+                    // BUSCADOR GENERAL
+                    //////////////////////////////////////////////////////
+
+                    if (
+                        texto &&
+                        !cliente.includes(texto) &&
+                        !telefono.includes(texto) &&
+                        !factura.includes(texto)
+                    ) {
+                        mostrar = false;
+                    }
+
+                    //////////////////////////////////////////////////////
+                    // FECHA
+                    //////////////////////////////////////////////////////
+
+                    if (fecha && fechaFila !== fecha) {
+                        mostrar = false;
+                    }
+
+                    //////////////////////////////////////////////////////
+                    // HORARIO
+                    //////////////////////////////////////////////////////
+
+                    if (horario && horarioFila !== horario) {
+                        mostrar = false;
+                    }
+
+                    //////////////////////////////////////////////////////
+                    // PAGO
+                    //////////////////////////////////////////////////////
+
+                    if (pago && pagoFila !== pago) {
+                        mostrar = false;
+                    }
+
+                    //////////////////////////////////////////////////////
+                    // ESTADO
+                    //////////////////////////////////////////////////////
+
+                    if (estado && estadoFila !== estado) {
+                        mostrar = false;
+                    }
+
+                    fila.style.display = mostrar ? "" : "none";
+                });
+        }
+
+                //////////////////////////////////////////////////////
+        // BUSCADOR GENERAL GLOBAL
+        //////////////////////////////////////////////////////
+
+        function buscarGeneral() {
+
+            let texto =
+                document.getElementById("buscadorFacturas")
+                .value
+                .trim();
+
+            //////////////////////////////////////////////////////
+            // SI VACÍO
+            //////////////////////////////////////////////////////
+
+            if (texto === "")
+            {
+                return;
+            }
+
+            //////////////////////////////////////////////////////
+            // REDIRECT
+            //////////////////////////////////////////////////////
+
+            window.location.href =
+                "/Facturacion?buscar=" +
+                encodeURIComponent(texto);
+        }
+
+                //////////////////////////////////////////////////////
+        // CANCELAR FACTURA
+        //////////////////////////////////////////////////////
+
+        function cancelarFactura(id) {
+
+            if (!confirm("¿Deseas cancelar esta factura?"))
+                return;
+
+            fetch('/Facturacion/CancelarFactura?id=' + id, {
+
+                method: 'POST'
+
+            })
+
+            .then(res => res.json())
+
+            .then(r => {
+
+                if (r === true)
+                {
+                    alert("Factura cancelada correctamente");
+
+                    location.reload();
+                }
+                else
+                {
+                    alert(r);
+                }
+
+            })
+
+            .catch(error => {
+
+                console.log(error);
+
+                alert("Ocurrió un error");
+            });
+        }
+        
+                     //////////////////////////////////////////////////////
+        // EDITAR FACTURA
+        //////////////////////////////////////////////////////
+
+        function editarFactura(id) {
+
+            fetch('/Facturacion/ObtenerFactura?id=' + id)
+
+            .then(res => res.json())
+
+            .then(f => {
+
+                //////////////////////////////////////////////////////
+                // VALIDAR
+                //////////////////////////////////////////////////////
+
+                if (f === "No se puede editar")
+                {
+                    alert(f);
+                    return;
+                }
+
+                //////////////////////////////////////////////////////
+                // MODO EDICIÓN
+                //////////////////////////////////////////////////////
+
+                facturaEditando = f.idFactura;
+                document.getElementById("nombreCliente").readOnly = true;
+
+                //////////////////////////////////////////////////////
+                // MOSTRAR FORM
+                //////////////////////////////////////////////////////
+
+                abrirFormulario();
+                document.getElementById("nombreCliente").readOnly = false;
+
+                //////////////////////////////////////////////////////
+                // DATOS
+                //////////////////////////////////////////////////////
+
+                document.getElementById("nombreCliente").value =
+                    f.nombreCliente || "";
+
+                document.getElementById("telefono").value =
+                    f.telefono || "";
+
+                document.getElementById("direccion").value =
+                    f.direccion || "";
+
+                document.getElementById("departamento").value =
+                    f.departamento || "";
+
+                document.getElementById("municipio").value =
+                    f.municipio || "";
+
+                document.getElementById("comentario").value =
+                    f.comentario || "";
+
+                document.getElementById("horario").value =
+                    f.horario || "TM";
+
+                document.getElementById("horaExacta").value =
+                    f.horaExacta || "";
+
+                if (f.fechaEnvio)
+                {
+                    document.getElementById("fechaEnvio").value =
+                        f.fechaEnvio.split('T')[0];
+                }
+
+                document.getElementById("envio").value =
+                    f.envio;
+
+                document.getElementById("valorDescuento").value =
+                    f.descuento;
+
+                //////////////////////////////////////////////////////
+                // MÉTODO PAGO
+                //////////////////////////////////////////////////////
+
+                seleccionarPago(f.metodoPago);
+
+                //////////////////////////////////////////////////////
+                // LIMPIAR TABLA
+                //////////////////////////////////////////////////////
+
+                document.getElementById("tablaProductosFactura")
+                    .innerHTML = "";
+
+                //////////////////////////////////////////////////////
+                // PRODUCTOS
+                //////////////////////////////////////////////////////
+
+                f.detalles.forEach(d => {
+
+                    agregarProducto(
+                        d.idProducto,
+                        d.nombre,
+                        d.precio,
+                        d.imagen,
+                        d.stock + d.cantidad
+                    );
+
+                    //////////////////////////////////////////////////////
+                    // COLOCAR CANTIDAD REAL
+                    //////////////////////////////////////////////////////
+
+                    let input = document.querySelector(
+                        `.cantidad[data-id="${d.idProducto}"]`
+                    );
+
+                    if (input)
+                    {
+                        input.value = d.cantidad;
+                    }
+                });
+
+                actualizarSubtotal();
+
+                //////////////////////////////////////////////////////
+                // BOTÓN
+                //////////////////////////////////////////////////////
+
+                document.querySelector(
+                    '.btn.btn-primary.w-100.mt-4'
+                ).innerText = "Actualizar Factura";
+            });
+        }
+
+                //////////////////////////////////////////////////////
+        // SELECCIONAR TODOS
+        //////////////////////////////////////////////////////
+
+        function seleccionarTodos() {
+
+            let checked =
+                document.getElementById("checkTodos").checked;
+
+            document.querySelectorAll(".checkFactura")
+                .forEach(x => {
+
+                    x.checked = checked;
+
+                });
+        }
+
+        //////////////////////////////////////////////////////
+        // OBTENER IDS
+        //////////////////////////////////////////////////////
+
+        function obtenerFacturasSeleccionadas() {
+
+            let ids = [];
+
+            document.querySelectorAll(".checkFactura:checked")
+                .forEach(x => {
+
+                    ids.push(parseInt(x.value));
+
+                });
+
+            return ids;
+        }
+
+        //////////////////////////////////////////////////////
+        // EXPORTAR EXCEL
+        //////////////////////////////////////////////////////
+
+        function exportarExcel() {
+
+            let ids = obtenerFacturasSeleccionadas();
+
+            if (ids.length === 0)
+            {
+                alert("Selecciona facturas");
+                return;
+            }
+
+            window.open(
+                '/Facturacion/ExportarExcel?ids=' + ids.join(","),
+                '_blank'
+            );
+        }
+
+        //////////////////////////////////////////////////////
+        // GENERAR PDF
+        //////////////////////////////////////////////////////
+
+        function generarEtiquetas() {
+
+            let ids = obtenerFacturasSeleccionadas();
+
+            if (ids.length === 0)
+            {
+                alert("Selecciona facturas");
+                return;
+            }
+
+            window.open(
+                '/Facturacion/GenerarEtiquetas?ids=' + ids.join(","),
+                '_blank'
+            );
+        }
+
+                //////////////////////////////////////////////////////
+        // FILTRAR POR FECHA REGISTRO
+        //////////////////////////////////////////////////////
+
+                function filtrarPorFechaRegistro() {
+
+            let fecha =
+                document.getElementById("filtroFechaRegistro").value;
+
+            //////////////////////////////////////////////////////
+            // LIMPIAR OTRO FILTRO
+            //////////////////////////////////////////////////////
+
+            document.getElementById("filtroFechaEnvio").value = "";
+
+            //////////////////////////////////////////////////////
+            // SI BORRÓ FECHA
+            //////////////////////////////////////////////////////
+
+            if (!fecha)
+            {
+                window.location.href = "/Facturacion";
+                return;
+            }
+
+            //////////////////////////////////////////////////////
+            // REDIRECT
+            //////////////////////////////////////////////////////
+
+            window.location.href =
+                "/Facturacion?fechaRegistro=" + fecha;
+        }
+
+                 function filtrarPorFechaEnvio() {
+
+            let fecha =
+                document.getElementById("filtroFechaEnvio").value;
+
+            //////////////////////////////////////////////////////
+            // LIMPIAR OTRO FILTRO
+            //////////////////////////////////////////////////////
+
+            document.getElementById("filtroFechaRegistro").value = "";
+
+            //////////////////////////////////////////////////////
+            // SI BORRÓ FECHA
+            //////////////////////////////////////////////////////
+
+            if (!fecha)
+            {
+                window.location.href = "/Facturacion";
+                return;
+            }
+
+            //////////////////////////////////////////////////////
+            // REDIRECT
+            //////////////////////////////////////////////////////
+
+            window.location.href =
+                "/Facturacion?fechaEnvio=" + fecha;
+        }
+
+                //////////////////////////////////////////////////////
+        // LIMPIAR BÚSQUEDA
+        //////////////////////////////////////////////////////
+
+        function limpiarBusqueda() {
+
+            //////////////////////////////////////////////////////
+            // LIMPIAR INPUTS
+            //////////////////////////////////////////////////////
+
+            document.getElementById("buscadorFacturas").value = "";
+
+            let fechaEnvio =
+                document.getElementById("filtroFechaEnvio");
+
+            if (fechaEnvio)
+                fechaEnvio.value = "";
+
+            let fechaRegistro =
+                document.getElementById("filtroFechaRegistro");
+
+            if (fechaRegistro)
+                fechaRegistro.value = "";
+
+            //////////////////////////////////////////////////////
+            // RECARGAR DASHBOARD
+            //////////////////////////////////////////////////////
+
+            window.location.href = "/Facturacion";
+        }
+
+
+
+
 
     </script>
 

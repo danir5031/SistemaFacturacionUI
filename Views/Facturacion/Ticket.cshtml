@@ -1,0 +1,301 @@
+﻿@model SistemaFacturacionUI.Models.Factura
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+
+    <meta charset="utf-8" />
+
+    <title>Ticket</title>
+
+    <style>
+
+            body {
+                font-family: Arial;
+                width: 300px;
+                margin: auto;
+                padding: 10px;
+                color: #000;
+            }
+
+            .center {
+                text-align: center;
+            }
+
+            .linea {
+                border-top: 1px dashed #000;
+                margin: 8px 0;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12px;
+            }
+
+            td {
+                padding: 3px 0;
+                vertical-align: top;
+            }
+
+            .total {
+                font-size: 18px;
+                font-weight: bold;
+            }
+
+            .btn {
+                margin-top: 15px;
+                width: 100%;
+                border: none;
+                background: #000;
+                color: #fff;
+                padding: 10px;
+                cursor: pointer;
+            }
+
+            @@media print {
+
+                .btn {
+                    display: none;
+                }
+
+                body {
+                    width: 100%;
+                }
+            }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- LOGO -->
+
+    <div class="center">
+        
+        <img src="~/img/loo.png"
+             width="120" />
+
+    </div>
+
+    <div class="center">
+
+        <h3 style="margin:5px 0;">
+            WATCHMAKER
+        </h3>
+
+    </div>
+
+    <div class="linea"></div>
+
+    <!-- DATOS -->
+
+    <table>
+
+        <tr>
+            <td><b>Factura:</b></td>
+            <td>@Model.NumeroFactura</td>
+        </tr>
+
+        <tr>
+            <td><b>Fecha:</b></td>
+            <td>
+                @(Model.FechaEnvio.HasValue
+        ? Model.FechaEnvio.Value.ToString(
+            "dddd, dd 'de' MMMM 'del' yyyy",
+            new System.Globalization.CultureInfo("es-ES")
+        )
+        : "-")
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Cliente:</b></td>
+            <td>@Model.NombreCliente</td>
+        </tr>
+
+        <tr>
+            <td><b>Tel:</b></td>
+            <td>@Model.Telefono</td>
+        </tr>
+
+        <tr>
+            <td><b>Pago:</b></td>
+            <td>@Model.MetodoPago</td>
+        </tr>
+
+        <tr>
+            <td><b>Horario:</b></td>
+            <td>
+                @(Model.Horario == "EXACTO"
+                    ? Model.HoraExacta
+                    : Model.Horario)
+            </td>
+        </tr>
+
+    </table>
+
+    <div class="linea"></div>
+
+    <!-- PRODUCTOS -->
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <td><b>Producto</b></td>
+
+                <td align="center"><b>Cant</b></td>
+
+                <td align="right"><b>Total</b></td>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            @foreach (var d in Model.Detalles)
+            {
+                <tr>
+
+                    <td>
+
+                        @(d.Producto != null
+                            ? d.Producto.Nombre
+                            : "Producto")
+
+                        <br />
+
+                        <small>
+
+                            $@d.Precio c/u
+
+                        </small>
+
+                    </td>
+
+                    <td align="center">
+
+                        @d.Cantidad
+
+                    </td>
+
+                    <td align="right">
+
+                        $@(d.Cantidad * d.Precio)
+
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+
+    <div class="linea"></div>
+
+    <!-- TOTALES -->
+
+    <table>
+
+        <tr>
+
+            <td>Subtotal:</td>
+
+            <td align="right">
+                $@Model.Subtotal
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>Envío:</td>
+
+            <td align="right">
+                $@Model.Envio
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>Descuento:</td>
+
+            <td align="right">
+                $@Model.Descuento
+            </td>
+
+        </tr>
+
+    </table>
+
+    <div class="linea"></div>
+
+    <div class="center total">
+
+        TOTAL: $@Model.Total
+
+    </div>
+
+    <div class="linea"></div>
+
+    <!-- DIRECCIÓN -->
+
+    <div>
+
+        <b>Dirección:</b>
+
+        <p style="font-size:12px;">
+
+            @Model.Direccion
+
+        </p>
+
+    </div>
+
+    <!-- COMENTARIO -->
+    @if (!string.IsNullOrWhiteSpace(Model.Comentario))
+    {
+        <div>
+
+            <b>Comentario:</b>
+
+            <p style="font-size:12px;">
+
+                @Model.Comentario
+
+            </p>
+
+        </div>
+    }
+
+    <div class="linea"></div>
+
+    <div class="center">
+
+        Gracias por su compra ❤️
+
+    </div>
+
+    <!-- IMPRIMIR -->
+
+    <button class="btn"
+            onclick="window.print()">
+
+        🖨 Imprimir Ticket
+
+    </button>
+
+</body>
+</html>

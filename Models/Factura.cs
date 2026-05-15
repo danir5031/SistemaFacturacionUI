@@ -16,6 +16,9 @@ namespace SistemaFacturacionUI.Models
         public int IdCliente { get; set; }
         public int IdUsuario { get; set; }
 
+        [ForeignKey("IdUsuario")]
+        public virtual Usuario Usuario { get; set; }
+
         public DateTime FechaRegistro { get; set; }
 
         public DateTime? FechaEnvio { get; set; }
@@ -61,6 +64,7 @@ namespace SistemaFacturacionUI.Models
 
         [StringLength(100)]
         public string Municipio { get; set; }
+        public bool TicketGenerado { get; set; }
 
         public virtual List<FacturaDetalle> Detalles { get; set; }
     }
