@@ -15,8 +15,9 @@
     </div>
 
     <button type="button"
-            class="btn btn-primary"
-            onclick="abrirFormulario()">
+        id="btnNuevaFactura"
+        class="btn btn-primary"
+        onclick="abrirFormulario()">
 
         + Nueva Factura
 
@@ -30,7 +31,9 @@
     <p class="text-muted">Ingresa los datos manualmente o usa lectura inteligente.</p>
 
     <!-- LECTURA INTELIGENTE -->
-    <div class="card-box mb-3" style="background:#eef2ff; border:1px solid #dbeafe;">
+    <div id="lecturaInteligente"
+     class="card-box mb-3"
+     style="background:#eef2ff; border:1px solid #dbeafe;">
 
         <label><b>⚡ Lectura Inteligente</b></label>
 
@@ -49,6 +52,21 @@
             </button>
 
         </div>
+
+    </div>
+    <!-- BUSCAR CLIENTE -->
+    <div id="buscarClienteBox" class="mt-3">
+
+        <label>Buscar Cliente Registrado</label>
+
+        <input type="text"
+               id="buscarCliente"
+               class="form-control"
+               placeholder="Buscar cliente por nombre o teléfono..."
+               onkeyup="buscarClientes(this.value)" />
+
+        <div id="resultadoClientes"
+             class="mt-2"></div>
 
     </div>
 
@@ -390,16 +408,32 @@
         </div>
 
         <!-- FECHA REGISTRO -->
-        <div style="min-width:180px;">
+        <!-- FECHA REGISTRO -->
+        <div style="min-width:380px;">
 
             <label class="mb-1 fw-semibold">
                 Fecha Registro
             </label>
 
-            <input type="date"
-                   id="filtroFechaRegistro"
-                   class="form-control"
-                   oninput="filtrarPorFechaRegistro()" />
+            <div class="d-flex gap-2">
+
+                <input type="date"
+                       id="fechaInicioRegistro"
+                       class="form-control" />
+
+                <input type="date"
+                       id="fechaFinRegistro"
+                       class="form-control" />
+
+                <button class="btn btn-primary"
+                        type="button"
+                        onclick="filtrarPorRangoRegistro()">
+
+                    🔍
+
+                </button>
+
+            </div>
 
         </div>
 
@@ -1267,20 +1301,37 @@
 
         function abrirFormulario() {
 
-            let form = document.getElementById("formFactura");
+    let form =
+        document.getElementById("formFactura");
 
-            let lista = document.getElementById("listaFacturas");
+    let lista =
+        document.getElementById("listaFacturas");
 
-            form.style.display = "block";
+    form.style.display = "block";
 
-            lista.style.display = "none";
-        }
+    lista.style.display = "none";
+
+    //////////////////////////////////////////////////////
+    // SI ES NUEVA FACTURA
+    //////////////////////////////////////////////////////
+
+    if (facturaEditando === 0)
+    {
+        document.getElementById("lecturaInteligente")
+            .style.display = "block";
+                    document.getElementById("buscarClienteBox")
+            .style.display = "block";
+
+        document.getElementById("btnNuevaFactura")
+            .style.display = "none";
+    }
+}
 
         //////////////////////////////////////////////////////
         // CANCELAR
         //////////////////////////////////////////////////////
 
-                function cancelar() {
+        function cancelar() {
 
             facturaEditando = 0;
             document.getElementById("nombreCliente").readOnly = false;
@@ -1320,6 +1371,16 @@
             //////////////////////////////////////////////////////
 
             document.getElementById("formFactura").style.display = "none";
+
+            document.getElementById("lecturaInteligente").style.display = "block";
+
+                    document.getElementById("buscarClienteBox").style.display = "block";
+
+        document.getElementById("buscarCliente").value = "";
+
+        document.getElementById("resultadoClientes").innerHTML = "";
+
+            document.getElementById("btnNuevaFactura").style.display = "inline-block";
 
             document.getElementById("listaFacturas").style.display = "block";
 
@@ -1530,6 +1591,13 @@
                 //////////////////////////////////////////////////////
 
                 facturaEditando = f.idFactura;
+                document.getElementById("lecturaInteligente")
+    .style.display = "none";
+            document.getElementById("buscarClienteBox")
+            .style.display = "none";
+
+document.getElementById("btnNuevaFactura")
+    .style.display = "none";
                 document.getElementById("nombreCliente").readOnly = true;
 
                 //////////////////////////////////////////////////////
@@ -1711,24 +1779,25 @@
         // FILTRAR POR FECHA REGISTRO
         //////////////////////////////////////////////////////
 
-                function filtrarPorFechaRegistro() {
+                     //////////////////////////////////////////////////////
+        // FILTRAR POR RANGO FECHA REGISTRO
+        //////////////////////////////////////////////////////
 
-            let fecha =
-                document.getElementById("filtroFechaRegistro").value;
+        function filtrarPorRangoRegistro() {
+
+            let inicio =
+                document.getElementById("fechaInicioRegistro").value;
+
+            let fin =
+                document.getElementById("fechaFinRegistro").value;
 
             //////////////////////////////////////////////////////
-            // LIMPIAR OTRO FILTRO
+            // VALIDAR
             //////////////////////////////////////////////////////
 
-            document.getElementById("filtroFechaEnvio").value = "";
-
-            //////////////////////////////////////////////////////
-            // SI BORRÓ FECHA
-            //////////////////////////////////////////////////////
-
-            if (!fecha)
+            if (!inicio || !fin)
             {
-                window.location.href = "/Facturacion";
+                alert("Selecciona fecha inicio y fecha fin");
                 return;
             }
 
@@ -1737,7 +1806,8 @@
             //////////////////////////////////////////////////////
 
             window.location.href =
-                "/Facturacion?fechaRegistro=" + fecha;
+                "/Facturacion?fechaInicioRegistro=" + inicio +
+                "&fechaFinRegistro=" + fin;
         }
 
                  function filtrarPorFechaEnvio() {
@@ -1798,6 +1868,413 @@
             //////////////////////////////////////////////////////
 
             window.location.href = "/Facturacion";
+        }
+        
+       //////////////////////////////////////////////////////
+// LECTURA INTELIGENTE
+//////////////////////////////////////////////////////
+
+function procesarMensaje() {
+
+    let texto =
+        document.getElementById("mensajeIA")
+        .value
+        .trim();
+
+    if (!texto)
+    {
+        alert("Pega un mensaje");
+        return;
+    }
+
+    //////////////////////////////////////////////////////
+    // NORMALIZAR
+    //////////////////////////////////////////////////////
+
+    let textoLower =
+        texto.toLowerCase();
+
+    //////////////////////////////////////////////////////
+    // FECHA
+    //////////////////////////////////////////////////////
+
+    let fechaRegex =
+        /(\d{1,2})\/(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)\/(\d{4})/i;
+
+    let fechaMatch =
+        texto.match(fechaRegex);
+
+    if (fechaMatch)
+    {
+        let dia =
+            fechaMatch[1].padStart(2, '0');
+
+        let mesTexto =
+            fechaMatch[2].toLowerCase();
+
+        let anio =
+            fechaMatch[3];
+
+        let meses = {
+            ene: "01",
+            feb: "02",
+            mar: "03",
+            abr: "04",
+            may: "05",
+            jun: "06",
+            jul: "07",
+            ago: "08",
+            sep: "09",
+            oct: "10",
+            nov: "11",
+            dic: "12"
+        };
+
+        let mes =
+            meses[mesTexto];
+
+        document.getElementById("fechaEnvio").value =
+            `${anio}-${mes}-${dia}`;
+    }
+
+    //////////////////////////////////////////////////////
+    // HORARIO
+    //////////////////////////////////////////////////////
+
+    if (textoLower.includes(" tm "))
+    {
+        document.getElementById("horario").value = "TM";
+    }
+    else if (textoLower.includes(" tt "))
+    {
+        document.getElementById("horario").value = "TT";
+    }
+    else if (textoLower.includes(" pr "))
+    {
+        document.getElementById("horario").value = "PR";
+    }
+
+    //////////////////////////////////////////////////////
+    // TELEFONOS
+    //////////////////////////////////////////////////////
+
+    let telefonos =
+        texto.match(/(\d{4}[- ]?\d{4})/g);
+
+    if (telefonos && telefonos.length > 0)
+    {
+        let telefono =
+            telefonos[0]
+            .replace("-", "")
+            .replace(" ", "");
+
+        document.getElementById("telefono").value =
+            telefono;
+    }
+
+    //////////////////////////////////////////////////////
+    // LINEAS
+    //////////////////////////////////////////////////////
+
+    let lineas =
+        texto.split("\n")
+        .map(x => x.trim())
+        .filter(x => x !== "");
+
+    //////////////////////////////////////////////////////
+    // NOMBRE
+    //////////////////////////////////////////////////////
+
+    let nombre = "";
+
+    for (let linea of lineas)
+    {
+        let l =
+            linea.toLowerCase();
+
+        //////////////////////////////////////////////////
+        // IGNORAR
+        //////////////////////////////////////////////////
+
+        if (
+            l.includes("/") ||
+            l.includes("$") ||
+            l.includes("tm") ||
+            l.includes("tt") ||
+            l.includes("pr") ||
+            /\d{4}/.test(l) ||
+            l.includes("colonia") ||
+            l.includes("calle") ||
+            l.includes("pasaje") ||
+            l.includes("casa") ||
+            l.includes("block")
+        )
+        {
+            continue;
+        }
+
+        //////////////////////////////////////////////////
+        // POSIBLE NOMBRE
+        //////////////////////////////////////////////////
+
+        if (linea.length > 3)
+        {
+            nombre = linea;
+            break;
+        }
+    }
+
+    if (nombre)
+    {
+        document.getElementById("nombreCliente").value =
+            nombre;
+    }
+
+    //////////////////////////////////////////////////////
+    // DIRECCION
+    //////////////////////////////////////////////////////
+
+    let direccion = "";
+
+    for (let linea of lineas)
+    {
+        let l =
+            linea.toLowerCase();
+
+        if (
+            l.includes("colonia") ||
+            l.includes("calle") ||
+            l.includes("pasaje") ||
+            l.includes("casa") ||
+            l.includes("block") ||
+            l.includes("avenida") ||
+            l.includes("urb")
+        )
+        {
+            direccion = linea;
+            break;
+        }
+    }
+
+    if (direccion)
+    {
+        document.getElementById("direccion").value =
+            direccion;
+    }
+
+    //////////////////////////////////////////////////////
+    // ALERTA
+    //////////////////////////////////////////////////////
+
+    alert("Datos procesados correctamente 🔥");
+}
+
+        //////////////////////////////////////////////////////
+        // BUSCAR CLIENTES
+        //////////////////////////////////////////////////////
+
+        function buscarClientes(valor) {
+
+            let contenedor =
+                document.getElementById("resultadoClientes");
+
+            contenedor.innerHTML = "";
+
+            //////////////////////////////////////////////////////
+            // VALIDAR
+            //////////////////////////////////////////////////////
+
+            if (valor.trim().length < 2)
+            {
+                return;
+            }
+
+            //////////////////////////////////////////////////////
+            // FETCH
+            //////////////////////////////////////////////////////
+
+            fetch('/Facturacion/BuscarClientes?filtro=' +
+                encodeURIComponent(valor))
+
+            .then(res => res.json())
+
+            .then(data => {
+
+                //////////////////////////////////////////////////////
+                // SIN RESULTADOS
+                //////////////////////////////////////////////////////
+
+                if (!data || data.length === 0)
+                {
+                    contenedor.innerHTML = `
+                        <div class="alert alert-warning mt-2">
+                            No se encontraron clientes
+                        </div>
+                    `;
+                    return;
+                }
+
+                //////////////////////////////////////////////////////
+                // RECORRER
+                //////////////////////////////////////////////////////
+
+                data.forEach(c => {
+
+                    contenedor.innerHTML += `
+                        <div class="card-box mb-2"
+                             style="cursor:pointer; padding:12px;"
+                             onclick="seleccionarCliente(
+                                '${(c.nombre || '').replace(/'/g, "\\'")}',
+                                '${(c.telefono || '').replace(/'/g, "\\'")}',
+                                '${(c.direccion || '').replace(/'/g, "\\'")}'
+                             )">
+
+                            <b>${c.nombre}</b>
+                            <br>
+                            <small>${c.telefono}</small>
+                            <br>
+                            <small style="color:#64748b;">
+                                ${c.direccion || ''}
+                            </small>
+
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        //////////////////////////////////////////////////////
+        // SELECCIONAR CLIENTE
+        //////////////////////////////////////////////////////
+
+        function seleccionarCliente(nombre, telefono, direccion) {
+
+            //////////////////////////////////////////////////////
+            // LLENAR CAMPOS
+            //////////////////////////////////////////////////////
+
+            document.getElementById("nombreCliente").value =
+                nombre;
+
+            document.getElementById("telefono").value =
+                telefono;
+
+            document.getElementById("direccion").value =
+                direccion;
+
+            //////////////////////////////////////////////////////
+            // LIMPIAR
+            //////////////////////////////////////////////////////
+
+            document.getElementById("buscarCliente").value =
+                nombre;
+
+            document.getElementById("resultadoClientes").innerHTML =
+                "";
+        }
+
+                //////////////////////////////////////////////////////
+        // BUSCAR CLIENTES
+        //////////////////////////////////////////////////////
+
+        function buscarClientes(valor) {
+
+            let contenedor =
+                document.getElementById("resultadoClientes");
+
+            contenedor.innerHTML = "";
+
+            //////////////////////////////////////////////////////
+            // VALIDAR
+            //////////////////////////////////////////////////////
+
+            if (valor.trim().length < 2)
+            {
+                return;
+            }
+
+            //////////////////////////////////////////////////////
+            // FETCH
+            //////////////////////////////////////////////////////
+
+            fetch('/Facturacion/BuscarClientes?filtro=' +
+                encodeURIComponent(valor))
+
+            .then(res => res.json())
+
+            .then(data => {
+
+                //////////////////////////////////////////////////////
+                // SIN RESULTADOS
+                //////////////////////////////////////////////////////
+
+                if (!data || data.length === 0)
+                {
+                    contenedor.innerHTML = `
+                        <div class="alert alert-warning mt-2">
+                            No se encontraron clientes
+                        </div>
+                    `;
+                    return;
+                }
+
+                //////////////////////////////////////////////////////
+                // RECORRER
+                //////////////////////////////////////////////////////
+
+                data.forEach(c => {
+
+                    contenedor.innerHTML += `
+                        <div class="card-box mb-2"
+                             style="cursor:pointer; padding:12px;"
+                             onclick="seleccionarCliente(
+                                '${(c.nombre || '').replace(/'/g, "\\'")}',
+                                '${(c.telefono || '').replace(/'/g, "\\'")}',
+                                '${(c.direccion || '').replace(/'/g, "\\'")}'
+                             )">
+
+                            <b>${c.nombre}</b>
+                            <br>
+                            <small>${c.telefono}</small>
+                            <br>
+                            <small style="color:#64748b;">
+                                ${c.direccion || ''}
+                            </small>
+
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        //////////////////////////////////////////////////////
+        // SELECCIONAR CLIENTE
+        //////////////////////////////////////////////////////
+
+        function seleccionarCliente(nombre, telefono, direccion) {
+
+            //////////////////////////////////////////////////////
+            // LLENAR CAMPOS
+            //////////////////////////////////////////////////////
+
+            document.getElementById("nombreCliente").value =
+                nombre;
+
+            document.getElementById("telefono").value =
+                telefono;
+
+            document.getElementById("direccion").value =
+                direccion;
+
+            //////////////////////////////////////////////////////
+            // LIMPIAR
+            //////////////////////////////////////////////////////
+
+            document.getElementById("buscarCliente").value =
+                nombre;
+
+            document.getElementById("resultadoClientes").innerHTML =
+                "";
         }
 
 

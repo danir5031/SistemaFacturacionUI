@@ -25,6 +25,8 @@ namespace SistemaFacturacionUI.Controllers
         //////////////////////////////////////////////////////
         public IActionResult Index(
     string buscar,
+    DateTime? fechaInicioRegistro,
+    DateTime? fechaFinRegistro,
     DateTime? fechaRegistro,
     DateTime? fechaEnvio)
         {
@@ -52,7 +54,8 @@ namespace SistemaFacturacionUI.Controllers
             // MOSTRAR ESA FECHA AUNQUE SEA ANTIGUA
             //////////////////////////////////////////////////////
 
-            if (!fechaRegistro.HasValue &&
+            if (!fechaInicioRegistro.HasValue &&
+    !fechaFinRegistro.HasValue &&
     !fechaEnvio.HasValue &&
     string.IsNullOrWhiteSpace(buscar))
             {
@@ -860,6 +863,56 @@ namespace SistemaFacturacionUI.Controllers
             _context.SaveChanges();
 
             return View("TicketsMasivos", facturas);
+        }
+
+        //////////////////////////////////////////////////////
+        // BUSCAR CLIENTES
+        //////////////////////////////////////////////////////
+
+        //////////////////////////////////////////////////////
+        // BUSCAR CLIENTES
+        //////////////////////////////////////////////////////
+
+        [HttpGet]
+        public JsonResult BuscarClientes(string filtro)
+        {
+            if (string.IsNullOrEmpty(filtro))
+            {
+                return Json(new List<object>());
+            }
+
+            var clientes = _context.Clientes
+
+                //////////////////////////////////////////////////////
+                // SOLO ACTIVOS
+                //////////////////////////////////////////////////////
+
+                .Where(x =>
+
+                    x.Activo == true &&
+
+                    (
+
+                        x.Nombre.Contains(filtro) ||
+
+                        x.Telefono.Contains(filtro)
+
+                    )
+                )
+
+                .Select(x => new
+                {
+                    x.Idcliente,
+                    x.Nombre,
+                    x.Telefono,
+                    x.Direccion
+                })
+
+                .Take(10)
+
+                .ToList();
+
+            return Json(clientes);
         }
 
 

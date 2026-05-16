@@ -3,95 +3,498 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<h3>Dashboard</h3>
-<p class="text-muted">Resumen general de tu negocio y reportes financieros.</p>
+<style>
 
-<div class="row mt-4">
+    .dashboard-card {
+        background: white;
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 5px 18px rgba(0,0,0,0.05);
+        transition: .25s;
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+    }
 
-    <div class="col-md-4">
-        <div class="card-box d-flex justify-content-between">
-            <div>
-                <p>Ventas Totales</p>
-                <h4>$0.00</h4>
-            </div>
-            <div class="icon" style="background:#d4f8e8;color:green">$</div>
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .dashboard-card .icon-box {
+            width: 65px;
+            height: 65px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .dashboard-card h2 {
+            font-size: 34px;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        .dashboard-card p {
+            margin: 0;
+            color: #64748b;
+            font-size: 15px;
+        }
+
+    .dashboard-title {
+        font-size: 40px;
+        font-weight: 700;
+    }
+
+    .dashboard-subtitle {
+        color: #64748b;
+        font-size: 17px;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 18px;
+        padding: 25px;
+        box-shadow: 0 5px 18px rgba(0,0,0,0.05);
+    }
+
+    .mini-text {
+        font-size: 13px;
+        color: #94a3b8;
+    }
+
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .status-box {
+        background: white;
+        padding: 20px;
+        border-radius: 18px;
+        box-shadow: 0 5px 18px rgba(0,0,0,0.05);
+        height: 100%;
+    }
+
+        .status-box h5 {
+            font-weight: 600;
+        }
+
+    .status-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+    .badge-custom {
+        padding: 7px 12px;
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+</style>
+
+<div class="top-bar">
+
+    <div>
+        <div class="dashboard-title">
+            Dashboard
+        </div>
+
+        <div class="dashboard-subtitle">
+            Resumen general de tu negocio y reportes financieros.
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card-box d-flex justify-content-between">
-            <div>
-                <p>Ganancia Neta</p>
-                <h4>$0.00</h4>
-            </div>
-            <div class="icon" style="background:#dbeafe;color:#2563eb">📈</div>
+    <div class="text-end">
+        <div class="mini-text">
+            Última actualización
         </div>
-    </div>
 
-    <div class="col-md-4">
-        <div class="card-box d-flex justify-content-between">
-            <div>
-                <p>Gastos de Envío</p>
-                <h4>$0.00</h4>
-            </div>
-            <div class="icon" style="background:#ffe8cc;color:orange">🚚</div>
-        </div>
+        <b id="fechaActual"></b>
     </div>
 
 </div>
 
-<div class="row mt-3">
+<div class="row g-4">
 
+    <!-- VENTAS -->
     <div class="col-md-4">
-        <div class="card-box d-flex justify-content-between">
-            <div>
-                <p>Costo / Reinversión</p>
-                <h4>$0.00</h4>
+
+        <div class="dashboard-card">
+
+            <div class="d-flex justify-content-between align-items-start">
+
+                <div>
+
+                    <p>Ventas Totales</p>
+
+                    <h2 id="ventasTotales">
+                        $@ViewBag.VentasTotales.ToString("N2")
+                    </h2>
+
+                    <span class="text-success">
+                        ↑ +12%
+                    </span>
+
+                </div>
+
+                <div class="icon-box"
+                     style="background:#dcfce7;color:#16a34a">
+
+                    💰
+
+                </div>
+
             </div>
-            <div class="icon" style="background:#ffd6d6;color:red">📉</div>
+
         </div>
+
     </div>
 
+    <!-- GANANCIA -->
     <div class="col-md-4">
-        <div class="card-box d-flex justify-content-between">
-            <div>
-                <p>Clientes Registrados</p>
-                <h4>2</h4>
+
+        <div class="dashboard-card">
+
+            <div class="d-flex justify-content-between align-items-start">
+
+                <div>
+
+                    <p>Ganancia Neta</p>
+
+                    <h2 id="gananciaNeta">
+                        $@ViewBag.GananciaNeta.ToString("N2")
+                    </h2>
+
+                    <span class="text-primary">
+                        ↑ +8%
+                    </span>
+
+                </div>
+
+                <div class="icon-box"
+                     style="background:#dbeafe;color:#2563eb">
+
+                    📈
+
+                </div>
+
             </div>
-            <div class="icon" style="background:#eee0ff;color:purple">👤</div>
+
         </div>
+
     </div>
 
+    <!-- ENVÍOS -->
     <div class="col-md-4">
-        <div class="card-box d-flex justify-content-between">
-            <div>
-                <p>Productos en Catálogo</p>
-                <h4>2</h4>
+
+        <div class="dashboard-card">
+
+            <div class="d-flex justify-content-between align-items-start">
+
+                <div>
+
+                    <p>Gastos de Envío</p>
+
+                    <h2 id="gastosEnvio">
+                        $@ViewBag.GastosEnvio.ToString("N2")
+                    </h2>
+
+                    <span class="text-warning">
+                        🚚 Envíos activos
+                    </span>
+
+                </div>
+
+                <div class="icon-box"
+                     style="background:#ffedd5;color:#ea580c">
+
+                    🚚
+
+                </div>
+
             </div>
-            <div class="icon" style="background:#dbeafe;color:#2563eb">📦</div>
+
         </div>
+
     </div>
 
 </div>
 
-<div class="card-box mt-4">
-    <h5>Ventas y Ganancias (Últimos 7 días)</h5>
-    <canvas id="chart"></canvas>
+<div class="row g-4 mt-1">
+
+    <!-- COSTOS -->
+    <div class="col-md-4">
+
+        <div class="dashboard-card">
+
+            <div class="d-flex justify-content-between align-items-start">
+
+                <div>
+
+                    <p>Costos / Reinversión</p>
+
+                    <h2 id="costos">
+                        $@ViewBag.CostoProductos.ToString("N2")
+                    </h2>
+
+                    <span class="text-danger">
+                        ↓ Gastos operativos
+                    </span>
+
+                </div>
+
+                <div class="icon-box"
+                     style="background:#fee2e2;color:#dc2626">
+
+                    📉
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- CLIENTES -->
+    <div class="col-md-4">
+
+        <div class="dashboard-card">
+
+            <div class="d-flex justify-content-between align-items-start">
+
+                <div>
+
+                    <p>Clientes Registrados</p>
+
+                    <h2>
+                        @ViewBag.Clientes
+                    </h2>
+
+                    <span class="text-success">
+                        Clientes activos
+                    </span>
+
+                </div>
+
+                <div class="icon-box"
+                     style="background:#f3e8ff;color:#9333ea">
+
+                    👤
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- PRODUCTOS -->
+    <div class="col-md-4">
+
+        <div class="dashboard-card">
+
+            <div class="d-flex justify-content-between align-items-start">
+
+                <div>
+
+                    <p>Productos en Catálogo</p>
+
+                    <h2>
+                        @ViewBag.Productos
+                    </h2>
+
+                    <span class="text-primary">
+                        Inventario disponible
+                    </span>
+
+                </div>
+
+                <div class="icon-box"
+                     style="background:#dbeafe;color:#2563eb">
+
+                    📦
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
-@section Scripts{
+<div class="row mt-4 g-4">
+
+    <!-- GRAFICA -->
+    <div class="col-md-8">
+
+        <div class="chart-card">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <h5 class="mb-0">
+                    Ventas y Ganancias (Últimos 7 días)
+                </h5>
+
+                <span class="badge bg-primary">
+                    Reporte semanal
+                </span>
+
+            </div>
+
+            <canvas id="chart"
+                    height="120"></canvas>
+
+        </div>
+
+    </div>
+
+    <!-- ESTADO -->
+    <div class="col-md-4">
+
+        <div class="status-box">
+
+            <h5>
+                Estado del Sistema
+            </h5>
+
+            <div class="status-item">
+
+                <span>Facturas Hoy</span>
+
+                <span class="badge-custom bg-success text-white">
+                    @ViewBag.FacturasHoy
+                </span>
+
+            </div>
+
+            <div class="status-item">
+
+                <span>Pedidos Pendientes</span>
+
+                <span class="badge-custom bg-warning text-dark">
+                    @ViewBag.Pendientes
+                </span>
+
+            </div>
+
+            <div class="status-item">
+
+                <span>Productos Bajos</span>
+
+                <span class="badge-custom bg-danger text-white">
+                    @ViewBag.ProductosBajos
+                </span>
+
+            </div>
+
+            <div class="status-item">
+
+                <span>Usuarios Activos</span>
+
+                <span class="badge-custom bg-primary text-white">
+                    @ViewBag.Usuarios
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
     <script>
+
+        //////////////////////////////////////////////////////
+        // FECHA
+        //////////////////////////////////////////////////////
+
+        document.getElementById("fechaActual").innerText =
+            new Date().toLocaleString();
+
+        //////////////////////////////////////////////////////
+        // DATA
+        //////////////////////////////////////////////////////
+
+        const labels =
+            @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.Labels));
+
+        const ventas =
+            @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.VentasSemana));
+
+        const ganancias =
+            @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.GananciasSemana));
+
+        //////////////////////////////////////////////////////
+        // CHART
+        //////////////////////////////////////////////////////
+
         const ctx = document.getElementById('chart');
 
         new Chart(ctx, {
+
             type: 'bar',
+
             data: {
-                labels: ['MA', 'MI', 'JU', 'VI', 'SA', 'DO', 'LU'],
+
+                labels: labels,
+
                 datasets: [
-                    { label: 'Ventas', data: [0, 0, 0, 0, 0, 0, 0], backgroundColor: '#3b6df6' },
-                    { label: 'Ganancias', data: [0, 0, 0, 0, 0, 0, 0], backgroundColor: '#22c55e' }
+
+                    {
+                        label: 'Ventas',
+                        data: ventas,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 10
+                    },
+
+                    {
+                        label: 'Ganancias',
+                        data: ganancias,
+                        backgroundColor: '#22c55e',
+                        borderRadius: 10
+                    }
                 ]
+            },
+
+            options: {
+
+                responsive: true,
+
+                plugins: {
+
+                    legend: {
+                        position: 'top'
+                    }
+                },
+
+                scales: {
+
+                    y: {
+                        beginAtZero: true
+                    }
+                }
             }
         });
+
     </script>
+
 }

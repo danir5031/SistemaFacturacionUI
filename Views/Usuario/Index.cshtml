@@ -1,0 +1,308 @@
+﻿@model List<SistemaFacturacionUI.Models.Usuario>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center">
+
+    <div>
+        <h3>Usuarios</h3>
+        <p class="text-muted">
+            Administración de usuarios del sistema.
+        </p>
+    </div>
+
+    <button class="btn btn-primary"
+            onclick="abrirNuevo()">
+
+        + Nuevo Usuario
+
+    </button>
+
+</div>
+
+<div class="card-box mt-3">
+
+    <table class="table">
+
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @foreach (var item in Model)
+            {
+                <tr>
+
+                    <td>@item.Nombre</td>
+
+                    <td>@item.Usuario1</td>
+
+                    <td>
+
+                        @if (item.Rol == "ADMIN")
+                        {
+                            <span class="badge bg-danger">
+                                ADMIN
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-primary">
+                                EMPLEADO
+                            </span>
+                        }
+
+                    </td>
+
+                    <td>
+                        @item.FechaRegistro.ToString("dd/MM/yyyy")
+                    </td>
+
+                    <td>
+
+                        <button class="btn btn-sm btn-warning"
+                                onclick="editar(
+                            @item.IdUsuario,
+                            '@item.Nombre',
+                            '@item.Usuario1',
+                            '@item.Password',
+                            '@item.Rol'
+                            )">
+
+                            ✏️
+
+                        </button>
+
+                        <button class="btn btn-sm btn-danger"
+                                onclick="eliminar(@item.IdUsuario)">
+
+                            🗑️
+
+                        </button>
+
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+
+</div>
+
+
+<div class="modal fade" id="usuarioModal">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 id="tituloModal">
+                    Nuevo Usuario
+                </h5>
+
+                <button class="btn-close"
+                        data-bs-dismiss="modal"></button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="idusuario" />
+
+                <input id="nombre"
+                       class="form-control mb-2"
+                       placeholder="Nombre" />
+
+                <input id="usuario"
+                       class="form-control mb-2"
+                       placeholder="Usuario" />
+
+                <input id="password"
+                       class="form-control mb-2"
+                       placeholder="Password" />
+
+                <select id="rol"
+                        class="form-control">
+
+                    <option value="EMPLEADO">
+                        EMPLEADO
+                    </option>
+
+                    <option value="ADMIN">
+                        ADMIN
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button class="btn btn-primary"
+                        onclick="guardar()">
+
+                    Guardar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    <script>
+
+        //////////////////////////////////////////////////////
+        // NUEVO
+        //////////////////////////////////////////////////////
+
+        function abrirNuevo(){
+
+            document.getElementById("idusuario").value = "";
+            document.getElementById("nombre").value = "";
+            document.getElementById("usuario").value = "";
+            document.getElementById("password").value = "";
+            document.getElementById("rol").value = "EMPLEADO";
+
+            document.getElementById("tituloModal").innerText =
+                "Nuevo Usuario";
+
+            new bootstrap.Modal(
+                document.getElementById("usuarioModal")
+            ).show();
+        }
+
+        //////////////////////////////////////////////////////
+        // EDITAR
+        //////////////////////////////////////////////////////
+
+        function editar(id,nombre,usuario,password,rol){
+
+            document.getElementById("idusuario").value = id;
+            document.getElementById("nombre").value = nombre;
+            document.getElementById("usuario").value = usuario;
+            document.getElementById("password").value = password;
+            document.getElementById("rol").value = rol;
+
+            document.getElementById("tituloModal").innerText =
+                "Editar Usuario";
+
+            new bootstrap.Modal(
+                document.getElementById("usuarioModal")
+            ).show();
+        }
+
+        //////////////////////////////////////////////////////
+        // GUARDAR
+        //////////////////////////////////////////////////////
+
+        function guardar(){
+
+            let data = {
+
+                IdUsuario:
+                    parseInt(document.getElementById("idusuario").value) || 0,
+
+                Nombre:
+                    document.getElementById("nombre").value,
+
+                Usuario1:
+                    document.getElementById("usuario").value,
+
+                Password:
+                    document.getElementById("password").value,
+
+                Rol:
+                    document.getElementById("rol").value
+            };
+
+            let url =
+                data.IdUsuario > 0
+                ? '/Usuario/Editar'
+                : '/Usuario/Crear';
+
+            fetch(url,{
+
+                method:'POST',
+
+                headers:{
+                    'Content-Type':'application/json'
+                },
+
+                body:JSON.stringify(data)
+
+            })
+
+            .then(res => res.json())
+
+            .then(r=>{
+
+                if(r === true){
+
+                    location.reload();
+                }
+                else{
+
+                    alert(r);
+                }
+            });
+        }
+
+        //////////////////////////////////////////////////////
+        // ELIMINAR
+        //////////////////////////////////////////////////////
+
+        function eliminar(id){
+
+            if(!confirm("¿Eliminar usuario?"))
+                return;
+
+            fetch('/Usuario/Eliminar?id=' + id,{
+
+                method:'POST'
+
+            })
+
+            .then(res => res.json())
+
+            .then(r=>{
+
+                if(r === true){
+
+                    location.reload();
+                }
+                else{
+
+                    alert(r);
+                }
+            });
+        }
+
+    </script>
+
+}

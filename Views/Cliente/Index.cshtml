@@ -12,7 +12,15 @@
 
     <div>
         <button class="btn btn-primary" onclick="abrirNuevo()">+ Nuevo Cliente</button>
-        <button class="btn btn-danger" onclick="eliminarSeleccionados()">🗑️</button>
+        @if (Context.Session.GetString("rol") == "ADMIN")
+        {
+            <button class="btn btn-danger"
+                    onclick="eliminarSeleccionados()">
+
+                🗑️
+
+            </button>
+        }
         @if (Context.Session.GetString("rol") == "ADMIN")
         {
             <a href="/Cliente/Eliminados" class="btn btn-outline-danger w-100 mt-2">
@@ -32,7 +40,13 @@
     <table class="table">
         <thead>
             <tr>
-                <th><input type="checkbox" onclick="seleccionarTodos(this)" /></th>
+                @if (Context.Session.GetString("rol") == "ADMIN")
+                {
+                    <th>
+                        <input type="checkbox"
+                               onclick="seleccionarTodos(this)" />
+                    </th>
+                }
                 <th>Nombre</th>
                 <th>Teléfono</th>
                 <th>Dirección</th>
@@ -45,7 +59,16 @@
             @foreach (var item in Model)
             {
                 <tr id="fila_@item.Idcliente">
-                    <td><input type="checkbox" class="checkCliente" value="@item.Idcliente" /></td>
+                    @if (Context.Session.GetString("rol") == "ADMIN")
+                    {
+                        <td>
+
+                            <input type="checkbox"
+                                   class="checkCliente"
+                                   value="@item.Idcliente" />
+
+                        </td>
+                    }
                     <td>@item.Nombre</td>
                     <td>@item.Telefono</td>
                     <td>@item.Direccion</td>
@@ -56,10 +79,16 @@
                             ✏️
                         </button>
 
-                        <button class="btn btn-sm btn-danger"
-                                onclick="confirmarEliminar(@item.Idcliente)">
-                            🗑️
-                        </button>
+                        <!-- ELIMINAR SOLO ADMIN -->
+                        @if (Context.Session.GetString("rol") == "ADMIN")
+                        {
+                            <button class="btn btn-sm btn-danger"
+                                    onclick="confirmarEliminar(@item.Idcliente)">
+
+                                🗑️
+
+                            </button>
+                        }
                     </td>
                 </tr>
             }
