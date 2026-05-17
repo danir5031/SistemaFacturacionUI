@@ -285,6 +285,20 @@
         box-shadow: 0 10px 30px rgba(0,0,0,0.45) !important;
         }
 
+        .factura-badge {
+        background: #1e293b;
+        color: #f8fafc;
+        padding: 6px 10px;
+        border-radius: 10px;
+        font-size: 11px;
+        display: inline-block;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        word-break: break-all;
+        line-height: 1.4;
+        border: 1px solid rgba(255,255,255,0.08);
+        }
+
         .sidebar {
         width: 250px;
         height: 100vh;
@@ -568,7 +582,10 @@
         let dark =
         document.body.classList.contains("dark-mode");
 
-        localStorage.setItem("darkMode", dark);
+        localStorage.setItem(
+        "darkMode_@(usuario)",
+        dark
+        );
 
         //////////////////////////////////////////////////////
         // ICONO
@@ -603,7 +620,7 @@
         window.onload = function () {
 
         let dark =
-        localStorage.getItem("darkMode");
+        localStorage.getItem("darkMode_@(usuario)");
 
         if (dark === "true")
         {

@@ -7,6 +7,9 @@
 
     var rol = Context.Session.GetString("rol");
 }
+<style>
+    
+</style>
 
 <div class="d-flex justify-content-between align-items-center">
     <div>
@@ -403,7 +406,7 @@
             <input type="date"
                    id="filtroFechaEnvio"
                    class="form-control"
-                   oninput="filtrarPorFechaEnvio()" />
+                   onchange="filtrarPorFechaEnvio()" />
 
         </div>
 
@@ -582,7 +585,7 @@
                     data-horario="@f.Horario"
                     data-pago="@f.MetodoPago"
                     data-estado="@f.Estado"
-                    data-fechaenvio="@(f.FechaEnvio.HasValue ? f.FechaEnvio.Value.ToString("yyyy-MM-dd") : "")">
+                     data-fechaenvio="@($"{f.FechaEnvio:yyyy-MM-dd}")">
                     
                     @if (rol == "ADMIN")
                     {
@@ -597,13 +600,7 @@
                     <!-- FACTURA -->
                     <td style="font-size:12px; max-width:120px;">
 
-                        <span style="
-                            background:#f1f5f9;
-                            padding:4px 8px;
-                            border-radius:8px;
-                            font-size:11px;
-                            color:#475569;
-                            display:inline-block;">
+                        <span class="factura-badge">
 
                             @f.NumeroFactura
 
@@ -1405,9 +1402,6 @@
                 .toLowerCase()
                 .trim();
 
-            let fecha =
-                document.getElementById("filtroFechaEnvio").value;
-
             let horario =
                 document.getElementById("filtroHorario").value
                 .toLowerCase();
@@ -1441,9 +1435,6 @@
                     let estadoFila =
                         (fila.dataset.estado || "").toLowerCase();
 
-                    let fechaFila =
-                        fila.dataset.fechaenvio || "";
-
                     let mostrar = true;
 
                     //////////////////////////////////////////////////////
@@ -1456,14 +1447,6 @@
                         !telefono.includes(texto) &&
                         !factura.includes(texto)
                     ) {
-                        mostrar = false;
-                    }
-
-                    //////////////////////////////////////////////////////
-                    // FECHA
-                    //////////////////////////////////////////////////////
-
-                    if (fecha && fechaFila !== fecha) {
                         mostrar = false;
                     }
 
@@ -1810,34 +1793,20 @@ document.getElementById("btnNuevaFactura")
                 "&fechaFinRegistro=" + fin;
         }
 
-                 function filtrarPorFechaEnvio() {
+        function filtrarPorFechaEnvio() {
 
-            let fecha =
-                document.getElementById("filtroFechaEnvio").value;
+    let fecha =
+        document.getElementById("filtroFechaEnvio").value;
 
-            //////////////////////////////////////////////////////
-            // LIMPIAR OTRO FILTRO
-            //////////////////////////////////////////////////////
+    if (!fecha)
+    {
+        window.location.href = "/Facturacion";
+        return;
+    }
 
-            document.getElementById("filtroFechaRegistro").value = "";
-
-            //////////////////////////////////////////////////////
-            // SI BORRÓ FECHA
-            //////////////////////////////////////////////////////
-
-            if (!fecha)
-            {
-                window.location.href = "/Facturacion";
-                return;
-            }
-
-            //////////////////////////////////////////////////////
-            // REDIRECT
-            //////////////////////////////////////////////////////
-
-            window.location.href =
-                "/Facturacion?fechaEnvio=" + fecha;
-        }
+    window.location.href =
+        "/Facturacion?fechaEnvio=" + fecha;
+}
 
                 //////////////////////////////////////////////////////
         // LIMPIAR BÚSQUEDA
@@ -1857,11 +1826,14 @@ document.getElementById("btnNuevaFactura")
             if (fechaEnvio)
                 fechaEnvio.value = "";
 
-            let fechaRegistro =
-                document.getElementById("filtroFechaRegistro");
+                    let inicio =
+            document.getElementById("fechaInicioRegistro");
 
-            if (fechaRegistro)
-                fechaRegistro.value = "";
+        let fin =
+            document.getElementById("fechaFinRegistro");
+
+        if (inicio) inicio.value = "";
+        if (fin) fin.value = "";
 
             //////////////////////////////////////////////////////
             // RECARGAR DASHBOARD

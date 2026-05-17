@@ -15,57 +15,106 @@
 
     <style>
 
+            @@page {
+                size: 80mm auto;
+                margin: 0;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html {
+                background: #fff;
+            }
+
             body {
-                font-family: Arial;
-                width: 300px;
-                margin: auto;
-                padding: 10px;
-                color: #000;
+                width: 72mm;
+                margin: 0 auto;
+                font-family: Arial,sans-serif;
+                background: #fff;
+            }
+
+            .ticket {
+                width: 72mm;
+                padding: 3mm;
             }
 
             .center {
                 text-align: center;
             }
 
+            .logo {
+                width: 95px;
+                display: block;
+                margin: auto;
+                margin-bottom: 8px;
+            }
+
+            .titulo {
+                font-size: 18px;
+                font-weight: bold;
+                margin: 5px 0;
+            }
+
             .linea {
                 border-top: 1px dashed #000;
-                margin: 8px 0;
+                margin: 5px 0;
             }
 
             table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 12px;
             }
 
             td {
-                padding: 3px 0;
+                font-size: 12px;
+                padding: 2px 0;
                 vertical-align: top;
             }
 
-            .total {
-                font-size: 18px;
-                font-weight: bold;
+            .producto {
+                width: 55%;
             }
 
-            .btn {
-                margin-top: 15px;
+            .cant {
+                width: 15%;
+                text-align: center;
+            }
+
+            .precio {
+                width: 30%;
+                text-align: right;
+            }
+
+            .total {
+                text-align: center;
+                font-size: 28px;
+                font-weight: bold;
+                margin: 10px 0;
+            }
+
+            .btn-print {
                 width: 100%;
-                border: none;
+                padding: 10px;
                 background: #000;
                 color: #fff;
-                padding: 10px;
+                border: none;
+                margin-top: 10px;
                 cursor: pointer;
             }
 
             @@media print {
 
-                .btn {
-                    display: none;
+                html,
+                body {
+                    width: 72mm;
                 }
 
-                body {
-                    width: 100%;
+                .btn-print {
+                    display: none !important;
                 }
             }
 
@@ -74,19 +123,19 @@
 </head>
 
 <body>
-
+    <div class="ticket">
     <!-- LOGO -->
 
     <div class="center">
         
         <img src="~/img/loo.png"
-             width="120" />
+             class="logo" />
 
     </div>
 
     <div class="center">
 
-        <h3 style="margin:5px 0;">
+        <h3 class="titulo">
             WATCHMAKER
         </h3>
 
@@ -151,11 +200,9 @@
 
             <tr>
 
-                <td><b>Producto</b></td>
-
-                <td align="center"><b>Cant</b></td>
-
-                <td align="right"><b>Total</b></td>
+                <td class="producto"><b>Producto</b></td>
+                <td class="cant"><b>Cant</b></td>
+                <td class="precio"><b>Total</b></td>
 
             </tr>
 
@@ -197,6 +244,7 @@
 
                 </tr>
             }
+            
 
         </tbody>
 
@@ -244,7 +292,11 @@
 
     <div class="center total">
 
-        TOTAL: $@Model.Total
+        @*TOTAL: $@Model.Total*@
+            TOTAL:
+            $@(Model.MetodoPago == "Transferencia"
+                ? "0.00"
+                : Model.Total.ToString("0.00"))
 
     </div>
 
@@ -290,12 +342,12 @@
 
     <!-- IMPRIMIR -->
 
-    <button class="btn"
+    <button class="btn-print"
             onclick="window.print()">
 
         🖨 Imprimir Ticket
 
     </button>
-
+    </div>
 </body>
 </html>

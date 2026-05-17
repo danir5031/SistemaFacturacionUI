@@ -64,44 +64,43 @@ namespace SistemaFacturacionUI.Controllers
                 query = query.Where(x =>
                     x.FechaRegistro.Date == hoy);
             }
-            else
+
+
+            //////////////////////////////////////////////////////
+            // SOLO HOY SI NO HAY FILTROS
+            //////////////////////////////////////////////////////
+
+            if (!fechaInicioRegistro.HasValue &&
+                !fechaFinRegistro.HasValue &&
+                !fechaEnvio.HasValue &&
+                string.IsNullOrWhiteSpace(buscar))
             {
-                //////////////////////////////////////////////////////
-                // FILTRO FECHA REGISTRO
-                //////////////////////////////////////////////////////
+                var hoy = DateTime.Today;
 
-                if (fechaRegistro.HasValue)
-                {
-                    var fecha = fechaRegistro.Value.Date;
-
-                    query = query.Where(x =>
-                        x.FechaRegistro.Date == fecha);
-                }
-
-                //////////////////////////////////////////////////////
-                // FILTRO FECHA ENVIO
-                //////////////////////////////////////////////////////
-
-                if (fechaEnvio.HasValue)
-                {
-                    var fecha = fechaEnvio.Value.Date;
-
-                    query = query.Where(x =>
-                        x.FechaEnvio.HasValue &&
-                        x.FechaEnvio.Value.Date == fecha);
-                }
+                query = query.Where(x =>
+                    x.FechaRegistro.Date == hoy);
             }
 
             //////////////////////////////////////////////////////
             // FILTRO FECHA REGISTRO
             //////////////////////////////////////////////////////
 
-            if (fechaRegistro.HasValue)
+            if (fechaInicioRegistro.HasValue &&
+                fechaFinRegistro.HasValue)
             {
-                var fecha = fechaRegistro.Value.Date;
+                var inicio =
+                    fechaInicioRegistro.Value.Date;
+
+                var fin =
+                    fechaFinRegistro.Value.Date.AddDays(1);
 
                 query = query.Where(x =>
-                    x.FechaRegistro.Date == fecha);
+
+                    x.FechaRegistro >= inicio &&
+
+                    x.FechaRegistro < fin
+
+                );
             }
 
             //////////////////////////////////////////////////////
@@ -110,11 +109,21 @@ namespace SistemaFacturacionUI.Controllers
 
             if (fechaEnvio.HasValue)
             {
-                var fecha = fechaEnvio.Value.Date;
+                var inicio =
+                    fechaEnvio.Value.Date;
+
+                var fin =
+                    inicio.AddDays(1);
 
                 query = query.Where(x =>
+
                     x.FechaEnvio.HasValue &&
-                    x.FechaEnvio.Value.Date == fecha);
+
+                    x.FechaEnvio.Value >= inicio &&
+
+                    x.FechaEnvio.Value < fin
+
+                );
             }
 
             //////////////////////////////////////////////////////
@@ -739,6 +748,7 @@ namespace SistemaFacturacionUI.Controllers
                 .ToList();
 
             var facturas = _context.Facturas
+                .Include(x => x.Detalles)
                 .Where(x => listaIds.Contains(x.IdFactura))
                 .ToList();
 
@@ -763,6 +773,33 @@ namespace SistemaFacturacionUI.Controllers
             ws.Cell(1, 11).Value = "Observaciones";
 
             //////////////////////////////////////////////////////
+            // ESTILO HEADER
+            //////////////////////////////////////////////////////
+
+            var headerRange =
+                ws.Range(1, 1, 1, 11);
+
+            headerRange.Style.Font.Bold = true;
+
+            headerRange.Style.Fill.BackgroundColor =
+                XLColor.Yellow;
+
+            headerRange.Style.Font.FontColor =
+                XLColor.Black;
+
+            headerRange.Style.Alignment.Horizontal =
+                XLAlignmentHorizontalValues.Center;
+
+            headerRange.Style.Alignment.Vertical =
+                XLAlignmentVerticalValues.Center;
+
+            headerRange.Style.Border.OutsideBorder =
+                XLBorderStyleValues.Thin;
+
+            headerRange.Style.Border.InsideBorder =
+                XLBorderStyleValues.Thin;
+
+            //////////////////////////////////////////////////////
             // DATA
             //////////////////////////////////////////////////////
 
@@ -770,18 +807,66 @@ namespace SistemaFacturacionUI.Controllers
 
             foreach (var f in facturas)
             {
-                ws.Cell(fila, 1).Value = f.NombreCliente;
-                ws.Cell(fila, 2).Value = f.Telefono;
-                ws.Cell(fila, 3).Value = "";
-                ws.Cell(fila, 4).Value = f.Direccion;
-                ws.Cell(fila, 5).Value = f.Municipio;
-                ws.Cell(fila, 6).Value = f.Departamento;
-                ws.Cell(fila, 7).Value = "El Salvador";
-                ws.Cell(fila, 8).Value = "JOYERIA";
-                ws.Cell(fila, 9).Value = 1;
+                ws.Cell(fila, 1).Value =
+                    f.NombreCliente;
+
+                ws.Cell(fila, 2).Value =
+                    f.Telefono;
 
                 //////////////////////////////////////////////////////
-                // COD
+                // EMAIL AUTOMATICO
+                //////////////////////////////////////////////////////
+
+                ws.Cell(fila, 3).Value =
+                    "watchmaker100@outlook.com";
+
+                ws.Cell(fila, 4).Value =
+                    f.Direccion;
+
+                ws.Cell(fila, 5).Value =
+                    f.Municipio;
+
+                ws.Cell(fila, 6).Value =
+                    f.Departamento;
+
+                ws.Cell(fila, 7).Value =
+                    "El Salvador";
+
+                //ws.Cell(fila, 8).Value =
+                   // "JOYERIA";
+
+                //////////////////////////////////////////////////////
+                // DESCRIPCION PRODUCTOS
+                //////////////////////////////////////////////////////
+
+                string descripcion = "";
+
+                foreach (var d in f.Detalles)
+                {
+                    var producto = _context.Productos
+                        .FirstOrDefault(x =>
+                            x.IdProducto == d.IdProducto);
+
+                    if (producto != null)
+                    {
+                        if (descripcion != "")
+                        {
+                            descripcion += ", ";
+                        }
+
+                        descripcion +=
+                            d.Cantidad + " " + producto.Nombre;
+                    }
+                }
+
+                ws.Cell(fila, 8).Value =
+                    descripcion;
+
+                ws.Cell(fila, 9).Value =
+                    1;
+
+                //////////////////////////////////////////////////////
+                // VALOR DECLARADO
                 //////////////////////////////////////////////////////
 
                 ws.Cell(fila, 10).Value =
@@ -789,8 +874,33 @@ namespace SistemaFacturacionUI.Controllers
                     ? f.Total
                     : 0;
 
-                ws.Cell(fila, 11).Value =
+                //////////////////////////////////////////////////////
+                // OBSERVACIONES + COMENTARIO
+                //////////////////////////////////////////////////////
+
+                string observacion =
                     "Llamar 30 min antes de la entrega";
+
+                if (!string.IsNullOrWhiteSpace(f.Comentario))
+                {
+                    observacion += " | " + f.Comentario;
+                }
+
+                ws.Cell(fila, 11).Value =
+                    observacion;
+
+                //////////////////////////////////////////////////////
+                // ESTILO FILAS
+                //////////////////////////////////////////////////////
+
+                var dataRange =
+                    ws.Range(fila, 1, fila, 11);
+
+                dataRange.Style.Border.OutsideBorder =
+                    XLBorderStyleValues.Thin;
+
+                dataRange.Style.Border.InsideBorder =
+                    XLBorderStyleValues.Thin;
 
                 //////////////////////////////////////////////////////
                 // MARCAR GENERADO
@@ -804,10 +914,22 @@ namespace SistemaFacturacionUI.Controllers
             _context.SaveChanges();
 
             //////////////////////////////////////////////////////
-            // AJUSTAR
+            // AJUSTAR COLUMNAS
             //////////////////////////////////////////////////////
 
             ws.Columns().AdjustToContents();
+
+            //////////////////////////////////////////////////////
+            // ALTO HEADER
+            //////////////////////////////////////////////////////
+
+            ws.Row(1).Height = 25;
+
+            //////////////////////////////////////////////////////
+            // CONGELAR HEADER
+            //////////////////////////////////////////////////////
+
+            ws.SheetView.FreezeRows(1);
 
             using var stream = new MemoryStream();
 

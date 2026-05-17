@@ -15,16 +15,31 @@
 
     <style>
 
-            body {
-                font-family: Arial;
+            @@page {
+                size: 80mm auto;
+                margin: 0;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html {
                 background: #fff;
             }
 
+            body {
+                width: 72mm;
+                margin: 0 auto;
+                background: #fff;
+                font-family: Arial,sans-serif;
+            }
+
             .ticket {
-                width: 300px;
-                margin: auto;
-                padding: 10px;
-                color: #000;
+                width: 72mm;
+                padding: 3mm;
                 page-break-after: always;
             }
 
@@ -32,46 +47,59 @@
                 text-align: center;
             }
 
+            .logo {
+                width: 95px;
+                display: block;
+                margin: auto;
+                margin-bottom: 8px;
+            }
+
             .linea {
                 border-top: 1px dashed #000;
-                margin: 8px 0;
+                margin: 5px 0;
             }
 
             table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 12px;
             }
 
             td {
-                padding: 3px 0;
+                font-size: 12px;
+                padding: 2px 0;
                 vertical-align: top;
             }
 
             .total {
-                font-size: 18px;
+                text-align: center;
+                font-size: 28px;
                 font-weight: bold;
+                margin: 10px 0;
             }
 
-            .btn {
-                margin: 20px auto;
-                display: block;
-                width: 300px;
-                border: none;
+            .btn-print {
+                width: 100%;
+                padding: 10px;
                 background: #000;
                 color: #fff;
-                padding: 10px;
+                border: none;
+                margin: 10px 0;
                 cursor: pointer;
             }
 
             @@media print {
 
-                .btn {
-                    display: none;
+                html,
+                body {
+                    width: 72mm;
+                }
+
+                .btn-print {
+                    display: none !important;
                 }
 
                 .ticket {
-                    width: 100%;
+                    page-break-after: always;
                 }
             }
 
@@ -81,7 +109,7 @@
 
 <body>
 
-    <button class="btn"
+    <button class="btn-print"
             onclick="window.print()">
 
         🖨 Imprimir Tickets
@@ -269,7 +297,11 @@
 
             <div class="center total">
 
-                TOTAL: $@Model.Total
+                 @*TOTAL: $@Model.Total *@
+                TOTAL:
+                $@(Model.MetodoPago == "Transferencia"
+                    ? "0.00"
+                    : Model.Total.ToString("0.00"))
 
             </div>
 
