@@ -14,81 +14,82 @@
 <a href="/Producto/Index" class="btn btn-outline-primary w-100 mb-3">
     ⬅️ Volver
 </a>
-
-<table class="table align-middle">
-    <thead>
-        <tr>
-            <th>Producto</th>
-            <th>Stock</th>
-            <th>Precio</th>
-            <th>Estado</th>
-            <th>Fecha</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-
-    <tbody id="tablaProductos">
-        @foreach (var item in Model)
-        {
-            <tr id="fila_@item.IdProducto">
-
-                <td>
-                    <div class="d-flex align-items-center gap-2">
-
-                        @if (item.Imagen != null)
-                        {
-                            <img src="/Producto/VerImagen/@item.IdProducto"
-                                 width="50"
-                                 style="border-radius:8px;" />
-                        }
-                        else if (!string.IsNullOrEmpty(item.ImagenUrl))
-                        {
-                            <img src="@item.ImagenUrl"
-                                 width="50"
-                                 style="border-radius:8px;" />
-                        }
-                        else
-                        {
-                            <img src="https://via.placeholder.com/50" />
-                        }
-
-                        <div>
-                            <b>@item.Nombre</b><br />
-                            <small>@item.Categoria</small>
-                        </div>
-                    </div>
-                </td>
-
-                <td>@item.Stock</td>
-
-                <td>$@item.PrecioVenta</td>
-
-                <td>
-                    <span class="badge @(item.Disponible ? "bg-success" : "bg-danger")">
-                        @(item.Disponible ? "Disponible" : "No disponible")
-                    </span>
-                </td>
-
-                <td>@item.FechaRegistro.ToString("dd/MM/yyyy")</td>
-
-                <td>
-                    <!-- 🔄 RESTAURAR -->
-                    <button class="btn btn-success btn-sm"
-                            onclick="restaurar(@item.IdProducto)">
-                        🔄 Restaurar
-                    </button>
-
-                    <!-- ❌ BORRAR DEFINITIVO -->
-                    <button class="btn btn-danger btn-sm"
-                            onclick="eliminarDefinitivo(@item.IdProducto)">
-                        ❌ Borrar
-                    </button>
-                </td>
-
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Stock</th>
+                <th>Precio</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+
+        <tbody id="tablaProductos">
+            @foreach (var item in Model)
+            {
+                <tr id="fila_@item.IdProducto">
+
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+
+                            @if (item.Imagen != null)
+                            {
+                                <img src="/Producto/VerImagen/@item.IdProducto"
+                                     width="50"
+                                     style="border-radius:8px;" />
+                            }
+                            else if (!string.IsNullOrEmpty(item.ImagenUrl))
+                            {
+                                <img src="@item.ImagenUrl"
+                                     width="50"
+                                     style="border-radius:8px;" />
+                            }
+                            else
+                            {
+                                <img src="https://via.placeholder.com/50" />
+                            }
+
+                            <div>
+                                <b>@item.Nombre</b><br />
+                                <small>@item.Categoria</small>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td>@item.Stock</td>
+
+                    <td>$@item.PrecioVenta</td>
+
+                    <td>
+                        <span class="badge @(item.Disponible ? "bg-success" : "bg-danger")">
+                            @(item.Disponible ? "Disponible" : "No disponible")
+                        </span>
+                    </td>
+
+                    <td>@item.FechaRegistro.ToString("dd/MM/yyyy")</td>
+
+                    <td>
+                        <!-- 🔄 RESTAURAR -->
+                        <button class="btn btn-success btn-sm"
+                                onclick="restaurar(@item.IdProducto)">
+                            🔄 Restaurar
+                        </button>
+
+                        <!-- ❌ BORRAR DEFINITIVO -->
+                        <button class="btn btn-danger btn-sm"
+                                onclick="eliminarDefinitivo(@item.IdProducto)">
+                            ❌ Borrar
+                        </button>
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
 @section Scripts {
     <script>

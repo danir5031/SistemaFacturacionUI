@@ -36,64 +36,65 @@
     <input id="buscador" class="form-control mb-3"
            placeholder="Buscar por nombre o teléfono..."
            onkeyup="buscar()" />
-
-    <table class="table">
-        <thead>
-            <tr>
-                @if (Context.Session.GetString("rol") == "ADMIN")
-                {
-                    <th>
-                        <input type="checkbox"
-                               onclick="seleccionarTodos(this)" />
-                    </th>
-                }
-                <th>Nombre</th>
-                <th>Teléfono</th>
-                <th>Dirección</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-
-        <tbody id="tablaClientes">
-            @foreach (var item in Model)
-            {
-                <tr id="fila_@item.Idcliente">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
                     @if (Context.Session.GetString("rol") == "ADMIN")
                     {
-                        <td>
-
+                        <th>
                             <input type="checkbox"
-                                   class="checkCliente"
-                                   value="@item.Idcliente" />
-
-                        </td>
+                                   onclick="seleccionarTodos(this)" />
+                        </th>
                     }
-                    <td>@item.Nombre</td>
-                    <td>@item.Telefono</td>
-                    <td>@item.Direccion</td>
-                    <td>@item.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>
-                        <button class="btn btn-sm btn-warning"
-                                onclick="editar(@item.Idcliente, '@item.Nombre', '@item.Telefono', '@item.Direccion')">
-                            ✏️
-                        </button>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                    <th>Dirección</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
 
-                        <!-- ELIMINAR SOLO ADMIN -->
+            <tbody id="tablaClientes">
+                @foreach (var item in Model)
+                {
+                    <tr id="fila_@item.Idcliente">
                         @if (Context.Session.GetString("rol") == "ADMIN")
                         {
-                            <button class="btn btn-sm btn-danger"
-                                    onclick="confirmarEliminar(@item.Idcliente)">
+                            <td>
 
-                                🗑️
+                                <input type="checkbox"
+                                       class="checkCliente"
+                                       value="@item.Idcliente" />
 
-                            </button>
+                            </td>
                         }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                        <td>@item.Nombre</td>
+                        <td>@item.Telefono</td>
+                        <td>@item.Direccion</td>
+                        <td>@item.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning"
+                                    onclick="editar(@item.Idcliente, '@item.Nombre', '@item.Telefono', '@item.Direccion')">
+                                ✏️
+                            </button>
+
+                            <!-- ELIMINAR SOLO ADMIN -->
+                            @if (Context.Session.GetString("rol") == "ADMIN")
+                            {
+                                <button class="btn btn-sm btn-danger"
+                                        onclick="confirmarEliminar(@item.Idcliente)">
+
+                                    🗑️
+
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- MODAL -->

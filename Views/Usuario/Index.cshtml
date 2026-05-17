@@ -23,81 +23,81 @@
 </div>
 
 <div class="card-box mt-3">
+    <div class="table-responsive">
+        <table class="table">
 
-    <table class="table">
-
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Usuario</th>
-                <th>Rol</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-
-        <tbody>
-
-            @foreach (var item in Model)
-            {
+            <thead>
                 <tr>
-
-                    <td>@item.Nombre</td>
-
-                    <td>@item.Usuario1</td>
-
-                    <td>
-
-                        @if (item.Rol == "ADMIN")
-                        {
-                            <span class="badge bg-danger">
-                                ADMIN
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-primary">
-                                EMPLEADO
-                            </span>
-                        }
-
-                    </td>
-
-                    <td>
-                        @item.FechaRegistro.ToString("dd/MM/yyyy")
-                    </td>
-
-                    <td>
-
-                        <button class="btn btn-sm btn-warning"
-                                onclick="editar(
-                            @item.IdUsuario,
-                            '@item.Nombre',
-                            '@item.Usuario1',
-                            '@item.Password',
-                            '@item.Rol'
-                            )">
-
-                            ✏️
-
-                        </button>
-
-                        <button class="btn btn-sm btn-danger"
-                                onclick="eliminar(@item.IdUsuario)">
-
-                            🗑️
-
-                        </button>
-
-                    </td>
-
+                    <th>Nombre</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
                 </tr>
-            }
+            </thead>
 
-        </tbody>
+            <tbody>
 
-    </table>
+                @foreach (var item in Model)
+                {
+                    <tr>
 
+                        <td>@item.Nombre</td>
+
+                        <td>@item.Usuario1</td>
+
+                        <td>
+
+                            @if (item.Rol == "ADMIN")
+                            {
+                                <span class="badge bg-danger">
+                                    ADMIN
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-primary">
+                                    EMPLEADO
+                                </span>
+                            }
+
+                        </td>
+
+                        <td>
+                            @item.FechaRegistro.ToString("dd/MM/yyyy")
+                        </td>
+
+                        <td>
+
+                            <button class="btn btn-sm btn-warning"
+                                    onclick="editar(
+                                @item.IdUsuario,
+                                '@item.Nombre',
+                                '@item.Usuario1',
+                                '@item.Password',
+                                '@item.Rol'
+                                )">
+
+                                ✏️
+
+                            </button>
+
+                            <button class="btn btn-sm btn-danger"
+                                    onclick="eliminar(@item.IdUsuario)">
+
+                                🗑️
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+    </div>
 </div>
 
 

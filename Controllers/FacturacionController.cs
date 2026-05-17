@@ -428,6 +428,8 @@ namespace SistemaFacturacionUI.Controllers
         {
             try
             {
+
+                
                 //////////////////////////////////////////////////////
                 // VALIDAR
                 //////////////////////////////////////////////////////
@@ -441,6 +443,22 @@ namespace SistemaFacturacionUI.Controllers
 
                 if (factura.Estado == "Cancelada")
                     return Json("No se puede editar una factura cancelada");
+
+                //////////////////////////////////////////////////////
+                // USUARIO ACTUAL
+                //////////////////////////////////////////////////////
+
+                var usuario =
+                    HttpContext.Session.GetString("usuario");
+
+                var userDb =
+                    _context.Usuarios
+                    .FirstOrDefault(x => x.Usuario1 == usuario);
+
+                if (userDb != null)
+                {
+                    factura.IdUsuario = userDb.IdUsuario;
+                }
 
                 //////////////////////////////////////////////////////
                 // DEVOLVER STOCK ANTERIOR
@@ -704,6 +722,95 @@ namespace SistemaFacturacionUI.Controllers
             catch (Exception ex)
             {
                 return Json(ex.Message);
+            }
+        }
+
+        //////////////////////////////////////////////////////
+        // ELIMINAR FACTURA DEFINITIVA
+        //////////////////////////////////////////////////////
+
+        [HttpPost]
+        public JsonResult EliminarFactura(int id)
+        {
+            try
+            {
+                //////////////////////////////////////////////////////
+                // SOLO ADMIN PRINCIPAL
+                //////////////////////////////////////////////////////
+
+                var usuario =
+                    HttpContext.Session.GetString("usuario");
+
+                if (usuario != "admin")
+                {
+                    return Json("No autorizado");
+                }
+
+                //////////////////////////////////////////////////////
+                // FACTURA
+                //////////////////////////////////////////////////////
+
+                var factura = _context.Facturas
+                    .Include(x => x.Detalles)
+                    .FirstOrDefault(x => x.IdFactura == id);
+
+                if (factura == null)
+                {
+                    return Json("Factura no encontrada");
+                }
+
+                //////////////////////////////////////////////////////
+                // DEVOLVER STOCK
+                //////////////////////////////////////////////////////
+
+                foreach (var d in factura.Detalles)
+                {
+                    var producto = _context.Productos
+                        .FirstOrDefault(x =>
+                            x.IdProducto == d.IdProducto);
+
+                    if (producto != null)
+                    {
+                        producto.Stock += d.Cantidad;
+
+                        //////////////////////////////////////////////////////
+                        // REACTIVAR PRODUCTO
+                        //////////////////////////////////////////////////////
+
+                        if (producto.Stock > 0)
+                        {
+                            producto.Disponible = true;
+                        }
+                    }
+                }
+
+                //////////////////////////////////////////////////////
+                // ELIMINAR DETALLES
+                //////////////////////////////////////////////////////
+
+                _context.FacturaDetalle
+                    .RemoveRange(factura.Detalles);
+
+                //////////////////////////////////////////////////////
+                // ELIMINAR FACTURA
+                //////////////////////////////////////////////////////
+
+                _context.Facturas.Remove(factura);
+
+                //////////////////////////////////////////////////////
+                // GUARDAR
+                //////////////////////////////////////////////////////
+
+                _context.SaveChanges();
+
+                return Json(true);
+            }
+            catch (Exception ex)
+            {
+                return Json(
+                    ex.InnerException?.Message ??
+                    ex.Message
+                );
             }
         }
 

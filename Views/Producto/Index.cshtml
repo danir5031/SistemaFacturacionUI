@@ -81,143 +81,144 @@
         </div>
 
     </div>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Stock</th>
+                    <th>Precio</th>
+                    <th>Estado</th>
 
-    <table class="table align-middle">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Stock</th>
-                <th>Precio</th>
-                <th>Estado</th>
+                    @if (rol == "ADMIN")
+                    {
+                        <th>Acciones</th>
+                    }
+                </tr>
+            </thead>
 
-                @if (rol == "ADMIN")
+            <tbody>
+                @foreach (var item in Model)
                 {
-                    <th>Acciones</th>
-                }
-            </tr>
-        </thead>
-
-        <tbody>
-            @foreach (var item in Model)
-            {
-                if(item.Activo) // 🔥 SOLO ACTIVOS
-                {
-                    <tr data-nombre="@item.Nombre.ToLower()"
-                        data-categoria="@item.Categoria.ToLower()"
-                        data-stock="@item.Stock"
-                        data-estado="@item.Disponible.ToString().ToLower()"
-                        data-fecha="@item.FechaRegistro.ToString("yyyy-MM-dd")">
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-
-                                @if (item.Imagen != null)
-                                {
-                                    <img src="/Producto/VerImagen/@item.IdProducto"
-                                         class="img-producto"
-                                         onclick="verImagen(this.src)" />
-                                }
-                                else if (!string.IsNullOrEmpty(item.ImagenUrl))
-                                {
-                                    <img src="@item.ImagenUrl"
-                                         class="img-producto"
-                                         onclick="verImagen(this.src)" />
-                                }
-                                else
-                                {
-                                    <img src="https://via.placeholder.com/70"
-                                         class="img-producto" />
-                                }
-
-                                <div>
-                                    <b>@item.Nombre</b><br />
-                                    <small>@item.Categoria</small>
-                                </div>
-                            </div>
-                        </td>
-
-                        <td>
-                            @{
-                                string color = "bg-success";
-
-                                if (item.Stock < 10)
-                                    color = "bg-danger";
-                                else if (item.Stock <= 20)
-                                    color = "bg-warning";
-                            }
-
-                            <span class="badge @color">
-                                @item.Stock unid.
-                            </span>
-                        </td>
-
-                        <td>
-                            <b>$@item.PrecioVenta</b><br />
-                            <small>Costo: $@item.Costo</small><br />
-
-                            @{
-                                decimal margen = 0;
-                                decimal markup = 0;
-
-                                // 🔥 MARGEN (correcto)
-                                if (item.PrecioVenta > 0)
-                                {
-                                    margen = ((item.PrecioVenta - item.Costo) / item.PrecioVenta) * 100;
-                                }
-
-                                // 🔥 MARKUP (limitado a 100%)
-                                if (item.Costo > 0)
-                                {
-                                    markup = ((item.PrecioVenta - item.Costo) / item.Costo) * 100;
-
-                                    if (markup > 100)
-                                    {
-                                        markup = 100;
-                                    }
-                                }
-                                string colorMargen = "green";
-
-                                if (margen < 30)
-                                    colorMargen = "red";
-                                else if (margen <= 60)
-                                    colorMargen = "orange";
-                            }
-
-                            
-                            <small style="color:@colorMargen; font-weight:bold;">
-                                Margen: @Math.Round(margen, 1)%
-                            
-                            </small><br />
-
-                            <small style="color:#6c757d;">
-                                Markup: @Math.Round(markup, 1)%
-                            </small>
-                        </td>
-
-                        <td>
-                            <span class="badge @(item.Disponible ? "bg-success" : "bg-danger")">
-                                @(item.Disponible ? "Disponible" : "No disponible")
-                            </span>
-                        </td>
-
-                        @if (rol == "ADMIN")
-                        {
+                    if(item.Activo) // 🔥 SOLO ACTIVOS
+                    {
+                        <tr data-nombre="@item.Nombre.ToLower()"
+                            data-categoria="@item.Categoria.ToLower()"
+                            data-stock="@item.Stock"
+                            data-estado="@item.Disponible.ToString().ToLower()"
+                            data-fecha="@item.FechaRegistro.ToString("yyyy-MM-dd")">
                             <td>
-                                <button class="btn btn-warning btn-sm"
-                                        onclick='editar(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(item)))'>
-                                    ✏️
-                                </button>
+                                <div class="d-flex align-items-center gap-2">
 
-                                <button class="btn btn-danger btn-sm"
-                                        onclick="eliminar(@item.IdProducto)">
-                                    🗑️
-                                </button>
+                                    @if (item.Imagen != null)
+                                    {
+                                        <img src="/Producto/VerImagen/@item.IdProducto"
+                                             class="img-producto"
+                                             onclick="verImagen(this.src)" />
+                                    }
+                                    else if (!string.IsNullOrEmpty(item.ImagenUrl))
+                                    {
+                                        <img src="@item.ImagenUrl"
+                                             class="img-producto"
+                                             onclick="verImagen(this.src)" />
+                                    }
+                                    else
+                                    {
+                                        <img src="https://via.placeholder.com/70"
+                                             class="img-producto" />
+                                    }
+
+                                    <div>
+                                        <b>@item.Nombre</b><br />
+                                        <small>@item.Categoria</small>
+                                    </div>
+                                </div>
                             </td>
-                        }
-                    </tr>
+
+                            <td>
+                                @{
+                                    string color = "bg-success";
+
+                                    if (item.Stock < 10)
+                                        color = "bg-danger";
+                                    else if (item.Stock <= 20)
+                                        color = "bg-warning";
+                                }
+
+                                <span class="badge @color">
+                                    @item.Stock unid.
+                                </span>
+                            </td>
+
+                            <td>
+                                <b>$@item.PrecioVenta</b><br />
+                                <small>Costo: $@item.Costo</small><br />
+
+                                @{
+                                    decimal margen = 0;
+                                    decimal markup = 0;
+
+                                    // 🔥 MARGEN (correcto)
+                                    if (item.PrecioVenta > 0)
+                                    {
+                                        margen = ((item.PrecioVenta - item.Costo) / item.PrecioVenta) * 100;
+                                    }
+
+                                    // 🔥 MARKUP (limitado a 100%)
+                                    if (item.Costo > 0)
+                                    {
+                                        markup = ((item.PrecioVenta - item.Costo) / item.Costo) * 100;
+
+                                        if (markup > 100)
+                                        {
+                                            markup = 100;
+                                        }
+                                    }
+                                    string colorMargen = "green";
+
+                                    if (margen < 30)
+                                        colorMargen = "red";
+                                    else if (margen <= 60)
+                                        colorMargen = "orange";
+                                }
+
+                            
+                                <small style="color:@colorMargen; font-weight:bold;">
+                                    Margen: @Math.Round(margen, 1)%
+                            
+                                </small><br />
+
+                                <small style="color:#6c757d;">
+                                    Markup: @Math.Round(markup, 1)%
+                                </small>
+                            </td>
+
+                            <td>
+                                <span class="badge @(item.Disponible ? "bg-success" : "bg-danger")">
+                                    @(item.Disponible ? "Disponible" : "No disponible")
+                                </span>
+                            </td>
+
+                            @if (rol == "ADMIN")
+                            {
+                                <td>
+                                    <button class="btn btn-warning btn-sm"
+                                            onclick='editar(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(item)))'>
+                                        ✏️
+                                    </button>
+
+                                    <button class="btn btn-danger btn-sm"
+                                            onclick="eliminar(@item.IdProducto)">
+                                        🗑️
+                                    </button>
+                                </td>
+                            }
+                        </tr>
+                    }
                 }
-            }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- 🔥 MODAL IMAGEN -->

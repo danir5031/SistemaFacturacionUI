@@ -215,23 +215,23 @@
                        id="buscadorProducto"
                        placeholder="Buscar producto para agregar..."
                        onkeyup="buscarProducto(this.value)" />
+                <div class="table-responsive">
+                    <table class="table mt-3">
 
-                <table class="table mt-3">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                                <th></th>
+                            </tr>
+                        </thead>
 
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>Precio</th>
-                            <th></th>
-                        </tr>
-                    </thead>
+                        <tbody id="tablaProductosFactura">
+                        </tbody>
 
-                    <tbody id="tablaProductosFactura">
-                    </tbody>
-
-                </table>
-
+                    </table>
+                </div>
             </div>
 
         </div>
@@ -530,256 +530,268 @@
 
         </div>
     }
+    <div class="table-responsive">
+        <table class="table">
 
-    <table class="table">
-
-        <thead>
-            <tr>
-                @if (rol == "ADMIN")
-                {
-                    <th style="width:50px;">
-
-                        <input type="checkbox"
-                               id="checkTodos"
-                               onclick="seleccionarTodos()" />
-
-                    </th>
-                }
-                <th>Factura</th>
-
-                <th>Cliente</th>
-                <th>Teléfono</th>
-
-                <th>Usuario</th>
-
-                <th>Fecha Envío</th>
-
-                <th>Fecha Registro</th>
-
-                <th>Horario</th>
-
-                <th>Pago</th>
-
-                <th>Estado</th>
-
-                <th>Total</th>
-                @if (rol == "ADMIN")
-                {
-                    <th style="width:50px; text-align:center;">
-                        TQ
-                    </th>
-                }
-
-                <th>Acciones</th>
-
-            </tr>
-        </thead>
-
-        <tbody>
-
-            @foreach (var f in Model)
-            {
-                <tr data-cliente="@f.NombreCliente"
-                    data-telefono="@f.Telefono"
-                    data-factura="@f.NumeroFactura"
-                    data-horario="@f.Horario"
-                    data-pago="@f.MetodoPago"
-                    data-estado="@f.Estado"
-                     data-fechaenvio="@($"{f.FechaEnvio:yyyy-MM-dd}")">
-                    
+            <thead>
+                <tr>
                     @if (rol == "ADMIN")
                     {
-                        <td>
+                        <th style="width:50px;">
 
                             <input type="checkbox"
-                                   class="checkFactura"
-                                   value="@f.IdFactura" />
+                                   id="checkTodos"
+                                   onclick="seleccionarTodos()" />
 
-                        </td>
+                        </th>
                     }
-                    <!-- FACTURA -->
-                    <td style="font-size:12px; max-width:120px;">
+                    <th>Factura</th>
 
-                        <span class="factura-badge">
+                    <th>Cliente</th>
+                    <th>Teléfono</th>
 
-                            @f.NumeroFactura
+                    <th>Usuario</th>
 
-                        </span>
+                    <th>Fecha Envío</th>
 
-                    </td>
+                    <th>Fecha Registro</th>
 
-                    <!-- CLIENTE -->
-                    <td>
+                    <th>Horario</th>
 
-                        @f.NombreCliente
+                    <th>Pago</th>
 
-                    </td>
-                    <!-- TELÉFONO -->
-                    <td>
-                        @f.Telefono
-                    </td>
+                    <th>Estado</th>
 
-                    <!-- USUARIO -->
-                    <td>
-                        @(f.Usuario != null ? f.Usuario.Usuario1 : "-")
-                    </td>
-
-                    <!-- FECHA ENVÍO -->
-                    <td>
-
-                        @(f.FechaEnvio.HasValue
-                            ? f.FechaEnvio.Value.ToString("dd/MM/yyyy")
-                            : "-")
-
-                    </td>
-
-                    <!-- FECHA REGISTRO -->
-                    <td>
-
-                        @f.FechaRegistro.ToString("dd/MM/yyyy hh:mm tt")
-
-                    </td>
-
-                    <!-- HORARIO -->
-                    <td>
-
-                        @if (f.Horario == "EXACTO")
-                        {
-                            <span>
-
-                                @f.HoraExacta
-
-                            </span>
-                        }
-                        else
-                        {
-                            @f.Horario
-                        }
-
-                    </td>
-
-                    <!-- MÉTODO PAGO -->
-                    <td>
-
-                        @if (f.MetodoPago == "Transferencia")
-                        {
-                            <span class="badge bg-primary">
-                                Transferencia
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-success">
-                                Efectivo
-                            </span>
-                        }
-
-                    </td>
-
-                    <!-- ESTADO -->
-                    <td>
-
-                        @if (f.Estado == "Cancelada")
-                        {
-                            <span class="badge bg-danger">
-                                Cancelada
-                            </span>
-                        }
-                        else if (f.Estado == "Pendiente")
-                        {
-                            <span class="badge bg-warning text-dark">
-                                Pendiente
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-success">
-                                Completada
-                            </span>
-                        }
-
-                    </td>
-
-                    <!-- TOTAL -->
-                    <td>
-
-                        $@f.Total
-
-                    </td>
+                    <th>Total</th>
                     @if (rol == "ADMIN")
                     {
-                        <td style="text-align:center;">
+                        <th style="width:50px; text-align:center;">
+                            TQ
+                        </th>
+                    }
 
-                            @if (f.TicketGenerado)
+                    <th>Acciones</th>
+
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @foreach (var f in Model)
+                {
+                    <tr data-cliente="@f.NombreCliente"
+                        data-telefono="@f.Telefono"
+                        data-factura="@f.NumeroFactura"
+                        data-horario="@f.Horario"
+                        data-pago="@f.MetodoPago"
+                        data-estado="@f.Estado"
+                         data-fechaenvio="@($"{f.FechaEnvio:yyyy-MM-dd}")">
+                    
+                        @if (rol == "ADMIN")
+                        {
+                            <td>
+
+                                <input type="checkbox"
+                                       class="checkFactura"
+                                       value="@f.IdFactura" />
+
+                            </td>
+                        }
+                        <!-- FACTURA -->
+                        <td style="font-size:12px; max-width:120px;">
+
+                            <span class="factura-badge">
+
+                                @f.NumeroFactura
+
+                            </span>
+
+                        </td>
+
+                        <!-- CLIENTE -->
+                        <td>
+
+                            @f.NombreCliente
+
+                        </td>
+                        <!-- TELÉFONO -->
+                        <td>
+                            @f.Telefono
+                        </td>
+
+                        <!-- USUARIO -->
+                        <td>
+                            @(f.Usuario != null ? f.Usuario.Usuario1 : "-")
+                        </td>
+
+                        <!-- FECHA ENVÍO -->
+                        <td>
+
+                            @(f.FechaEnvio.HasValue
+                                ? f.FechaEnvio.Value.ToString("dd/MM/yyyy")
+                                : "-")
+
+                        </td>
+
+                        <!-- FECHA REGISTRO -->
+                        <td>
+
+                            @f.FechaRegistro.ToString("dd/MM/yyyy hh:mm tt")
+
+                        </td>
+
+                        <!-- HORARIO -->
+                        <td>
+
+                            @if (f.Horario == "EXACTO")
                             {
-                                <span style="
-                                width:15px;
-                                height:15px;
-                                background:#22c55e;
-                                border-radius:50%;
-                                display:inline-block;
-                                "></span>
+                                <span>
+
+                                    @f.HoraExacta
+
+                                </span>
                             }
                             else
                             {
-                                <span style="
-                                width:15px;
-                                height:15px;
-                                background:#ef4444;
-                                border-radius:50%;
-                                display:inline-block;
-                                "></span>
+                                @f.Horario
                             }
 
                         </td>
-                    }
 
-                    <td>
+                        <!-- MÉTODO PAGO -->
+                        <td>
 
-                        <div class="d-flex gap-1 align-items-center">
-
-                            <!-- VER -->
-                            <a href="/Facturacion/Ticket/@f.IdFactura"
-                                   target="_blank"
-                                   class="btn btn-sm btn-dark">
-
-                                👁
-
-                            </a>
-
-                            <!-- EDITAR -->
-                            <button class="btn btn-sm btn-warning"
-                                    onclick="editarFactura(@f.IdFactura)">
-
-                                ✏️
-
-                            </button>
-
-                            <!-- CANCELAR -->
-                            @if (rol == "ADMIN")
+                            @if (f.MetodoPago == "Transferencia")
                             {
-                                @if (f.Estado != "Cancelada")
-                                {
-                                    <button class="btn btn-sm btn-danger"
-                                            onclick="cancelarFactura(@f.IdFactura)">
+                                <span class="badge bg-primary">
+                                    Transferencia
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">
+                                    Efectivo
+                                </span>
+                            }
 
-                                        🗑️
+                        </td>
+
+                        <!-- ESTADO -->
+                        <td>
+
+                            @if (f.Estado == "Cancelada")
+                            {
+                                <span class="badge bg-danger">
+                                    Cancelada
+                                </span>
+                            }
+                            else if (f.Estado == "Pendiente")
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    Pendiente
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">
+                                    Completada
+                                </span>
+                            }
+
+                        </td>
+
+                        <!-- TOTAL -->
+                        <td>
+
+                            $@f.Total
+
+                        </td>
+                        @if (rol == "ADMIN")
+                        {
+                            <td style="text-align:center;">
+
+                                @if (f.TicketGenerado)
+                                {
+                                    <span style="
+                                    width:15px;
+                                    height:15px;
+                                    background:#22c55e;
+                                    border-radius:50%;
+                                    display:inline-block;
+                                    "></span>
+                                }
+                                else
+                                {
+                                    <span style="
+                                    width:15px;
+                                    height:15px;
+                                    background:#ef4444;
+                                    border-radius:50%;
+                                    display:inline-block;
+                                    "></span>
+                                }
+
+                            </td>
+                        }
+
+                        <td>
+
+                            <div class="d-flex gap-1 align-items-center">
+
+                                <!-- VER -->
+                                <a href="/Facturacion/Ticket/@f.IdFactura"
+                                       target="_blank"
+                                       class="btn btn-sm btn-dark">
+
+                                    👁
+
+                                </a>
+
+                                <!-- EDITAR -->
+                                <button class="btn btn-sm btn-warning"
+                                        onclick="editarFactura(@f.IdFactura)">
+
+                                    ✏️
+
+                                </button>
+
+                                <!-- CANCELAR -->
+                                @if (rol == "ADMIN")
+                                {
+                                    @if (f.Estado != "Cancelada")
+                                    {
+                                        <button class="btn btn-sm btn-danger"
+                                                onclick="cancelarFactura(@f.IdFactura)"
+                                                title="Cancelar factura">
+
+                                            🗑️
+
+                                        </button>
+                                    }
+                                }
+
+                                @if (Context.Session.GetString("usuario") == "admin")
+                                {
+                                    <button class="btn btn-sm btn-dark"
+                                            onclick="eliminarFactura(@f.IdFactura)"
+                                            title="Eliminar definitivamente">
+
+                                        ❌
 
                                     </button>
                                 }
-                            }
 
-                        </div>
+                            </div>
 
-                    </td>
+                        </td>
 
-                </tr>
-            }
+                    </tr>
+                }
 
-        </tbody>
+            </tbody>
 
-    </table>
-
+        </table>
+    </div>
 </div>
 
 @section Scripts {
@@ -1529,6 +1541,57 @@
                 if (r === true)
                 {
                     alert("Factura cancelada correctamente");
+
+                    location.reload();
+                }
+                else
+                {
+                    alert(r);
+                }
+
+            })
+
+            .catch(error => {
+
+                console.log(error);
+
+                alert("Ocurrió un error");
+            });
+        }
+
+                //////////////////////////////////////////////////////
+        // ELIMINAR DEFINITIVAMENTE
+        //////////////////////////////////////////////////////
+
+        function eliminarFactura(id) {
+
+            //////////////////////////////////////////////////////
+            // DOBLE CONFIRMACIÓN
+            //////////////////////////////////////////////////////
+
+            if (!confirm("⚠️ Esta factura será eliminada permanentemente"))
+                return;
+
+            if (!confirm("¿Seguro? Esta acción NO se puede deshacer"))
+                return;
+
+            //////////////////////////////////////////////////////
+            // FETCH
+            //////////////////////////////////////////////////////
+
+            fetch('/Facturacion/EliminarFactura?id=' + id, {
+
+                method: 'POST'
+
+            })
+
+            .then(res => res.json())
+
+            .then(r => {
+
+                if (r === true)
+                {
+                    alert("Factura eliminada correctamente");
 
                     location.reload();
                 }

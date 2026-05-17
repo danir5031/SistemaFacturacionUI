@@ -14,6 +14,7 @@
         position: relative;
         overflow: hidden;
         height: 100%;
+        max-width: 100%;
     }
 
         .dashboard-card:hover {
@@ -100,6 +101,120 @@
         border-radius: 30px;
         font-size: 12px;
         font-weight: 600;
+    }
+
+    @@media (max-width:768px) {
+
+        .row {
+            margin: 0 !important;
+        }
+
+        .col,
+        .col-md-3,
+        .col-md-4,
+        .col-md-6,
+        .col-lg-3,
+        .col-lg-4 {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 100% !important;
+        }
+    }
+
+    /* =======================================================
+       DARK MODE DASHBOARD
+    ======================================================= */
+
+    body.dark-mode .dashboard-card,
+    body.dark-mode .chart-card,
+    body.dark-mode .status-box {
+        background: #1e293b !important;
+        border: 1px solid #334155;
+        color: white !important;
+    }
+
+        body.dark-mode .dashboard-card p,
+        body.dark-mode .dashboard-subtitle,
+        body.dark-mode .mini-text,
+        body.dark-mode .status-item span {
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .dashboard-title,
+        body.dark-mode .dashboard-card h2,
+        body.dark-mode .chart-card h5,
+        body.dark-mode .status-box h5 {
+            color: white !important;
+        }
+
+    /* =======================================================
+       CHART
+    ======================================================= */
+
+    body.dark-mode canvas {
+        background: transparent !important;
+    }
+
+    /* =======================================================
+       OVERLAY MOBILE
+    ======================================================= */
+
+    .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.5);
+        opacity: 0;
+        visibility: hidden;
+        transition: .3s;
+        z-index: 998;
+    }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+    /* =======================================================
+       MOBILE FIXES
+    ======================================================= */
+
+    @@media(max - width:768px) {
+
+        .top-bar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .dashboard-title {
+            font-size: 30px !important;
+            line-height: 1.1;
+        }
+
+        .dashboard-subtitle {
+            font-size: 15px;
+        }
+
+        .dashboard-card,
+        .chart-card,
+        .status-box {
+            padding: 18px !important;
+        }
+
+            .dashboard-card h2 {
+                font-size: 28px !important;
+                word-break: break-word;
+            }
+
+        .icon-box {
+            width: 55px !important;
+            height: 55px !important;
+            font-size: 22px !important;
+        }
+
+        .chart-card canvas {
+            max-height: 250px !important;
+        }
     }
 
 </style>
