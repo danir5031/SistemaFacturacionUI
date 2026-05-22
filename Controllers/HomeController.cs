@@ -153,6 +153,111 @@ namespace SistemaFacturacionUI.Controllers
                 .Count(x => x.Activo == true);
 
             //////////////////////////////////////////////////////
+            // HOY
+            //////////////////////////////////////////////////////
+
+            var hoy = DateTime.Today;
+
+            //////////////////////////////////////////////////////
+            // VENTAS HOY $
+            //////////////////////////////////////////////////////
+
+            decimal ventasHoyMonto =
+                _context.Facturas
+                .Where(x =>
+                    x.Estado != "Cancelada"
+                    &&
+                    x.FechaRegistro.Date == hoy)
+                .Sum(x => (decimal?)x.Total) ?? 0;
+
+            //////////////////////////////////////////////////////
+            // ENVIOS HOY $
+            //////////////////////////////////////////////////////
+
+            decimal enviosHoyMonto =
+                _context.Facturas
+                .Where(x =>
+                    x.Estado != "Cancelada"
+                    &&
+                    x.FechaRegistro.Date == hoy)
+                .Sum(x => (decimal?)x.Envio) ?? 0;
+
+            //////////////////////////////////////////////////////
+            // CANTIDAD VENTAS HOY
+            //////////////////////////////////////////////////////
+
+            int cantidadVentasHoy =
+                _context.Facturas
+                .Count(x =>
+                    x.Estado != "Cancelada"
+                    &&
+                    x.FechaRegistro.Date == hoy);
+
+            //////////////////////////////////////////////////////
+            // VENTAS EMPLEADOS
+            //////////////////////////////////////////////////////
+
+            //////////////////////////////////////////////////////
+            // VENTAS EMPLEADOS HOY
+            //////////////////////////////////////////////////////
+
+            var ventasUsuariosHoy = _context.Facturas
+
+                .Where(x =>
+                    x.Estado != "Cancelada"
+                    &&
+                    x.FechaRegistro.Date == hoy
+                    &&
+                    x.Usuario != null)
+
+                .GroupBy(x => x.Usuario.Usuario1)
+
+                .Select(g => new
+                {
+                    Usuario = g.Key,
+
+                    Ventas = g.Count(),
+
+                    Total = g.Sum(x => x.Total)
+                })
+
+                .OrderByDescending(x => x.Ventas)
+
+                .ToList();
+
+            //////////////////////////////////////////////////////
+            // VENTAS TOTALES EMPLEADOS
+            //////////////////////////////////////////////////////
+
+            var ventasUsuariosTotal = _context.Facturas
+
+                .Where(x =>
+                    x.Estado != "Cancelada"
+                    &&
+                    x.Usuario != null)
+
+                .GroupBy(x => x.Usuario.Usuario1)
+
+                .Select(g => new
+                {
+                    Usuario = g.Key,
+
+                    Ventas = g.Count(),
+
+                    Total = g.Sum(x => x.Total)
+                })
+
+                .OrderByDescending(x => x.Total)
+
+                .ToList();
+
+            ViewBag.VentasUsuariosTotal = ventasUsuariosTotal;
+
+            ViewBag.VentasUsuariosHoy = ventasUsuariosHoy;
+
+
+
+            //////////////////////////////////////////////////////
             // VIEWBAG
             //////////////////////////////////////////////////////
 
@@ -168,6 +273,18 @@ namespace SistemaFacturacionUI.Controllers
             ViewBag.Pendientes = pendientes;
             ViewBag.ProductosBajos = productosBajos;
             ViewBag.Usuarios = usuarios;
+
+            //////////////////////////////////////////////////////
+            // NUEVOS VIEWBAG
+            //////////////////////////////////////////////////////
+
+            ViewBag.VentasHoyMonto = ventasHoyMonto;
+
+            ViewBag.EnviosHoyMonto = enviosHoyMonto;
+
+            ViewBag.CantidadVentasHoy = cantidadVentasHoy;
+
+            
 
             //////////////////////////////////////////////////////
             // GRAFICA

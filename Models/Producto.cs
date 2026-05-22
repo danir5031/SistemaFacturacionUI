@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace SistemaFacturacionUI.Models
@@ -27,5 +28,7 @@ namespace SistemaFacturacionUI.Models
         public bool Disponible { get; set; }
         public bool Activo { get; set; } = true;
         public DateTime FechaRegistro { get; set; }
+        public virtual ICollection<ProductoVariante> Variantes
+        { get; set; } = new List<ProductoVariante>();
     }
 }

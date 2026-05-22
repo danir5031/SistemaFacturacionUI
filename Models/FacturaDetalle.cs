@@ -22,5 +22,8 @@ namespace SistemaFacturacionUI.Models
 
         [ForeignKey("IdProducto")]
         public virtual Producto Producto { get; set; }
+
+        public int? IdVariante { get; set; }
+        public string Variante { get; set; }
     }
 }

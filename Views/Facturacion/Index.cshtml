@@ -519,6 +519,8 @@
 
             </button>
 
+            
+
         </div>
     }
 
@@ -563,12 +565,10 @@
                     <th>Estado</th>
 
                     <th>Total</th>
-                    @if (rol == "ADMIN")
-                    {
+                    
                         <th style="width:50px; text-align:center;">
                             TQ
                         </th>
-                    }
 
                     <th>Acciones</th>
 
@@ -706,13 +706,13 @@
                             $@f.Total
 
                         </td>
-                        @if (rol == "ADMIN")
-                        {
+                        
                             <td style="text-align:center;">
 
                                 @if (f.TicketGenerado)
                                 {
-                                    <span style="
+                                    <span title="Ticket actualizado"
+                                          style="
                                     width:15px;
                                     height:15px;
                                     background:#22c55e;
@@ -732,7 +732,7 @@
                                 }
 
                             </td>
-                        }
+                        
 
                         <td>
 
@@ -792,6 +792,126 @@
 
         </table>
     </div>
+    @{
+    var totalVentas = Model
+        .Where(x => x.Estado != "Cancelada")
+        .Sum(x => x.Total);
+
+    var totalEnvios = Model
+        .Where(x => x.Estado != "Cancelada")
+        .Sum(x => x.Envio);
+
+    var totalFacturas = Model
+        .Count(x => x.Estado != "Cancelada");
+
+    var totalEfectivo = Model
+        .Where(x =>
+            x.Estado != "Cancelada" &&
+            x.MetodoPago == "Efectivo")
+        .Sum(x => x.Total);
+
+    var totalTransferencia = Model
+        .Where(x =>
+            x.Estado != "Cancelada" &&
+            x.MetodoPago == "Transferencia")
+        .Sum(x => x.Total);
+}
+    @if (rol == "ADMIN")
+    {
+        <div class="row mt-3 g-2">
+
+            <!-- FACTURAS -->
+            <div class="col">
+                <div class="card-box mini-resumen-card py-2 px-2 text-center">
+
+                    <small class="d-block">
+                        Facturas
+                    </small>
+
+                    <b>
+                        @totalFacturas
+                    </b>
+
+                </div>
+            </div>
+
+            <!-- VENTAS -->
+            <div class="col">
+                <div class="card-box mini-resumen-card py-2 px-2 text-center">
+
+                    <small class="d-block">
+                        Ventas
+                    </small>
+
+                    <b class="text-success">
+                        $@totalVentas.ToString("0.00")
+                    </b>
+
+                </div>
+            </div>
+
+            <!-- EFECTIVO -->
+            <div class="col">
+                <div class="card-box mini-resumen-card py-2 px-2 text-center">
+
+                    <small class="d-block">
+                        Efectivo
+                    </small>
+
+                    <b class="text-success">
+                        $@totalEfectivo.ToString("0.00")
+                    </b>
+
+                </div>
+            </div>
+
+            <!-- TRANSFERENCIA -->
+            <div class="col">
+                <div class="card-box mini-resumen-card py-2 px-2 text-center">
+
+                    <small class="d-block">
+                        Transferencia
+                    </small>
+
+                    <b class="text-info">
+                        $@totalTransferencia.ToString("0.00")
+                    </b>
+
+                </div>
+            </div>
+
+            <!-- ENVIOS -->
+            <div class="col">
+                <div class="card-box mini-resumen-card py-2 px-2 text-center">
+
+                    <small class="d-block">
+                        Envíos
+                    </small>
+
+                    <b class="text-primary">
+                        $@totalEnvios.ToString("0.00")
+                    </b>
+
+                </div>
+            </div>
+
+            <!-- CANCELADOS -->
+            <div class="col">
+                <div class="card-box mini-resumen-card py-2 px-2 text-center">
+
+                    <small class="d-block">
+                        Cancelados
+                    </small>
+
+                    <b class="text-danger">
+                        @Model.Count(x => x.Estado == "Cancelada")
+                    </b>
+
+                </div>
+            </div>
+
+        </div>
+    }
 </div>
 
 @section Scripts {
@@ -865,13 +985,19 @@
                     tabla.innerHTML += `
                     <tr class="busqueda"
                         style="cursor:pointer; background:#f8fafc;"
-                        onclick="agregarProducto(
-                            ${p.idProducto},
-                            '${p.nombre.replace(/'/g, "\\'")}',
-                            ${p.precioVenta},
-                            '${p.imagenUrl || ''}',
-                            ${p.stock}
-                        )">
+                                        onclick="agregarProducto(
+            ${p.idProducto},
+            '${p.nombre.replace(/'/g, "\\'")}',
+            ${p.precioVenta},
+            '${p.imagenUrl || ''}',
+            ${p.stock},
+            ${p.idVariante || 0},
+                    '${(
+            p.esVariante
+            ? p.nombre.replace(/^.*? - /, '')
+            : ''
+        ).replace(/'/g, "\\'")}'
+        )">
 
                         <td colspan="4">
 
@@ -914,10 +1040,18 @@
         // AGREGAR PRODUCTO
         //////////////////////////////////////////////////////
 
-                function agregarProducto(id, nombre, precio, imagen, stock) {
+                function agregarProducto(
+            id,
+            nombre,
+            precio,
+            imagen,
+            stock,
+            idVariante = 0,
+            variante = ""
+        ) {
 
             //////////////////////////////////////////////////////
-            // LIMPIAR BÚSQUEDA
+            // LIMPIAR
             //////////////////////////////////////////////////////
 
             document.querySelectorAll(".busqueda")
@@ -929,7 +1063,9 @@
             // VALIDAR EXISTE
             //////////////////////////////////////////////////////
 
-            let inputExistente = document.querySelector(`.cantidad[data-id="${id}"]`);
+            let inputExistente = document.querySelector(
+                `.cantidad[data-id="${id}"][data-variante="${idVariante}"]`
+            );
 
             if (inputExistente)
             {
@@ -950,22 +1086,42 @@
             }
 
             //////////////////////////////////////////////////////
-            // AGREGAR FILA
+            // ID ÚNICO
             //////////////////////////////////////////////////////
 
-            let tabla = document.getElementById("tablaProductosFactura");
+            let filaId =
+                "fila_" + id + "_" + idVariante;
+
+            //////////////////////////////////////////////////////
+            // TABLA
+            //////////////////////////////////////////////////////
+
+            let tabla =
+                document.getElementById("tablaProductosFactura");
+
+            //////////////////////////////////////////////////////
+            // HTML
+            //////////////////////////////////////////////////////
 
             tabla.innerHTML += `
-            <tr id="fila_${id}">
+
+            <tr id="${filaId}">
 
                 <td>
 
                     <div class="d-flex align-items-center gap-2">
 
-                        <img src="${imagen && imagen !== '' ? imagen : '/Producto/VerImagen/' + id}"
-                             width="40"
-                             height="40"
-                             style="border-radius:8px; object-fit:cover;">
+                        <img src="${
+                            imagen && imagen !== ''
+                            ? imagen
+                            : '/Producto/VerImagen/' + id
+                        }"
+                        width="40"
+                        height="40"
+                        style="
+                            border-radius:8px;
+                            object-fit:cover;
+                        ">
 
                         <div>
 
@@ -989,10 +1145,19 @@
                            value="1"
                            min="1"
                            max="${stock}"
+
                            class="form-control cantidad"
+
                            data-id="${id}"
+
+                           data-variante="${idVariante}"
+
+                           data-nombrevariante="${variante}"
+
                            data-precio="${precio}"
+
                            style="width:80px;"
+
                            oninput="validarCantidad(this, ${stock})">
 
                 </td>
@@ -1007,7 +1172,7 @@
 
                     <button type="button"
                             class="btn btn-sm btn-danger"
-                            onclick="eliminarProducto(${id})">
+                            onclick="eliminarProducto('${filaId}')">
 
                         X
 
@@ -1044,23 +1209,15 @@
         // ELIMINAR PRODUCTO
         //////////////////////////////////////////////////////
 
-                function eliminarProducto(id) {
+                 function eliminarProducto(idFila) {
 
-            let fila = document.getElementById("fila_" + id);
+            let fila =
+                document.getElementById(idFila);
 
             if (fila)
             {
                 fila.remove();
             }
-
-            //////////////////////////////////////////////////////
-            // LIMPIAR BÚSQUEDA BUG
-            //////////////////////////////////////////////////////
-
-            document.querySelectorAll(".busqueda")
-                .forEach(x => x.remove());
-
-            document.getElementById("buscadorProducto").value = "";
 
             actualizarSubtotal();
         }
@@ -1186,15 +1343,19 @@
 
             document.querySelectorAll(".cantidad").forEach(input => {
 
-                detalles.push({
+                        detalles.push({
 
-                    IdProducto: parseInt(input.dataset.id),
+            IdProducto: parseInt(input.dataset.id),
 
-                    Cantidad: parseInt(input.value),
+            IdVariante: parseInt(input.dataset.variante) || null,
 
-                    Precio: parseFloat(input.dataset.precio)
+            Variante: input.dataset.nombrevariante || "",
 
-                });
+            Cantidad: parseInt(input.value),
+
+            Precio: parseFloat(input.dataset.precio)
+
+        });
 
             });
 
@@ -1712,13 +1873,15 @@ document.getElementById("btnNuevaFactura")
 
                 f.detalles.forEach(d => {
 
-                    agregarProducto(
-                        d.idProducto,
-                        d.nombre,
-                        d.precio,
-                        d.imagen,
-                        d.stock + d.cantidad
-                    );
+                            agregarProducto(
+            d.idProducto,
+            d.nombre,
+            d.precio,
+            d.imagen,
+            d.stock + d.cantidad,
+            d.idVariante || 0,
+            d.variante || ""
+        );
 
                     //////////////////////////////////////////////////////
                     // COLOCAR CANTIDAD REAL

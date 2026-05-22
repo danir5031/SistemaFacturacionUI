@@ -28,7 +28,9 @@ namespace SistemaFacturacionUI.Controllers
     DateTime? fechaInicioRegistro,
     DateTime? fechaFinRegistro,
     DateTime? fechaRegistro,
-    DateTime? fechaEnvio)
+    DateTime? fechaEnvio,
+    bool mostrarTodas = false,
+    int pagina = 1)
         {
             var rol = HttpContext.Session.GetString("rol");
 
@@ -169,27 +171,85 @@ namespace SistemaFacturacionUI.Controllers
                 if (string.IsNullOrWhiteSpace(filtro))
                     return Json(new List<object>());
 
+                //////////////////////////////////////////////////////
+                // PRODUCTOS
+                //////////////////////////////////////////////////////
+
                 var productos = _context.Productos
+                    .Include(x => x.Variantes)
                     .Where(x =>
                         x.Activo &&
                         x.Disponible &&
                         x.Stock > 0 &&
-                        (
-                            x.Nombre.Contains(filtro)
-                        )
+                        x.Nombre.Contains(filtro)
                     )
-                    .Select(x => new
-                    {
-                        idProducto = x.IdProducto,
-                        nombre = x.Nombre,
-                        precioVenta = x.PrecioVenta,
-                        imagenUrl = x.ImagenUrl,
-                        stock = x.Stock
-                    })
-                    .Take(10)
                     .ToList();
 
-                return Json(productos);
+                //////////////////////////////////////////////////////
+                // RESULTADO
+                //////////////////////////////////////////////////////
+
+                var resultado = productos.SelectMany(p =>
+
+                    //////////////////////////////////////////////////////
+                    // SI TIENE VARIANTES
+                    //////////////////////////////////////////////////////
+
+                    p.Variantes != null && p.Variantes.Any()
+
+                    ?
+
+                    p.Variantes
+                    .Where(v => v.Activo && v.Stock > 0)
+                    .Select(v => new
+                    {
+                        idProducto = p.IdProducto,
+
+                        nombre =
+                            p.Nombre + " - " + v.NombreVariante,
+
+                        precioVenta = p.PrecioVenta,
+
+                        imagenUrl = p.ImagenUrl,
+
+                        stock = v.Stock,
+
+                        idVariante = v.IdVariante,
+
+                        esVariante = true
+                    })
+
+                    :
+
+                    //////////////////////////////////////////////////////
+                    // PRODUCTO NORMAL
+                    //////////////////////////////////////////////////////
+
+                    new[]
+                    {
+                new
+                {
+                    idProducto = p.IdProducto,
+
+                    nombre = p.Nombre,
+
+                    precioVenta = p.PrecioVenta,
+
+                    imagenUrl = p.ImagenUrl,
+
+                    stock = p.Stock,
+
+                    idVariante = 0,
+
+                    esVariante = false
+                }
+                    }
+
+                )
+                .Take(10)
+                .ToList();
+
+                return Json(resultado);
             }
             catch (Exception ex)
             {
@@ -369,9 +429,7 @@ namespace SistemaFacturacionUI.Controllers
 
                     if (producto.Stock < d.Cantidad)
                     {
-                        return Json(
-                            $"Stock insuficiente para {producto.Nombre}"
-                        );
+                        
                     }
 
                     //////////////////////////////////////////////////////
@@ -384,6 +442,10 @@ namespace SistemaFacturacionUI.Controllers
 
                         IdProducto = d.IdProducto,
 
+                        IdVariante = d.IdVariante,
+
+                        Variante = d.Variante,
+
                         Cantidad = d.Cantidad,
 
                         Precio = d.Precio
@@ -391,15 +453,90 @@ namespace SistemaFacturacionUI.Controllers
 
                     _context.FacturaDetalle.Add(detalle);
 
+                    
+
+                    //////////////////////////////////////////////////////
+                    // DESCONTAR TOTAL PRODUCTO
+                    //////////////////////////////////////////////////////
+
                     //////////////////////////////////////////////////////
                     // DESCONTAR STOCK
                     //////////////////////////////////////////////////////
 
-                    producto.Stock -= d.Cantidad;
+                    if (d.IdVariante.HasValue &&
+                        d.IdVariante > 0)
+                    {
+                        var variante = _context.ProductoVariantes
+                            .FirstOrDefault(x =>
+                                x.IdVariante == d.IdVariante);
+
+                        if (variante != null)
+                        {
+                            //////////////////////////////////////////////////////
+                            // VALIDAR STOCK
+                            //////////////////////////////////////////////////////
+
+                            if (variante.Stock < d.Cantidad)
+                            {
+                                return Json(
+                                    $"Stock insuficiente para {variante.NombreVariante}"
+                                );
+                            }
+
+                            //////////////////////////////////////////////////////
+                            // DESCONTAR VARIANTE
+                            //////////////////////////////////////////////////////
+
+                            variante.Stock -= d.Cantidad;
+
+                            if (variante.Stock < 0)
+                                variante.Stock = 0;
+
+                            //////////////////////////////////////////////////////
+                            // RECALCULAR STOCK TOTAL
+                            //////////////////////////////////////////////////////
+
+                            producto.Stock = _context.ProductoVariantes
+    .AsEnumerable()
+    .Where(x =>
+        x.IdProducto == producto.IdProducto &&
+        x.Activo)
+    .Sum(x => x.Stock);
+
+                            //////////////////////////////////////////////////////
+                            // DISPONIBLE
+                            //////////////////////////////////////////////////////
+
+                            producto.Disponible =
+                                producto.Stock > 0;
+                        }
+                    }
+                    else
+                    {
+                        //////////////////////////////////////////////////////
+                        // PRODUCTO NORMAL
+                        //////////////////////////////////////////////////////
+
+                        if (producto.Stock < d.Cantidad)
+                        {
+                            return Json(
+                                $"Stock insuficiente para {producto.Nombre}"
+                            );
+                        }
+
+                        producto.Stock -= d.Cantidad;
+
+                        if (producto.Stock < 0)
+                            producto.Stock = 0;
+
+                        producto.Disponible =
+                            producto.Stock > 0;
+                    }
 
                     if (producto.Stock <= 0)
                     {
                         producto.Stock = 0;
+
                         producto.Disponible = false;
                     }
                 }
@@ -436,6 +573,7 @@ namespace SistemaFacturacionUI.Controllers
 
                 var factura = _context.Facturas
                     .Include(x => x.Detalles)
+
                     .FirstOrDefault(x => x.IdFactura == data.IdFactura);
 
                 if (factura == null)
@@ -443,6 +581,8 @@ namespace SistemaFacturacionUI.Controllers
 
                 if (factura.Estado == "Cancelada")
                     return Json("No se puede editar una factura cancelada");
+
+                
 
                 //////////////////////////////////////////////////////
                 // USUARIO ACTUAL
@@ -469,13 +609,81 @@ namespace SistemaFacturacionUI.Controllers
                     var producto = _context.Productos
                         .FirstOrDefault(x => x.IdProducto == d.IdProducto);
 
-                    if (producto != null)
-                    {
-                        producto.Stock += d.Cantidad;
+                    //////////////////////////////////////////////////////
+                    // SI ES VARIANTE
+                    //////////////////////////////////////////////////////
 
-                        if (producto.Stock > 0)
+                    if (d.IdVariante.HasValue &&
+                        d.IdVariante > 0)
+                    {
+                        var variante = _context.ProductoVariantes
+                            .FirstOrDefault(x =>
+                                x.IdVariante == d.IdVariante);
+
+                        if (variante != null)
                         {
-                            producto.Disponible = true;
+                            //////////////////////////////////////////////////////
+                            // DEVOLVER STOCK VARIANTE
+                            //////////////////////////////////////////////////////
+
+                            variante.Stock += d.Cantidad;
+
+                            //////////////////////////////////////////////////////
+                            // RECALCULAR STOCK TOTAL
+                            //////////////////////////////////////////////////////
+
+                            if (producto != null)
+                            {
+                                producto.Stock = _context.ProductoVariantes
+    .AsEnumerable()
+    .Where(x =>
+        x.IdProducto == producto.IdProducto &&
+        x.Activo)
+    .Sum(x => x.Stock);
+
+                                producto.Disponible =
+                                    producto.Stock > 0;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //////////////////////////////////////////////////////
+                        // PRODUCTO NORMAL
+                        //////////////////////////////////////////////////////
+
+                        if (producto != null)
+                        {
+                            if (d.IdVariante.HasValue &&
+    d.IdVariante > 0)
+                            {
+                                var variante = _context.ProductoVariantes
+                                    .FirstOrDefault(x =>
+                                        x.IdVariante == d.IdVariante);
+
+                                if (variante != null)
+                                {
+                                    variante.Stock += d.Cantidad;
+                                }
+
+                                //////////////////////////////////////////////////////
+                                // RECALCULAR STOCK TOTAL
+                                //////////////////////////////////////////////////////
+
+                                producto.Stock = _context.ProductoVariantes
+    .AsEnumerable()
+    .Where(x =>
+        x.IdProducto == producto.IdProducto &&
+        x.Activo)
+    .Sum(x => x.Stock);
+                            }
+                            else
+                            {
+                                producto.Stock += d.Cantidad;
+                            }
+
+                            producto.Disponible =
+                                producto.Stock > 0;
                         }
                     }
                 }
@@ -515,6 +723,7 @@ namespace SistemaFacturacionUI.Controllers
                 factura.Total = data.Total;
 
                 factura.MetodoPago = data.MetodoPago ?? "Efectivo";
+                factura.TicketGenerado = false;
 
                 //////////////////////////////////////////////////////
                 // NUEVOS DETALLES
@@ -544,8 +753,15 @@ namespace SistemaFacturacionUI.Controllers
                     var detalle = new FacturaDetalle
                     {
                         IdFactura = factura.IdFactura,
+
                         IdProducto = d.IdProducto,
+
+                        IdVariante = d.IdVariante,
+
+                        Variante = d.Variante,
+
                         Cantidad = d.Cantidad,
+
                         Precio = d.Precio
                     };
 
@@ -555,12 +771,67 @@ namespace SistemaFacturacionUI.Controllers
                     // DESCONTAR STOCK
                     //////////////////////////////////////////////////////
 
-                    producto.Stock -= d.Cantidad;
+                    //////////////////////////////////////////////////////
+                    // DESCONTAR STOCK
+                    //////////////////////////////////////////////////////
 
-                    if (producto.Stock <= 0)
+                    if (d.IdVariante.HasValue &&
+                        d.IdVariante > 0)
                     {
-                        producto.Stock = 0;
-                        producto.Disponible = false;
+                        var variante = _context.ProductoVariantes
+                            .FirstOrDefault(x =>
+                                x.IdVariante == d.IdVariante);
+
+                        if (variante != null)
+                        {
+                            //////////////////////////////////////////////////////
+                            // VALIDAR STOCK
+                            //////////////////////////////////////////////////////
+
+                            if (variante.Stock < d.Cantidad)
+                            {
+                                return Json(
+                                    $"Stock insuficiente para {variante.NombreVariante}"
+                                );
+                            }
+
+                            //////////////////////////////////////////////////////
+                            // DESCONTAR VARIANTE
+                            //////////////////////////////////////////////////////
+
+                            variante.Stock -= d.Cantidad;
+
+                            if (variante.Stock < 0)
+                                variante.Stock = 0;
+
+                            //////////////////////////////////////////////////////
+                            // RECALCULAR STOCK TOTAL
+                            //////////////////////////////////////////////////////
+
+                            producto.Stock = _context.ProductoVariantes
+    .AsEnumerable()
+    .Where(x =>
+        x.IdProducto == producto.IdProducto &&
+        x.Activo)
+    .Sum(x => x.Stock);
+
+                            producto.Disponible =
+                                producto.Stock > 0;
+                        }
+                    }
+                    else
+                    {
+                        //////////////////////////////////////////////////////
+                        // PRODUCTO NORMAL
+                        //////////////////////////////////////////////////////
+
+                        producto.Stock -= d.Cantidad;
+
+                        if (producto.Stock < 0)
+                            producto.Stock = 0;
+
+                        producto.Disponible =
+                            producto.Stock > 0;
                     }
                 }
 
@@ -620,18 +891,41 @@ namespace SistemaFacturacionUI.Controllers
                     var producto = _context.Productos
                         .FirstOrDefault(x => x.IdProducto == d.IdProducto);
 
+                    //////////////////////////////////////////////////////
+                    // DEVOLVER VARIANTE
+                    //////////////////////////////////////////////////////
+
+                    if (d.IdVariante.HasValue)
+                    {
+                        var variante = _context.ProductoVariantes
+                            .FirstOrDefault(x =>
+                                x.IdVariante == d.IdVariante);
+
+                        if (variante != null)
+                        {
+                            variante.Stock += d.Cantidad;
+                        }
+                    }
+
                     if (producto != null)
                     {
-                        producto.Stock += d.Cantidad;
-
                         //////////////////////////////////////////////////////
-                        // REACTIVAR
+                        // RECALCULAR STOCK TOTAL
                         //////////////////////////////////////////////////////
 
-                        if (producto.Stock > 0)
-                        {
-                            producto.Disponible = true;
-                        }
+                        producto.Stock = _context.ProductoVariantes
+    .AsEnumerable()
+    .Where(x =>
+        x.IdProducto == producto.IdProducto &&
+        x.Activo)
+    .Sum(x => x.Stock);
+
+                        //////////////////////////////////////////////////////
+                        // DISPONIBLE
+                        //////////////////////////////////////////////////////
+
+                        producto.Disponible =
+                            producto.Stock > 0;
                     }
                 }
 
@@ -662,6 +956,7 @@ namespace SistemaFacturacionUI.Controllers
             {
                 var factura = _context.Facturas
                     .Include(x => x.Detalles)
+                    .Include(x => x.Usuario)
                     .FirstOrDefault(x => x.IdFactura == id);
 
                 if (factura == null)
@@ -688,11 +983,42 @@ namespace SistemaFacturacionUI.Controllers
                     return new
                     {
                         idProducto = d.IdProducto,
-                        nombre = producto != null ? producto.Nombre : "",
+
+                        idVariante = d.IdVariante,
+
+                        variante = d.Variante,
+
+                        nombre = producto != null
+    ? (
+        !string.IsNullOrEmpty(d.Variante)
+        ? producto.Nombre + " - " + d.Variante
+        : producto.Nombre
+      )
+    : "",
+
                         cantidad = d.Cantidad,
+
                         precio = d.Precio,
-                        imagen = producto != null ? producto.ImagenUrl : "",
-                        stock = producto != null ? producto.Stock : 0
+
+                        imagen = producto != null
+                            ? producto.ImagenUrl
+                            : "",
+
+                        stock =
+    d.IdVariante.HasValue && d.IdVariante > 0
+
+    ?
+
+    _context.ProductoVariantes
+        .Where(x => x.IdVariante == d.IdVariante)
+        .Select(x => x.Stock)
+        .FirstOrDefault()
+
+    :
+
+    (producto != null
+        ? producto.Stock
+        : 0)
                     };
 
                 }).ToList();
@@ -771,7 +1097,33 @@ namespace SistemaFacturacionUI.Controllers
 
                     if (producto != null)
                     {
-                        producto.Stock += d.Cantidad;
+                        if (d.IdVariante.HasValue &&
+    d.IdVariante > 0)
+                        {
+                            var variante = _context.ProductoVariantes
+                                .FirstOrDefault(x =>
+                                    x.IdVariante == d.IdVariante);
+
+                            if (variante != null)
+                            {
+                                variante.Stock += d.Cantidad;
+                            }
+
+                            //////////////////////////////////////////////////////
+                            // RECALCULAR STOCK TOTAL
+                            //////////////////////////////////////////////////////
+
+                            producto.Stock = _context.ProductoVariantes
+    .AsEnumerable()
+    .Where(x =>
+        x.IdProducto == producto.IdProducto &&
+        x.Activo)
+    .Sum(x => x.Stock);
+                        }
+                        else
+                        {
+                            producto.Stock += d.Cantidad;
+                        }
 
                         //////////////////////////////////////////////////////
                         // REACTIVAR PRODUCTO
@@ -824,6 +1176,7 @@ namespace SistemaFacturacionUI.Controllers
         {
             var factura = _context.Facturas
                 .Include(x => x.Detalles)
+                .Include(x => x.Usuario)
                 .FirstOrDefault(x => x.IdFactura == id);
 
             if (factura == null)
@@ -1063,6 +1416,7 @@ namespace SistemaFacturacionUI.Controllers
 
             var facturas = _context.Facturas
                 .Include(x => x.Detalles)
+                .Include(x => x.Usuario)
                 .ToList();
 
             facturas = facturas
@@ -1202,6 +1556,10 @@ namespace SistemaFacturacionUI.Controllers
         public int Cantidad { get; set; }
 
         public decimal Precio { get; set; }
+
+        public int? IdVariante { get; set; }
+
+        public string Variante { get; set; }
     }
 
 

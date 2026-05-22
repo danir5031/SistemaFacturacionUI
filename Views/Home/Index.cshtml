@@ -5,6 +5,19 @@
 
 <style>
 
+    .chart-wrapper {
+        position: relative;
+        width: 100%;
+        height: 420px;
+    }
+
+    @@media(max - width:768px) {
+
+        .chart-wrapper {
+            height: 320px;
+        }
+    }
+
     .dashboard-card {
         background: white;
         border-radius: 18px;
@@ -243,6 +256,103 @@
 
 <div class="row g-4">
 
+    <div class="col-md-4">
+
+        <div class="dashboard-card">
+
+            <div class="d-flex justify-content-between align-items-start">
+
+                <div>
+
+                    <p>Ventas del Día</p>
+
+                    <h2>
+                        $@ViewBag.VentasHoyMonto.ToString("N2")
+                    </h2>
+
+                    <span class="text-success">
+                        💵 Hoy
+                    </span>
+
+                </div>
+
+                <div class="icon-box"
+                     style="background:#dcfce7;color:#16a34a">
+
+                    🟢
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    <div class="col-md-4">
+
+        <div class="dashboard-card">
+
+            <div class="d-flex justify-content-between align-items-start">
+
+                <div>
+
+                    <p>Envíos del Día</p>
+
+                    <h2>
+                        $@ViewBag.EnviosHoyMonto.ToString("N2")
+                    </h2>
+
+                    <span class="text-warning">
+                        🚚 Hoy
+                    </span>
+
+                </div>
+
+                <div class="icon-box"
+                     style="background:#ffedd5;color:#ea580c">
+
+                    🚚
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-4">
+
+        <div class="dashboard-card">
+
+            <div class="d-flex justify-content-between align-items-start">
+
+                <div>
+
+                    <p>Ventas Realizadas Hoy</p>
+
+                    <h2>
+                        @ViewBag.CantidadVentasHoy
+                    </h2>
+
+                    <span class="text-primary">
+                        📄 Facturas
+                    </span>
+
+                </div>
+
+                <div class="icon-box"
+                     style="background:#dbeafe;color:#2563eb">
+
+                    📄
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
     <!-- VENTAS -->
     <div class="col-md-4">
 
@@ -456,9 +566,9 @@
 <div class="row mt-4 g-4">
 
     <!-- GRAFICA -->
-    <div class="col-md-8">
+    <div class="col-lg-8">
 
-        <div class="chart-card">
+        <div class="chart-card h-100">
 
             <div class="d-flex justify-content-between align-items-center mb-3">
 
@@ -472,17 +582,18 @@
 
             </div>
 
-            <canvas id="chart"
-                    height="120"></canvas>
+            <div class="chart-wrapper">
+                <canvas id="chart"></canvas>
+            </div>
 
         </div>
 
     </div>
 
-    <!-- ESTADO -->
-    <div class="col-md-4">
+    <!-- ESTADO SISTEMA -->
+    <div class="col-lg-4">
 
-        <div class="status-box">
+        <div class="status-box h-100">
 
             <h5>
                 Estado del Sistema
@@ -527,6 +638,84 @@
                 </span>
 
             </div>
+
+        </div>
+
+    </div>
+
+    <!-- VENTAS EMPLEADOS HOY -->
+    <div class="col-lg-6">
+
+        <div class="status-box h-100">
+
+            <h5 class="mb-4">
+                Ventas de Empleados Hoy
+            </h5>
+
+            @foreach (var item in ViewBag.VentasUsuariosHoy)
+            {
+                var color = "danger";
+
+                if (item.Ventas >= 10)
+                {
+                    color = "success";
+                }
+                else if (item.Ventas >= 5)
+                {
+                    color = "warning";
+                }
+
+                <div class="status-item">
+
+                    <span>
+                        @item.Usuario
+                    </span>
+
+                    <span class="badge-custom bg-@color text-white">
+                        @item.Ventas ventas
+                    </span>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+    <!-- VENTAS TOTALES -->
+    <div class="col-lg-6">
+
+        <div class="status-box h-100">
+
+            <h5 class="mb-4">
+                Ventas Totales por Usuario
+            </h5>
+
+            @foreach (var item in ViewBag.VentasUsuariosTotal)
+            {
+                var color = "danger";
+
+                if (item.Total >= 100)
+                {
+                    color = "success";
+                }
+                else if (item.Total >= 50)
+                {
+                    color = "warning";
+                }
+
+                <div class="status-item">
+
+                    <span>
+                        @item.Usuario
+                    </span>
+
+                    <span class="badge-custom bg-@color text-white">
+                        $@item.Total.ToString("N2")
+                    </span>
+
+                </div>
+            }
 
         </div>
 
@@ -578,14 +767,18 @@
                         label: 'Ventas',
                         data: ventas,
                         backgroundColor: '#3b82f6',
-                        borderRadius: 10
+                        borderRadius: 10,
+                        barThickness: 22,
+                        maxBarThickness: 28
                     },
 
                     {
                         label: 'Ganancias',
                         data: ganancias,
                         backgroundColor: '#22c55e',
-                        borderRadius: 10
+                        borderRadius: 10,
+                        barThickness: 22,
+                        maxBarThickness: 28
                     }
                 ]
             },
@@ -593,18 +786,58 @@
             options: {
 
                 responsive: true,
+                maintainAspectRatio: false,
+
+                layout: {
+                    padding: 15
+                },
 
                 plugins: {
 
                     legend: {
-                        position: 'top'
+
+                        position: 'top',
+
+                        labels: {
+                            color: '#cbd5e1',
+                            padding: 20,
+                            font: {
+                                size: 13
+                            }
+                        }
                     }
                 },
 
                 scales: {
 
+                    x: {
+
+                        ticks: {
+                            color: '#94a3b8',
+                            font: {
+                                size: 12
+                            }
+                        },
+
+                        grid: {
+                            color: 'rgba(255,255,255,0.05)'
+                        }
+                    },
+
                     y: {
-                        beginAtZero: true
+
+                        beginAtZero: true,
+
+                        ticks: {
+                            color: '#94a3b8',
+                            font: {
+                                size: 12
+                            }
+                        },
+
+                        grid: {
+                            color: 'rgba(255,255,255,0.05)'
+                        }
                     }
                 }
             }

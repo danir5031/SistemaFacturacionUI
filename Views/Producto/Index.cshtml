@@ -8,8 +8,8 @@
 
 <style>
 .img-producto{
-    width:70px;
-    height:70px;
+    width:60px;
+    height:60px;
     object-fit:cover;
     border-radius:10px;
     cursor:pointer;
@@ -44,45 +44,83 @@
     <div class="row mb-3">
 
         <div class="col-md-4">
-            <input id="buscador" class="form-control"
+            <input id="buscador" value="@ViewBag.Buscar" class="form-control"
                    placeholder="Buscar por nombre o categoría..."
-                   onkeyup="filtrar()" />
+                   onkeyup="filtrarConDelay()"  />
         </div>
 
         <div class="col-md-2">
-            <select id="filtroCategoria" class="form-control" onchange="filtrar()">
+            <select id="filtroCategoria" class="form-control" onchange="filtrarServidor()">
                 <option value="">Categoría</option>
-                @foreach (var cat in Model.Select(x => x.Categoria).Distinct())
+                @foreach (var cat in ViewBag.Categorias)
                 {
-                    <option value="@cat">@cat</option>
+                    <option value="@cat"
+                            selected="@(ViewBag.Categoria == cat ? "selected" : null)">
+
+                        @cat
+
+                    </option>
                 }
             </select>
         </div>
 
         <div class="col-md-2">
-            <select id="filtroStock" class="form-control" onchange="filtrar()">
+            <select id="filtroStock"
+                    class="form-control"
+                    onchange="filtrarServidor()">
+
                 <option value="">Stock</option>
-                <option value="bajo">Bajo (&lt;5)</option>
-                <option value="medio">Medio (5-20)</option>
-                <option value="alto">Alto (&gt;20)</option>
+
+                <option value="bajo"
+                        selected="@(ViewBag.Stock == "bajo" ? "selected" : null)">
+                    Bajo (&lt;5)
+                </option>
+
+                <option value="medio"
+                        selected="@(ViewBag.Stock == "medio" ? "selected" : null)">
+                    Medio (5-20)
+                </option>
+
+                <option value="alto"
+                        selected="@(ViewBag.Stock == "alto" ? "selected" : null)">
+                    Alto (&gt;20)
+                </option>
+
             </select>
         </div>
 
         <div class="col-md-2">
-            <select id="filtroEstado" class="form-control" onchange="filtrar()">
+            <select id="filtroEstado"
+                    class="form-control"
+                    onchange="filtrarServidor()">
+
                 <option value="">Estado</option>
-                <option value="true">Disponible</option>
-                <option value="false">No disponible</option>
+
+                <option value="true"
+                        selected="@(ViewBag.Estado == "true" ? "selected" : null)">
+                    Disponible
+                </option>
+
+                <option value="false"
+                        selected="@(ViewBag.Estado == "false" ? "selected" : null)">
+                    No disponible
+                </option>
+
             </select>
         </div>
 
         <div class="col-md-2">
-            <input type="date" id="filtroFecha" class="form-control" onchange="filtrar()" />
+            <input type="date"
+                   id="filtroFecha"
+                   class="form-control"
+                   value="@ViewBag.Fecha"
+                   onchange="filtrarServidor()" />
         </div>
 
     </div>
     <div class="table-responsive">
         <table class="table align-middle">
+
             <thead>
                 <tr>
                     <th>Producto</th>
@@ -129,8 +167,28 @@
                                     }
 
                                     <div>
+
                                         <b>@item.Nombre</b><br />
+
                                         <small>@item.Categoria</small>
+
+                                        @if (item.Variantes != null && item.Variantes.Any())
+                                        {
+                                            <br />
+
+                                            <small style="color:#8fa8d6;">
+
+                                                Variantes:
+
+                                                @string.Join(", ",
+                                                    item.Variantes
+                                                    .Where(v => v.Activo)
+                                                    .Select(v => v.NombreVariante)
+                                                )
+
+                                            </small>
+                                        }
+
                                     </div>
                                 </div>
                             </td>
@@ -203,7 +261,7 @@
                             {
                                 <td>
                                     <button class="btn btn-warning btn-sm"
-                                            onclick='editar(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(item)))'>
+                                            onclick="editar(@item.IdProducto)">
                                         ✏️
                                     </button>
 
@@ -217,6 +275,67 @@
                     }
                 }
             </tbody>
+            <!-- PAGINACION -->
+            <!-- PAGINACION -->
+            @if (ViewBag.TotalPaginas > 1)
+            {
+                <div class="d-flex justify-content-center mt-4">
+
+                    <nav>
+
+                        <ul class="pagination">
+
+                            <!-- ANTERIOR -->
+                            @if (ViewBag.PaginaActual > 1)
+                            {
+                                <li class="page-item">
+
+                                    <a class="page-link"
+                                           href="/Producto?pagina=@(ViewBag.PaginaActual - 1)&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stock=@ViewBag.Stock&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
+
+                                        Anterior
+
+                                    </a>
+
+                                </li>
+                            }
+
+                            <!-- PAGINAS -->
+                            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                            {
+                                <li class="page-item @(i == ViewBag.PaginaActual ? "active" : "")">
+
+                                    <a class="page-link"
+                                           href="/Producto?pagina=@i&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stock=@ViewBag.Stock&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
+
+                                        @i
+
+                                    </a>
+
+                                </li>
+                            }
+
+                            <!-- SIGUIENTE -->
+                            @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+                            {
+                                <li class="page-item">
+
+                                    <a class="page-link"
+                                           href="/Producto?pagina=@(ViewBag.PaginaActual + 1)&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stock=@ViewBag.Stock&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
+
+                                        Siguiente
+
+                                    </a>
+
+                                </li>
+                            }
+
+                        </ul>
+
+                    </nav>
+
+                </div>
+            }
         </table>
     </div>
 </div>
@@ -274,6 +393,34 @@
                     </div>
                 </div>
 
+                <div class="form-check mb-3">
+
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="tieneVariantes"
+                           onchange="toggleVariantes()" />
+
+                    <label class="form-check-label">
+                        Tiene variantes
+                    </label>
+
+                </div>
+
+                <div id="variantesContainer"
+                     style="display:none;">
+
+                    <div id="listaVariantes"></div>
+
+                    <button type="button"
+                            class="btn btn-outline-primary mt-2"
+                            onclick="agregarVariante()">
+
+                        + Agregar Variante
+
+                    </button>
+
+                </div>
+
                 <!-- URL -->
                 <div class="mt-3">
                     <label>URL de Imagen</label>
@@ -298,6 +445,8 @@
                     <textarea id="descripcion" class="form-control"></textarea>
                 </div>
 
+
+
                 <!-- DISPONIBLE -->
                 <div class="mt-2">
                     <input id="disponible" type="checkbox" checked />
@@ -305,6 +454,8 @@
                 </div>
 
             </div>
+
+
 
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -343,37 +494,124 @@ function limpiar(){
     document.getElementById("imagenUrl").value="";
     document.getElementById("disponible").checked=true;
             document.getElementById("previewImagen").src = "https://via.placeholder.com/150";
+
+                    //////////////////////////////////////////////////////
+        // LIMPIAR VARIANTES
+        //////////////////////////////////////////////////////
+
+        document.getElementById("tieneVariantes").checked = false;
+
+        document.getElementById("variantesContainer")
+        .style.display = "none";
+
+        document.getElementById("listaVariantes")
+        .innerHTML = "";
 }
 
-                        function editar(p){
+                function editar(id){
 
-            document.getElementById("idProducto").value = p.IdProducto;
-            document.getElementById("nombre").value = p.Nombre;
-            document.getElementById("categoria").value = p.Categoria;
-            document.getElementById("descripcion").value = p.Descripcion;
-            document.getElementById("precio").value = p.PrecioVenta;
-            document.getElementById("costo").value = p.Costo;
-            document.getElementById("stock").value = p.Stock;
-            document.getElementById("imagenUrl").value = p.ImagenUrl || "";
-            document.getElementById("disponible").checked = p.Disponible;
+            limpiar();
 
-            let preview = document.getElementById("previewImagen");
+            fetch('/Producto/ObtenerProducto?id=' + id)
 
-            // 🔥 PRIORIDAD: imagen BD → url → placeholder
-            if (p.IdProducto) {
-                preview.src = "/Producto/VerImagen/" + p.IdProducto;
-            }
+            .then(res => res.json())
 
-            if (p.ImagenUrl && p.ImagenUrl !== "") {
-                preview.src = p.ImagenUrl;
-            }
+            .then(p => {
 
-            new bootstrap.Modal(document.getElementById('productoModal')).show();
+                document.getElementById("idProducto").value = p.idProducto;
+
+                document.getElementById("nombre").value = p.nombre;
+
+                document.getElementById("categoria").value = p.categoria;
+
+                document.getElementById("descripcion").value = p.descripcion;
+
+                document.getElementById("precio").value = p.precioVenta;
+
+                document.getElementById("costo").value = p.costo;
+
+                document.getElementById("stock").value = p.stock;
+
+                document.getElementById("imagenUrl").value = p.imagenUrl || "";
+
+                document.getElementById("disponible").checked = p.disponible;
+
+                //////////////////////////////////////////////////////
+                // IMAGEN
+                //////////////////////////////////////////////////////
+
+                let preview =
+                    document.getElementById("previewImagen");
+
+                preview.src =
+                    p.imagenUrl && p.imagenUrl !== ""
+                    ? p.imagenUrl
+                    : "/Producto/VerImagen/" + p.idProducto;
+
+                //////////////////////////////////////////////////////
+                // VARIANTES
+                //////////////////////////////////////////////////////
+
+                if(p.variantes && p.variantes.length > 0){
+
+                    document.getElementById("tieneVariantes")
+                    .checked = true;
+
+                    toggleVariantes();
+
+                    p.variantes.forEach(v => {
+
+                        agregarVariante(
+                            v.nombreVariante,
+                            v.stock
+                        );
+
+                    });
+                }
+
+                new bootstrap.Modal(
+                    document.getElementById('productoModal')
+                ).show();
+
+            });
         }
 
 function guardarProducto(){
 
     let formData=new FormData();
+
+            
+                    //////////////////////////////////////////////////////
+        // VARIANTES
+        //////////////////////////////////////////////////////
+
+        document
+        .querySelectorAll(".variante-item")
+        .forEach((v, index) => {
+
+            let nombre =
+                v.querySelector(".nombreVariante").value;
+
+            let stock =
+                v.querySelector(".stockVariante").value;
+
+            //////////////////////////////////////////////////////
+            // VALIDAR
+            //////////////////////////////////////////////////////
+
+            if(nombre && stock){
+
+                formData.append(
+                    `Variantes[${index}].NombreVariante`,
+                    nombre
+                );
+
+                formData.append(
+                    `Variantes[${index}].Stock`,
+                    stock
+                );
+            }
+        });
 
     formData.append("IdProducto",document.getElementById("idProducto").value);
     formData.append("Nombre",document.getElementById("nombre").value);
@@ -438,54 +676,130 @@ function eliminar(id){
             }
         });
 
-                function filtrar(){
+                //////////////////////////////////////////////////////
+        // DELAY BUSCADOR
+        //////////////////////////////////////////////////////
 
-            let texto = document.getElementById("buscador").value.toLowerCase();
-            let categoria = document.getElementById("filtroCategoria").value.toLowerCase();
-            let estado = document.getElementById("filtroEstado").value;
-            let stock = document.getElementById("filtroStock").value;
-            let fecha = document.getElementById("filtroFecha").value;
+        let timeoutBusqueda;
 
-            document.querySelectorAll("tbody tr").forEach(fila => {
+        function filtrarConDelay(){
 
-                let nombre = fila.dataset.nombre;
-                let cat = fila.dataset.categoria;
-                let stk = parseInt(fila.dataset.stock);
-                let est = fila.dataset.estado;
-                let fec = fila.dataset.fecha;
+            clearTimeout(timeoutBusqueda);
 
-                let mostrar = true;
+            timeoutBusqueda = setTimeout(() => {
 
-                // 🔍 BUSCADOR
-                if(texto && !(nombre.includes(texto) || cat.includes(texto))){
-                    mostrar = false;
-                }
+                filtrarServidor();
 
-                // 📂 CATEGORIA
-                if(categoria && cat !== categoria){
-                    mostrar = false;
-                }
+            }, 700);
+        }
 
-                // 🟢 ESTADO
-                if(estado && est !== estado){
-                    mostrar = false;
-                }
+                      //////////////////////////////////////////////////////
+        // FILTROS SERVIDOR
+        //////////////////////////////////////////////////////
 
-                // 📦 STOCK
-                if(stock){
-                    if(stock === "bajo" && stk >= 5) mostrar = false;
-                    if(stock === "medio" && (stk < 5 || stk > 20)) mostrar = false;
-                    if(stock === "alto" && stk <= 20) mostrar = false;
-                }
+        function filtrarServidor(){
 
-                // 📅 FECHA
-                if(fecha && fec !== fecha){
-                    mostrar = false;
-                }
+            let buscar =
+                document.getElementById("buscador").value;
 
-                fila.style.display = mostrar ? "" : "none";
+            let categoria =
+                document.getElementById("filtroCategoria").value;
 
-            });
+            let stock =
+                document.getElementById("filtroStock").value;
+
+            let estado =
+                document.getElementById("filtroEstado").value;
+
+            let fecha =
+                document.getElementById("filtroFecha").value;
+
+            //////////////////////////////////////////////////////
+            // URL
+            //////////////////////////////////////////////////////
+
+            let url =
+                `/Producto?buscar=${encodeURIComponent(buscar)}`
+                + `&categoria=${encodeURIComponent(categoria)}`
+                + `&stock=${encodeURIComponent(stock)}`
+                + `&estado=${encodeURIComponent(estado)}`
+                + `&fecha=${encodeURIComponent(fecha)}`;
+
+            //////////////////////////////////////////////////////
+            // REDIRECT
+            //////////////////////////////////////////////////////
+
+            window.location.href = url;
+        }
+
+                //////////////////////////////////////////////////////
+        // TOGGLE
+        //////////////////////////////////////////////////////
+
+        function toggleVariantes(){
+
+            let check =
+                document.getElementById("tieneVariantes");
+
+            let div =
+                document.getElementById("variantesContainer");
+
+            div.style.display =
+                check.checked
+                ? "block"
+                : "none";
+        }
+
+        //////////////////////////////////////////////////////
+        // AGREGAR VARIANTE
+        //////////////////////////////////////////////////////
+
+                  function agregarVariante(nombre = "", stock = 0){
+
+            let container =
+                document.getElementById("listaVariantes");
+
+            let html = `
+
+                <div class="row mb-2 variante-item">
+
+                    <div class="col-md-6">
+
+                        <input type="text"
+                               class="form-control nombreVariante"
+                               value="${nombre}"
+                               placeholder="Ej: Talla 5" />
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <input type="number"
+                               class="form-control stockVariante"
+                               value="${stock}"
+                               placeholder="Stock" />
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <button type="button"
+                                class="btn btn-danger w-100"
+                                onclick="this.parentElement.parentElement.remove()">
+
+                            X
+
+                        </button>
+
+                    </div>
+
+                </div>
+            `;
+
+            container.insertAdjacentHTML(
+                "beforeend",
+                html
+            );
         }
 
 </script>

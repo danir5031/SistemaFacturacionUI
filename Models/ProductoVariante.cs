@@ -1,0 +1,46 @@
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace SistemaFacturacionUI.Models
+{
+    public class ProductoVariante
+    {
+        [Key]
+        public int IdVariante { get; set; }
+
+        //////////////////////////////////////////////////////
+        // PRODUCTO
+        //////////////////////////////////////////////////////
+
+        public int IdProducto { get; set; }
+
+        [ForeignKey("IdProducto")]
+        public virtual Producto Producto { get; set; }
+
+        //////////////////////////////////////////////////////
+        // VARIANTE
+        //////////////////////////////////////////////////////
+
+        public string NombreVariante { get; set; }
+
+        //////////////////////////////////////////////////////
+        // STOCK
+        //////////////////////////////////////////////////////
+
+        public int Stock { get; set; }
+
+        //////////////////////////////////////////////////////
+        // ACTIVO
+        //////////////////////////////////////////////////////
+
+        public bool Activo { get; set; } = true;
+
+        //////////////////////////////////////////////////////
+        // FECHA
+        //////////////////////////////////////////////////////
+
+        public DateTime FechaRegistro { get; set; }
+            = DateTime.Now;
+    }
+}
