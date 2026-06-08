@@ -3,23 +3,208 @@
     ViewData["Title"] = "Panel Empleado";
 }
 
-<h3>Panel de Empleado</h3>
-<p class="text-muted">Acceso rápido a productos y facturación.</p>
+<style>
 
-<div class="row mt-4">
+    .employee-card {
+        background: #374151;
+        border-radius: 22px;
+        padding: 28px 22px;
+        transition: .3s ease;
+        border: 1px solid rgba(255,255,255,.05);
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+    }
+
+        .employee-card:hover {
+            transform: translateY(-5px);
+            background: #425066;
+            box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        }
+
+        .employee-card::before {
+            content: "";
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 110px;
+            height: 110px;
+            background: rgba(255,255,255,.04);
+            border-radius: 50%;
+        }
+
+    .employee-icon {
+        width: 65px;
+        height: 65px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin: auto;
+        margin-bottom: 15px;
+        color: white;
+    }
+
+    .bg-productos {
+        background: linear-gradient(135deg,#2563eb,#1d4ed8);
+    }
+
+    .bg-clientes {
+        background: linear-gradient(135deg,#7c3aed,#6d28d9);
+    }
+
+    .bg-facturacion {
+        background: linear-gradient(135deg,#059669,#047857);
+    }
+
+    .employee-title {
+        font-size: 42px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .employee-subtitle {
+        color: #64748b;
+        margin-bottom: 25px;
+        font-size: 17px;
+    }
+
+    .btn-panel {
+        border-radius: 14px;
+        padding: 10px 22px;
+        font-weight: 600;
+        border: none;
+        transition: .3s;
+    }
+
+        .btn-panel:hover {
+            transform: scale(1.05);
+        }
+
+    @@media(max-width:768px) {
+
+        .employee-title {
+            font-size: 34px;
+        }
+
+        .employee-card {
+            padding: 24px 18px;
+        }
+
+        .employee-icon {
+            width: 58px;
+            height: 58px;
+            font-size: 24px;
+        }
+
+        .btn-panel {
+            width: 100%;
+        }
+    }
+
+</style>
+
+<div class="mb-4">
+
+    <h1 class="employee-title">
+        Panel
+    </h1>
+
+    <p class="employee-subtitle">
+        Acceso rápido a productos, clientes y facturación.
+    </p>
+
+</div>
+
+<div class="row g-3">
+
+    <!-- PRODUCTOS -->
 
     <div class="col-md-6">
-        <div class="card-box text-center">
-            <h4>📦 Productos</h4>
-            <a href="/Productos" class="btn btn-primary mt-2">Ir a Productos</a>
+
+        <div class="employee-card text-center">
+
+            <div class="employee-icon bg-productos">
+                📦
+            </div>
+
+            <h4 class="text-white fw-bold mb-2">
+                Productos
+            </h4>
+
+            <p class="text-light opacity-75 mb-4">
+                Administra inventario y variantes.
+            </p>
+
+            <a href="/Producto"
+                   class="btn btn-primary btn-panel">
+
+                Ir a Productos
+
+            </a>
+
         </div>
+
     </div>
 
+    <!-- CLIENTES -->
+
     <div class="col-md-6">
-        <div class="card-box text-center">
-            <h4>🧾 Facturación</h4>
-            <a href="/Facturacion" class="btn btn-success mt-2">Ir a Facturación</a>
+
+        <div class="employee-card text-center">
+
+            <div class="employee-icon bg-clientes">
+                👤
+            </div>
+
+            <h4 class="text-white fw-bold mb-2">
+                Clientes
+            </h4>
+
+            <p class="text-light opacity-75 mb-4">
+                Consulta y registra clientes.
+            </p>
+
+            <a href="/Cliente"
+                   class="btn btn-success btn-panel">
+
+                Ir a Clientes
+
+            </a>
+
         </div>
+
+    </div>
+
+    <!-- FACTURACION -->
+
+    <div class="col-md-6">
+
+        <div class="employee-card text-center">
+
+            <div class="employee-icon bg-facturacion">
+                🧾
+            </div>
+
+            <h4 class="text-white fw-bold mb-2">
+                Facturación
+            </h4>
+
+            <p class="text-light opacity-75 mb-4">
+                Genera ventas y administra pedidos.
+            </p>
+
+            <a href="/Facturacion"
+                   class="btn btn-success btn-panel">
+
+                Ir a Facturación
+
+            </a>
+
+        </div>
+
     </div>
 
 </div>

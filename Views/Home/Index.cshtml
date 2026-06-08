@@ -253,6 +253,33 @@
     </div>
 
 </div>
+<div class="d-flex gap-2 mb-4 flex-wrap">
+
+    <input type="date"
+           id="fechaInicio"
+           class="form-control"
+           style="max-width:200px;" />
+
+    <input type="date"
+           id="fechaFin"
+           class="form-control"
+           style="max-width:200px;" />
+
+    <button class="btn btn-primary"
+            onclick="filtrarDashboard()">
+
+        Filtrar
+
+    </button>
+
+    <button class="btn btn-outline-secondary"
+            onclick="limpiarFiltro()">
+
+        Limpiar
+
+    </button>
+
+</div>
 
 <div class="row g-4">
 
@@ -590,7 +617,119 @@
 
     </div>
 
-    <!-- ESTADO SISTEMA -->
+    <!-- PRODUCTOS MAS VENDIDOS -->
+
+    <div class="col-lg-4">
+
+        <div class="status-box h-100">
+
+            <h5>
+                Productos Más Vendidos
+            </h5>
+
+            @foreach (var item in ViewBag.ProductosMasVendidos)
+            {
+                <div class="status-item">
+
+                    <span>
+
+                        @item.NombreProducto
+
+                    </span>
+
+                    <span class="badge-custom bg-success text-white">
+
+                        @item.CantidadVendida
+
+                    </span>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+    <!-- VENTAS EMPLEADOS HOY -->
+    <div class="col-lg-4">
+
+        <div class="status-box h-100">
+
+            <h5 class="mb-4">
+                Ventas de Empleados Hoy
+            </h5>
+
+            @foreach (var item in ViewBag.VentasUsuariosHoy)
+            {
+                var color = "danger";
+
+                if (item.Ventas >= 10)
+                {
+                    color = "success";
+                }
+                else if (item.Ventas >= 5)
+                {
+                    color = "warning";
+                }
+
+                <div class="status-item">
+
+                    <span>
+                        @item.Usuario
+                    </span>
+
+                    <span class="badge-custom bg-@color text-white">
+                        @item.Ventas ventas
+                    </span>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+    <!-- VENTAS TOTALES -->
+    <div class="col-lg-4">
+
+        <div class="status-box h-100">
+
+            <h5 class="mb-4">
+                Ventas Totales por Usuario
+            </h5>
+
+            @foreach (var item in ViewBag.VentasUsuariosTotal)
+            {
+                var color = "danger";
+
+                if (item.Total >= 100)
+                {
+                    color = "success";
+                }
+                else if (item.Total >= 50)
+                {
+                    color = "warning";
+                }
+
+                <div class="status-item">
+
+                    <span>
+                        @item.Usuario
+                    </span>
+
+                    <span class="badge-custom bg-@color text-white">
+                        $@item.Total.ToString("N2")
+                    </span>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+    <!-- ESTADO DEL SISTEMA -->
+
     <div class="col-lg-4">
 
         <div class="status-box h-100">
@@ -638,84 +777,6 @@
                 </span>
 
             </div>
-
-        </div>
-
-    </div>
-
-    <!-- VENTAS EMPLEADOS HOY -->
-    <div class="col-lg-6">
-
-        <div class="status-box h-100">
-
-            <h5 class="mb-4">
-                Ventas de Empleados Hoy
-            </h5>
-
-            @foreach (var item in ViewBag.VentasUsuariosHoy)
-            {
-                var color = "danger";
-
-                if (item.Ventas >= 10)
-                {
-                    color = "success";
-                }
-                else if (item.Ventas >= 5)
-                {
-                    color = "warning";
-                }
-
-                <div class="status-item">
-
-                    <span>
-                        @item.Usuario
-                    </span>
-
-                    <span class="badge-custom bg-@color text-white">
-                        @item.Ventas ventas
-                    </span>
-
-                </div>
-            }
-
-        </div>
-
-    </div>
-
-    <!-- VENTAS TOTALES -->
-    <div class="col-lg-6">
-
-        <div class="status-box h-100">
-
-            <h5 class="mb-4">
-                Ventas Totales por Usuario
-            </h5>
-
-            @foreach (var item in ViewBag.VentasUsuariosTotal)
-            {
-                var color = "danger";
-
-                if (item.Total >= 100)
-                {
-                    color = "success";
-                }
-                else if (item.Total >= 50)
-                {
-                    color = "warning";
-                }
-
-                <div class="status-item">
-
-                    <span>
-                        @item.Usuario
-                    </span>
-
-                    <span class="badge-custom bg-@color text-white">
-                        $@item.Total.ToString("N2")
-                    </span>
-
-                </div>
-            }
 
         </div>
 
@@ -843,6 +904,41 @@
             }
         });
 
+
+                //////////////////////////////////////////////////////
+        // CARGAR FECHAS
+        //////////////////////////////////////////////////////
+
+        document.getElementById("fechaInicio").value =
+        '@ViewBag.FechaInicio';
+
+        document.getElementById("fechaFin").value =
+        '@ViewBag.FechaFin';
+
+        //////////////////////////////////////////////////////
+        // FILTRAR
+        //////////////////////////////////////////////////////
+
+        function filtrarDashboard() {
+
+            let inicio =
+                document.getElementById("fechaInicio").value;
+
+            let fin =
+                document.getElementById("fechaFin").value;
+
+            window.location =
+                `/Home/Index?fechaInicio=${inicio}&fechaFin=${fin}`;
+        }
+
+        //////////////////////////////////////////////////////
+        // LIMPIAR
+        //////////////////////////////////////////////////////
+
+        function limpiarFiltro() {
+
+            window.location = '/Home/Index';
+        }
     </script>
 
 }

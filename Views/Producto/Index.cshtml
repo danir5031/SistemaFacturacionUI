@@ -16,8 +16,237 @@
     transition:0.3s;
 }
 .img-producto:hover{
-    transform:scale(1.6);
+            transform: scale(1.15);
 }
+
+    .pagination {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    @@media(max-width:768px) {
+
+        .pagination {
+            justify-content: center;
+        }
+
+        .page-link {
+            min-width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px !important;
+            font-size: 14px;
+            padding: 0 10px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+    }
+
+    .product-info-table {
+        width: 100%;
+    }
+
+        .product-info-table tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .product-info-table td,
+        .product-info-table th {
+            padding: 14px;
+            vertical-align: top;
+        }
+
+
+        .product-info-table th {
+            width: 35%;
+            font-weight: 700;
+            color: #111827;
+        }
+
+    .card-box {
+        border-radius: 18px;
+    }
+
+    @@media(max-width:768px) {
+
+        .card-box {
+            padding: 16px !important;
+        }
+
+            .card-box h5 {
+                font-size: 20px;
+            }
+
+            .card-box img {
+                width: 100px !important;
+                height: 100px !important;
+            }
+
+        .btn {
+            border-radius: 12px;
+        }
+
+        .pagination {
+            gap: 4px;
+        }
+
+        .page-link {
+            font-size: 13px;
+            min-width: 34px;
+            height: 34px;
+        }
+    }
+
+    @@media(max-width:768px) {
+
+        .product-info-table,
+        .product-info-table tbody,
+        .product-info-table tr,
+        .product-info-table td,
+        .product-info-table th {
+            display: block;
+            width: 100%;
+        }
+
+            .product-info-table tr {
+                margin-bottom: 18px;
+                border-bottom: 1px solid #d1d5db;
+                padding-bottom: 10px;
+            }
+
+            .product-info-table td,
+            .product-info-table th {
+                padding: 6px 0;
+                text-align: left;
+                word-break: break-word;
+            }
+
+            .product-info-table th {
+                color: #374151;
+                font-size: 15px;
+            }
+    }
+
+    .product-detail-table {
+        width: 100%;
+    }
+
+        .product-detail-table tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .product-detail-table th,
+        .product-detail-table td {
+            padding: 16px 10px;
+            vertical-align: middle;
+        }
+
+        .product-detail-table th {
+            width: 35%;
+            font-weight: 700;
+            color: #111827;
+            white-space: nowrap;
+        }
+
+        .product-detail-table td {
+            color: #374151;
+            word-break: break-word;
+        }
+
+    @@media(max-width:768px) {
+
+        .product-detail-table tr {
+            display: flex !important;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 14px 0;
+        }
+
+        .product-detail-table th {
+            width: 100% !important;
+            padding-bottom: 6px !important;
+            font-size: 16px;
+        }
+
+        .product-detail-table td {
+            width: 100% !important;
+            font-size: 15px;
+            padding-top: 0 !important;
+        }
+
+        #detalleProductoModal .modal-body {
+            padding: 16px !important;
+        }
+
+        #detalleProductoModal img {
+            width: 100%;
+            max-height: 240px;
+            object-fit: cover;
+        }
+
+        #detalleProductoModal .modal-dialog {
+            margin: 10px;
+        }
+
+        #detalleProductoModal .modal-content {
+            border-radius: 22px;
+        }
+    }
+
+    @@media(max-width:768px) {
+
+        #detalleProductoModal .modal-dialog {
+            margin: 10px;
+        }
+
+        #detalleProductoModal .modal-content {
+            border-radius: 22px;
+        }
+
+        #detalleProductoModal .modal-body {
+            padding: 18px !important;
+        }
+
+        #detalleProductoModal .row {
+            flex-direction: column;
+        }
+
+        #detalleProductoModal .col-md-4,
+        #detalleProductoModal .col-md-8 {
+            width: 100%;
+        }
+
+        #detalleProductoModal img {
+            max-height: 240px !important;
+        }
+
+        .product-detail-table,
+        .product-detail-table tbody,
+        .product-detail-table tr,
+        .product-detail-table th,
+        .product-detail-table td {
+            display: block;
+            width: 100%;
+        }
+
+            .product-detail-table tr {
+                padding: 12px 0;
+            }
+
+            .product-detail-table th {
+                padding-bottom: 4px;
+                font-size: 15px;
+            }
+
+            .product-detail-table td {
+                padding-top: 0;
+                font-size: 15px;
+            }
+    }
 </style>
 
 <div class="d-flex justify-content-between align-items-center">
@@ -118,19 +347,28 @@
         </div>
 
     </div>
-    <div class="table-responsive">
-        <table class="table align-middle">
+    <div class="table-responsive d-none d-md-block">
+        <!--<div class="table-responsive">-->
+        <!--<table class="table align-middle">-->
+           <table class="product-info-table">
 
             <thead>
                 <tr>
                     <th>Producto</th>
                     <th>Stock</th>
                     <th>Precio</th>
-                    <th>Estado</th>
-
+                    <th>Ubicacion</th>
                     @if (rol == "ADMIN")
                     {
+                    <th>Estado</th>
+                    
+
+                    
                         <th>Acciones</th>
+                    }
+                    else
+                    {
+                        <th>Información</th>
                     }
                 </tr>
             </thead>
@@ -183,7 +421,7 @@
                                                 @string.Join(", ",
                                                     item.Variantes
                                                     .Where(v => v.Activo)
-                                                    .Select(v => v.NombreVariante)
+                                                    .Select(v => $"{v.NombreVariante} ({v.Stock})")
                                                 )
 
                                             </small>
@@ -251,6 +489,26 @@
                                 </small>
                             </td>
 
+                            @if (rol == "ADMIN")
+                            {
+                                <td>
+
+                                    @if (!string.IsNullOrWhiteSpace(item.Descripcion))
+                                    {
+                                        @(item.Descripcion.Length > 50
+                                            ? item.Descripcion.Substring(0, 50) + "..."
+                                            : item.Descripcion)
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">
+                                            Sin descripción
+                                        </span>
+                                    }
+
+                                </td>
+                            }
+
                             <td>
                                 <span class="badge @(item.Disponible ? "bg-success" : "bg-danger")">
                                     @(item.Disponible ? "Disponible" : "No disponible")
@@ -271,80 +529,256 @@
                                     </button>
                                 </td>
                             }
+                            else
+                            {
+                                <td>
+
+                                    <button class="btn btn-info btn-sm"
+                                            onclick="verDetalle(@item.IdProducto)">
+
+                                        👁️ Ver
+
+                                    </button>
+
+                                </td>
+                            }
                         </tr>
                     }
                 }
             </tbody>
-            <!-- PAGINACION -->
-            <!-- PAGINACION -->
-            @if (ViewBag.TotalPaginas > 1)
+            
+        </table>
+    </div>
+
+    <!-- MOBILE CARDS -->
+
+    <div class="d-block d-md-none">
+
+        @foreach (var item in Model)
+        {
+            if (item.Activo)
             {
-                <div class="d-flex justify-content-center mt-4">
+                <div class="card-box mb-3 p-3">
+                    <!--<div class="card-box mb-3"> -->
 
-                    <nav>
+                    <div class="text-center mb-3">
 
-                        <ul class="pagination">
+                        @if (item.Imagen != null)
+                        {
+                            <img src="/Producto/VerImagen/@item.IdProducto"
+                                 onclick="verImagen(this.src)"
+                                 style="
+                            width:90px;
+                            height:90px;
+                            object-fit:cover;
+                            border-radius:16px;
+                            cursor:pointer;" />
+                        }
+                        else if (!string.IsNullOrEmpty(item.ImagenUrl))
+                        {
+                            <img src="@item.ImagenUrl"
+                                 onclick="verImagen(this.src)"
+                                 style="
+                            width:90px;
+                            height:90px;
+                            object-fit:cover;
+                            border-radius:16px;
+                            cursor:pointer;" />
+                        }
 
-                            <!-- ANTERIOR -->
-                            @if (ViewBag.PaginaActual > 1)
-                            {
-                                <li class="page-item">
+                    </div>
 
-                                    <a class="page-link"
-                                           href="/Producto?pagina=@(ViewBag.PaginaActual - 1)&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stock=@ViewBag.Stock&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
+                    <h5 class="fw-bold">
+                        @item.Nombre
+                    </h5>
 
-                                        Anterior
+                    <small class="text-muted">
+                        @item.Categoria
+                    </small>
 
-                                    </a>
+                    <hr />
 
-                                </li>
-                            }
+                    <div class="mb-2">
 
-                            <!-- PAGINAS -->
-                            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
-                            {
-                                <li class="page-item @(i == ViewBag.PaginaActual ? "active" : "")">
+                        <span class="badge bg-primary">
+                            @item.Stock unid.
+                        </span>
 
-                                    <a class="page-link"
-                                           href="/Producto?pagina=@i&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stock=@ViewBag.Stock&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
+                    </div>
 
-                                        @i
+                    <div class="mb-2">
 
-                                    </a>
+                        <b style="font-size:22px;">
+                            $@item.PrecioVenta
+                        </b>
 
-                                </li>
-                            }
+                    </div>
 
-                            <!-- SIGUIENTE -->
-                            @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
-                            {
-                                <li class="page-item">
+                  
 
-                                    <a class="page-link"
-                                           href="/Producto?pagina=@(ViewBag.PaginaActual + 1)&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stock=@ViewBag.Stock&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
+                    <div class="mb-2">
 
-                                        Siguiente
+                        <span class="badge @(item.Disponible ? "bg-success" : "bg-danger")">
 
-                                    </a>
+                            @(item.Disponible ? "Disponible" : "No disponible")
 
-                                </li>
-                            }
+                        </span>
 
-                        </ul>
+                    </div>
 
-                    </nav>
+                    @if (rol == "ADMIN")
+                    {
+                        <div class="mt-2 p-2"
+                             style="
+                            background:rgba(0,0,0,.03);
+                            border-radius:10px;">
+
+                            <small class="fw-bold">
+                                Ubicacion
+                            </small>
+
+                            <div style="
+                                font-size:14px;
+                                margin-top:5px;">
+
+                                @(string.IsNullOrWhiteSpace(item.Descripcion)
+                                    ? "Sin descripción"
+                                    : item.Descripcion)
+
+                            </div>
+
+                        </div>
+                    }
+
+                    @if (item.Variantes != null && item.Variantes.Any())
+                    {
+                        <div class="mt-2">
+
+                            <small style="color:#8fa8d6;">
+
+                                Variantes:
+
+                                @string.Join(", ",
+                                    item.Variantes
+                                    .Where(v => v.Activo)
+                                    .Select(v => $"{v.NombreVariante} ({v.Stock})")
+                                )
+
+                            </small>
+
+                        </div>
+                    }
+
+                    <hr />
+
+                    @if (rol == "ADMIN")
+                    {
+                        <div class="d-flex gap-2">
+
+                            <button class="btn btn-warning w-100"
+                                    onclick="editar(@item.IdProducto)">
+
+                                ✏️ Editar
+
+                            </button>
+
+                            <button class="btn btn-danger w-100"
+                                    onclick="eliminar(@item.IdProducto)">
+
+                                🗑️
+
+                            </button>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <button class="btn btn-info w-100"
+                                onclick="verDetalle(@item.IdProducto)">
+
+                            👁️ Ver información
+
+                        </button>
+                    }
 
                 </div>
             }
-        </table>
+        }
+
     </div>
+    <!-- PAGINACION -->
+    <!-- PAGINACION -->
+    @if (ViewBag.TotalPaginas > 1)
+    {
+        <div class="d-flex justify-content-center mt-4">
+
+            <nav>
+
+                <ul class="pagination">
+
+                    <!-- ANTERIOR -->
+                    @if (ViewBag.PaginaActual > 1)
+                    {
+                        <li class="page-item">
+
+                            <a class="page-link"
+                                   href="/Producto?pagina=@(ViewBag.PaginaActual - 1)&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stock=@ViewBag.Stock&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
+
+                                Anterior
+
+                            </a>
+
+                        </li>
+                    }
+
+                    <!-- PAGINAS -->
+                    @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                    {
+                        <li class="page-item @(i == ViewBag.PaginaActual ? "active" : "")">
+
+                            <a class="page-link"
+                                   href="/Producto?pagina=@i&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stock=@ViewBag.Stock&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
+
+                                @i
+
+                            </a>
+
+                        </li>
+                    }
+
+                    <!-- SIGUIENTE -->
+                    @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+                    {
+                        <li class="page-item">
+
+                            <a class="page-link"
+                                   href="/Producto?pagina=@(ViewBag.PaginaActual + 1)&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stock=@ViewBag.Stock&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
+
+                                Siguiente
+
+                            </a>
+
+                        </li>
+                    }
+
+                </ul>
+
+            </nav>
+
+        </div>
+    }
 </div>
 
 <!-- 🔥 MODAL IMAGEN -->
 <div class="modal fade" id="imgModal">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <img id="imgGrande" style="width:100%" />
+        <div class="modal-content bg-transparent border-0">
+            <img id="imgGrande"
+                 style="
+            width:100%;
+            border-radius:20px;
+            max-height:90vh;
+            object-fit:contain;" />
         </div>
     </div>
 </div>
@@ -466,6 +900,131 @@
     </div>
 </div>
 
+<div class="modal fade" id="detalleProductoModal">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+
+        <div class="modal-content border-0"
+             style="
+            border-radius:25px;
+            overflow:hidden;
+            background:#f8fafc;">
+
+            <div class="modal-header border-0 px-4 pt-4">
+
+                <h3 class="fw-bold">
+                    Información del Producto
+                </h3>
+
+                <button class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body px-4 pb-4">
+
+                <div class="row">
+
+                    <!-- IMAGEN -->
+
+                    <div class="col-md-4 text-center">
+
+                        <div style="
+                            background:white;
+                            border-radius:20px;
+                            padding:20px;
+                            box-shadow:0 5px 20px rgba(0,0,0,.05);">
+
+                            <img id="detalleImagen"
+                                 style="
+                            width:100%;
+                            max-height:300px;
+                            object-fit:contain;
+                            border-radius:18px;" />
+
+                        </div>
+
+                    </div>
+
+                    <!-- INFO -->
+
+                    <div class="col-md-8">
+
+                        <div style="
+                            background:white;
+                            border-radius:20px;
+                            padding:25px;
+                            box-shadow:0 5px 20px rgba(0,0,0,.05);">
+
+                            <table class="product-detail-table">
+
+                                <tbody>
+
+                                    <tr>
+                                        <th width="35%">Nombre</th>
+
+                                        <td id="detalleNombre"></td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Categoría</th>
+
+                                        <td id="detalleCategoria"></td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Precio</th>
+
+                                        <td id="detallePrecio"></td>
+                                    </tr>
+
+                                    
+
+                                    <tr>
+                                        <th>Stock</th>
+
+                                        <td id="detalleStock"></td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Estado</th>
+
+                                        <td id="detalleEstado"></td>
+                                    </tr>
+
+                                    @if (rol == "ADMIN")
+                                    {
+                                        <tr>
+                                            <th>Descripción</th>
+                                            <td id="detalleDescripcion"></td>
+                                        </tr>
+                                    }
+
+                                    <tr>
+                                        <th>Variantes</th>
+
+                                        <td id="detalleVariantes"></td>
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
 @section Scripts{
 <script>
 
@@ -506,6 +1065,34 @@ function limpiar(){
 
         document.getElementById("listaVariantes")
         .innerHTML = "";
+
+                //////////////////////////////////////////////////////
+        // REACTIVAR INPUTS
+        //////////////////////////////////////////////////////
+
+        document.querySelectorAll(
+            "#productoModal input, #productoModal textarea"
+        )
+        .forEach(x => x.disabled = false);
+
+        document.getElementById("tieneVariantes")
+            .disabled = false;
+
+        //////////////////////////////////////////////////////
+        // MOSTRAR BOTON
+        //////////////////////////////////////////////////////
+
+        document.querySelector(
+            "#productoModal .btn-primary"
+        ).style.display = "block";
+
+        //////////////////////////////////////////////////////
+        // TITULO NORMAL
+        //////////////////////////////////////////////////////
+
+        document.querySelector(
+            "#productoModal .modal-header h5"
+        ).innerText = "Nuevo Producto";
 }
 
                 function editar(id){
@@ -551,7 +1138,11 @@ function limpiar(){
                 //////////////////////////////////////////////////////
                 // VARIANTES
                 //////////////////////////////////////////////////////
+                        //////////////////////////////////////////////////////
+        // LIMPIAR VARIANTES ANTES DE CARGAR
+        //////////////////////////////////////////////////////
 
+        document.getElementById("listaVariantes").innerHTML = "";
                 if(p.variantes && p.variantes.length > 0){
 
                     document.getElementById("tieneVariantes")
@@ -569,8 +1160,102 @@ function limpiar(){
                     });
                 }
 
+
+                        
                 new bootstrap.Modal(
                     document.getElementById('productoModal')
+                ).show();
+
+            });
+        }
+
+
+                        function verDetalle(id){
+
+            fetch('/Producto/ObtenerProducto?id=' + id)
+
+            .then(res => res.json())
+
+            .then(p => {
+
+                //////////////////////////////////////////////////////
+                // IMAGEN
+                //////////////////////////////////////////////////////
+
+                let imagen =
+                    "/Producto/VerImagen/" + p.idProducto;
+
+                if(p.imagenUrl){
+                    imagen = p.imagenUrl;
+                }
+
+                document.getElementById("detalleImagen").src =
+                    imagen;
+
+                //////////////////////////////////////////////////////
+                // INFO
+                //////////////////////////////////////////////////////
+
+                document.getElementById("detalleNombre")
+                    .innerText = p.nombre;
+
+                document.getElementById("detalleCategoria")
+                    .innerText = p.categoria;
+
+                document.getElementById("detallePrecio")
+                    .innerHTML = `<b>$${p.precioVenta}</b>`;
+
+
+                document.getElementById("detalleStock")
+                    .innerHTML = `
+                        <span class="badge bg-primary">
+                            ${p.stock} unidades
+                        </span>
+                    `;
+
+                document.getElementById("detalleEstado")
+                    .innerHTML = p.disponible
+                    ? `<span class="badge bg-success">
+                            Disponible
+                       </span>`
+                    : `<span class="badge bg-danger">
+                            No disponible
+                       </span>`;
+
+                               let descripcion = document.getElementById("detalleDescripcion");
+
+        if(descripcion){
+            descripcion.innerText =
+                p.descripcion || "Sin descripción";
+        }
+                
+
+                //////////////////////////////////////////////////////
+                // VARIANTES
+                //////////////////////////////////////////////////////
+
+                let variantes = "Sin variantes";
+
+                if(p.variantes && p.variantes.length > 0){
+
+                    variantes = p.variantes
+                        .map(v => `
+                            <span class="badge bg-dark me-1 mb-1">
+                                ${v.nombreVariante}: ${v.stock}
+                            </span>
+                        `)
+                        .join("");
+                }
+
+                document.getElementById("detalleVariantes")
+                    .innerHTML = variantes;
+
+                //////////////////////////////////////////////////////
+                // ABRIR MODAL
+                //////////////////////////////////////////////////////
+
+                new bootstrap.Modal(
+                    document.getElementById("detalleProductoModal")
                 ).show();
 
             });
@@ -801,6 +1486,48 @@ function eliminar(id){
                 html
             );
         }
+
+                //////////////////////////////////////////////////////
+        // LIMPIAR BACKDROP PRODUCTO
+        //////////////////////////////////////////////////////
+
+        document.getElementById('productoModal')
+        .addEventListener('hidden.bs.modal', function () {
+
+            document.body.classList.remove('modal-open');
+
+            document.querySelectorAll('.modal-backdrop')
+            .forEach(x => x.remove());
+
+        });
+
+        //////////////////////////////////////////////////////
+        // LIMPIAR BACKDROP DETALLE
+        //////////////////////////////////////////////////////
+
+        document.getElementById('detalleProductoModal')
+        .addEventListener('hidden.bs.modal', function () {
+
+            document.body.classList.remove('modal-open');
+
+            document.querySelectorAll('.modal-backdrop')
+            .forEach(x => x.remove());
+
+        });
+
+        //////////////////////////////////////////////////////
+        // LIMPIAR BACKDROP IMAGEN
+        //////////////////////////////////////////////////////
+
+        document.getElementById('imgModal')
+        .addEventListener('hidden.bs.modal', function () {
+
+            document.body.classList.remove('modal-open');
+
+            document.querySelectorAll('.modal-backdrop')
+            .forEach(x => x.remove());
+
+        });
 
 </script>
 }

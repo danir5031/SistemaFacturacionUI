@@ -45,7 +45,7 @@ namespace SistemaFacturacionUI.Controllers
             // PAGINACION
             //////////////////////////////////////////////////////
 
-            int cantidadPorPagina = 15;
+            int cantidadPorPagina = 10;
 
             //////////////////////////////////////////////////////
             // QUERY
@@ -215,8 +215,16 @@ namespace SistemaFacturacionUI.Controllers
                 using (var ms = new MemoryStream())
                 {
                     await imagenFile.CopyToAsync(ms);
+
                     producto.Imagen = ms.ToArray();
+
                     producto.ImagenMime = imagenFile.ContentType;
+
+                    //////////////////////////////////////////////////////
+                    // LIMPIAR URL
+                    //////////////////////////////////////////////////////
+
+                    producto.ImagenUrl = null;
                 }
             }
 
@@ -365,7 +373,14 @@ namespace SistemaFacturacionUI.Controllers
                     if (producto.Imagen != null)
                     {
                         db.Imagen = producto.Imagen;
+
                         db.ImagenMime = producto.ImagenMime;
+
+                        //////////////////////////////////////////////////////
+                        // LIMPIAR URL
+                        //////////////////////////////////////////////////////
+
+                        db.ImagenUrl = null;
                     }
                 }
             }
@@ -465,7 +480,9 @@ namespace SistemaFacturacionUI.Controllers
                 producto.PrecioVenta,
                 producto.Costo,
                 producto.Stock,
-                producto.ImagenUrl,
+                ImagenUrl = producto.Imagen != null
+    ? "/Producto/VerImagen/" + producto.IdProducto
+    : producto.ImagenUrl,
                 producto.Disponible,
 
                 Variantes = producto.Variantes

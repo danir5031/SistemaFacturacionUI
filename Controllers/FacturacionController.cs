@@ -210,7 +210,9 @@ namespace SistemaFacturacionUI.Controllers
 
                         precioVenta = p.PrecioVenta,
 
-                        imagenUrl = p.ImagenUrl,
+                        imagenUrl = p.Imagen != null
+    ? "/Producto/VerImagen/" + p.IdProducto
+    : p.ImagenUrl,
 
                         stock = v.Stock,
 
@@ -235,7 +237,9 @@ namespace SistemaFacturacionUI.Controllers
 
                     precioVenta = p.PrecioVenta,
 
-                    imagenUrl = p.ImagenUrl,
+                    imagenUrl = p.Imagen != null
+        ? "/Producto/VerImagen/" + p.IdProducto
+        : p.ImagenUrl,
 
                     stock = p.Stock,
 
@@ -328,7 +332,7 @@ namespace SistemaFacturacionUI.Controllers
 
                         Direccion = data.Direccion ?? "",
 
-                        FechaRegistro = DateTime.Now,
+                        FechaRegistro = DateTime.UtcNow.AddHours(-6),
 
                         Activo = true
                     };
@@ -595,10 +599,7 @@ namespace SistemaFacturacionUI.Controllers
                     _context.Usuarios
                     .FirstOrDefault(x => x.Usuario1 == usuario);
 
-                if (userDb != null)
-                {
-                    factura.IdUsuario = userDb.IdUsuario;
-                }
+               
 
                 //////////////////////////////////////////////////////
                 // DEVOLVER STOCK ANTERIOR
@@ -909,20 +910,20 @@ namespace SistemaFacturacionUI.Controllers
 
                     if (producto != null)
                     {
-                        //////////////////////////////////////////////////////
-                        // RECALCULAR STOCK TOTAL
-                        //////////////////////////////////////////////////////
-
-                        producto.Stock = _context.ProductoVariantes
-    .AsEnumerable()
-    .Where(x =>
-        x.IdProducto == producto.IdProducto &&
-        x.Activo)
-    .Sum(x => x.Stock);
-
-                        //////////////////////////////////////////////////////
-                        // DISPONIBLE
-                        //////////////////////////////////////////////////////
+                        if (d.IdVariante.HasValue &&
+                            d.IdVariante > 0)
+                        {
+                            producto.Stock = _context.ProductoVariantes
+                                .AsEnumerable()
+                                .Where(x =>
+                                    x.IdProducto == producto.IdProducto &&
+                                    x.Activo)
+                                .Sum(x => x.Stock);
+                        }
+                        else
+                        {
+                            producto.Stock += d.Cantidad;
+                        }
 
                         producto.Disponible =
                             producto.Stock > 0;
@@ -1109,16 +1110,12 @@ namespace SistemaFacturacionUI.Controllers
                                 variante.Stock += d.Cantidad;
                             }
 
-                            //////////////////////////////////////////////////////
-                            // RECALCULAR STOCK TOTAL
-                            //////////////////////////////////////////////////////
-
                             producto.Stock = _context.ProductoVariantes
-    .AsEnumerable()
-    .Where(x =>
-        x.IdProducto == producto.IdProducto &&
-        x.Activo)
-    .Sum(x => x.Stock);
+                                .AsEnumerable()
+                                .Where(x =>
+                                    x.IdProducto == producto.IdProducto &&
+                                    x.Activo)
+                                .Sum(x => x.Stock);
                         }
                         else
                         {
