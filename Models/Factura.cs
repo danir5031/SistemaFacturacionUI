@@ -67,5 +67,7 @@ namespace SistemaFacturacionUI.Models
         public bool TicketGenerado { get; set; }
 
         public virtual List<FacturaDetalle> Detalles { get; set; }
+
+        public string Tienda { get; set; }
     }
 }

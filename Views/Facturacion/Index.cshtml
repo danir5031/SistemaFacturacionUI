@@ -192,7 +192,19 @@
 
                     </div>
 
+                    <div class="mt-2">
+
+                        <label>🏪 Tienda</label>
+
+                        <input id="tienda"
+                               class="form-control"
+                               maxlength="100"
+                               placeholder="Ej. WMK o Zen" />
+
+                    </div>
+
                 </div>
+
                 <div class="mt-2">
 
                     <label>Comentario</label>
@@ -562,6 +574,8 @@
 
                     <th>Pago</th>
 
+                    <th>Tienda</th>
+
                     <th>Estado</th>
 
                     <th>Total</th>
@@ -640,6 +654,7 @@
 
                         </td>
 
+
                         <!-- HORARIO -->
                         <td>
 
@@ -672,6 +687,20 @@
                                 <span class="badge bg-success">
                                     Efectivo
                                 </span>
+                            }
+
+                        </td>
+                        <td>
+
+                            @if (!string.IsNullOrWhiteSpace(f.Tienda))
+                            {
+                                <span class="badge bg-info text-dark">
+                                    @f.Tienda
+                                </span>
+                            }
+                            else
+                            {
+                                <span>-</span>
                             }
 
                         </td>
@@ -815,6 +844,40 @@
             x.Estado != "Cancelada" &&
             x.MetodoPago == "Transferencia")
         .Sum(x => x.Total);
+
+        var ventasPorTienda = Model
+    .Where(x =>
+        x.Estado != "Cancelada" &&
+        !string.IsNullOrWhiteSpace(x.Tienda))
+    .GroupBy(x => x.Tienda.Trim().ToUpper())
+    .Select(g => new
+    {
+        Nombre = g.First().Tienda.Trim(),
+        Total = g.Sum(x => x.Total)
+    })
+    .OrderByDescending(x => x.Total)
+    .ToList();
+
+        var ventasPorUsuario = Model
+
+    .Where(x =>
+        x.Estado != "Cancelada" &&
+        x.Usuario != null)
+
+    .GroupBy(x => x.Usuario.Usuario1.Trim().ToUpper())
+
+    .Select(g => new
+    {
+        Nombre = g.First().Usuario.Usuario1.Trim(),
+        Total = g.Sum(x => x.Total),
+        Cantidad = g.Count()
+    })
+
+    .OrderByDescending(x => x.Total)
+
+    .ToList();
+
+
 }
     @if (rol == "ADMIN")
     {
@@ -909,6 +972,48 @@
 
                 </div>
             </div>
+
+            @foreach (var tienda in ventasPorTienda)
+            {
+                <div class="col">
+
+                    <div class="card-box mini-resumen-card py-2 px-2 text-center">
+
+                        <small class="d-block">
+                            🏪 @tienda.Nombre.ToUpper()
+                        </small>
+
+                        <b class="text-warning">
+                            $@tienda.Total.ToString("0.00")
+                        </b>
+
+                    </div>
+
+                </div>
+            }
+
+            @foreach (var usuario in ventasPorUsuario)
+            {
+                <div class="col">
+
+                    <div class="card-box mini-resumen-card py-2 px-2 text-center">
+
+                        <small class="d-block">
+                            👤 @usuario.Nombre.ToUpper()
+                        </small>
+
+                        <b class="text-primary">
+                            $@usuario.Total.ToString("0.00")
+                        </b>
+
+                        <div style="font-size:11px;color:#6b7280;">
+                            @usuario.Cantidad factura@(usuario.Cantidad == 1 ? "" : "s")
+                        </div>
+
+                    </div>
+
+                </div>
+            }
 
         </div>
     }
@@ -1383,6 +1488,9 @@
                 Municipio:
                     document.getElementById("municipio").value,
 
+                Tienda:
+                    document.getElementById("tienda").value,
+
                 Comentario:
                     document.getElementById("comentario").value,
 
@@ -1513,6 +1621,7 @@
             document.getElementById("nombreCliente").value = "";
             document.getElementById("telefono").value = "";
             document.getElementById("direccion").value = "";
+                    document.getElementById("tienda").value = "";
             document.getElementById("comentario").value = "";
             document.getElementById("municipio").value = "";
             document.getElementById("fechaEnvio").value = "";
@@ -1832,6 +1941,9 @@ document.getElementById("btnNuevaFactura")
 
                 document.getElementById("municipio").value =
                     f.municipio || "";
+
+                            document.getElementById("tienda").value =
+            f.tienda || "";
 
                 document.getElementById("comentario").value =
                     f.comentario || "";

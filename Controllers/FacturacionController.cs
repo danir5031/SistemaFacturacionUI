@@ -378,6 +378,8 @@ namespace SistemaFacturacionUI.Controllers
                     Municipio =
                         data.Municipio ?? "",
 
+                    Tienda = data.Tienda ?? "",
+
                     Comentario =
                         data.Comentario ?? "",
 
@@ -706,6 +708,8 @@ namespace SistemaFacturacionUI.Controllers
                 factura.Departamento = data.Departamento ?? "";
 
                 factura.Municipio = data.Municipio ?? "";
+
+                factura.Tienda = data.Tienda ?? "";
 
                 factura.Comentario = data.Comentario ?? "";
 
@@ -1036,6 +1040,7 @@ namespace SistemaFacturacionUI.Controllers
                     factura.Direccion,
                     factura.Departamento,
                     factura.Municipio,
+                    factura.Tienda,
                     factura.Comentario,
                     factura.Horario,
                     factura.HoraExacta,
@@ -1275,7 +1280,7 @@ namespace SistemaFacturacionUI.Controllers
                 //////////////////////////////////////////////////////
 
                 ws.Cell(fila, 3).Value =
-                    "watchmaker100@outlook.com";
+                    "taosv503@gmail.com";
 
                 ws.Cell(fila, 4).Value =
                     f.Direccion;
@@ -1522,6 +1527,7 @@ namespace SistemaFacturacionUI.Controllers
         public string Comentario { get; set; }
 
         public string Horario { get; set; }
+        public string? Tienda { get; set; }
 
         public string HoraExacta { get; set; }
 
@@ -1553,6 +1559,8 @@ namespace SistemaFacturacionUI.Controllers
         public int Cantidad { get; set; }
 
         public decimal Precio { get; set; }
+        public string? Tienda { get; set; }
+
 
         public int? IdVariante { get; set; }
 

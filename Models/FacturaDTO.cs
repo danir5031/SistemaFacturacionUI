@@ -9,6 +9,7 @@ public class FacturaDTO
 
     public decimal Subtotal { get; set; }
     public decimal Envio { get; set; }
+    public string? Tienda { get; set; }
     public decimal Descuento { get; set; }
     public decimal Total { get; set; }
 

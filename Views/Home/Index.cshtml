@@ -5,13 +5,15 @@
 
 <style>
 
+    
+
     .chart-wrapper {
         position: relative;
         width: 100%;
         height: 420px;
     }
 
-    @@media(max - width:768px) {
+    @@media(max-width:768px) {
 
         .chart-wrapper {
             height: 320px;
@@ -191,7 +193,7 @@
        MOBILE FIXES
     ======================================================= */
 
-    @@media(max - width:768px) {
+    @@media(max-width:768px) {
 
         .top-bar {
             flex-direction: column;
@@ -228,7 +230,29 @@
         .chart-card canvas {
             max-height: 250px !important;
         }
+
+
+
     }
+
+    .chart-productos {
+        position: relative;
+        height: 450px;
+    }
+
+    @@media(max-width:768px) {
+
+        .chart-productos {
+            height: 650px;
+        }
+
+        #chartProductos {
+            max-height: none !important;
+        }
+
+    }
+
+    -----------------------------------------------------------------------------------------------------
 
 </style>
 
@@ -782,6 +806,92 @@
 
     </div>
 
+    <div class="col-12">
+
+        <div class="chart-card">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <h5 class="mb-0">
+                    Participación de Ventas por Usuario
+                </h5>
+
+                <span class="badge bg-info">
+                    %
+                </span>
+
+            </div>
+
+            <div style="position:relative;height:450px;">
+
+                <canvas id="chartUsuarios"></canvas>
+
+                
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-12 mt-4">
+
+        <div class="chart-card">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <h5 class="mb-0">
+                    Productos Más Vendidos (%)
+                </h5>
+
+                <span class="badge bg-success">
+                    Top Productos
+                </span>
+
+            </div>
+
+            <div style="position:relative;height:450px;">
+
+                <canvas id="chartProductos"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-12 mt-4">
+
+        <div class="chart-card">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <h5 class="mb-0">
+
+                    Ventas por Tienda
+
+                </h5>
+
+                <span class="badge bg-primary">
+
+                    %
+
+                </span>
+
+            </div>
+
+            <div style="height:450px;">
+
+                <canvas id="chartTiendas"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
 @section Scripts {
@@ -810,6 +920,30 @@
 
         //////////////////////////////////////////////////////
         // CHART
+        //////////////////////////////////////////////////////
+
+                function obtenerColorTexto() {
+
+            const fondo =
+                getComputedStyle(document.body)
+                .backgroundColor;
+
+            // Modo oscuro
+            if (fondo === "rgb(15, 23, 42)" ||
+                fondo === "rgb(30, 41, 59)") {
+
+                return "#cbd5e1";
+            }
+
+            // Modo claro
+            return "#1f2937";
+        }
+
+        const colorTexto = obtenerColorTexto();
+        
+
+                //////////////////////////////////////////////////////
+        // GRAFICA BARRAS
         //////////////////////////////////////////////////////
 
         const ctx = document.getElementById('chart');
@@ -902,7 +1036,340 @@
                     }
                 }
             }
+
         });
+
+                
+
+
+
+        //////////////////////////////////////////////////////
+        // GRAFICO PASTEL USUARIOS
+        //////////////////////////////////////////////////////
+
+
+
+               const usuariosLabelsOriginal =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PastelUsuariosLabels));
+
+        const usuariosValores =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PastelUsuariosValores));
+
+
+        const totalVentas =
+        usuariosValores.reduce((a,b) => a + b, 0);
+
+        const usuariosLabels =
+        usuariosLabelsOriginal.map((nombre,index) => {
+
+            let porcentaje =
+                ((usuariosValores[index] / totalVentas) * 100)
+                .toFixed(1);
+
+            return `${nombre} (${porcentaje}%)`;
+
+        });
+        const ctxUsuarios =
+        document.getElementById('chartUsuarios');
+
+        new Chart(ctxUsuarios, {
+
+            type: 'pie',
+
+            data: {
+
+                labels: usuariosLabels,
+
+                datasets: [{
+
+                    data: usuariosValores,
+
+                    backgroundColor: [
+                        '#3b82f6',
+                        '#22c55e',
+                        '#f59e0b',
+                        '#ef4444',
+                        '#8b5cf6',
+                        '#06b6d4',
+                        '#ec4899',
+                        '#84cc16'
+                    ]
+                }]
+            },
+
+                    options: {
+
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: {
+
+                    position:
+                        window.innerWidth < 768
+                        ? 'bottom'
+                        : 'right',
+
+                    maxWidth:
+                        window.innerWidth < 768
+                        ? 280
+                        : 400,
+
+                            labels: {
+
+            color: function () {
+
+                return document.body.classList.contains("dark-mode")
+                    ? "#e2e8f0"
+                    : "#1f2937";
+
+            },
+
+            usePointStyle: true,
+
+            pointStyle: "rect",
+
+            boxWidth: 12,
+
+            padding: 18,
+
+            font: {
+                size: window.innerWidth < 768 ? 11 : 13
+            }
+        }
+                }
+            }
+        }
+        });
+
+                const productosLabelsOriginal =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PastelProductosLabels));
+
+        const productosValores =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PastelProductosValores));
+
+        const totalProductos =
+        productosValores.reduce((a,b) => a + b, 0);
+
+        const productosLabels =
+        productosLabelsOriginal.map((nombre,index)=>{
+
+            let cantidad = productosValores[index];
+
+            let porcentaje =
+            ((cantidad / totalProductos) * 100).toFixed(0);
+
+                    let nombreCorto =
+
+        window.innerWidth < 768
+
+        ? nombre.substring(0,18)
+
+        : nombre;
+
+        return `${nombreCorto} (${cantidad}) ${porcentaje}%`;
+
+        });
+
+        
+
+                const ctxProductos =
+        document.getElementById('chartProductos');
+
+        new Chart(ctxProductos, {
+
+            type: 'pie',
+
+            data: {
+
+                labels: productosLabels,
+
+                datasets: [{
+
+                    data: productosValores,
+
+                    backgroundColor: [
+
+                        '#3b82f6',
+                        '#22c55e',
+                        '#f59e0b',
+                        '#ef4444',
+                        '#8b5cf6',
+                        '#06b6d4',
+                        '#ec4899',
+                        '#84cc16',
+                        '#f97316',
+                        '#14b8a6'
+                    ]
+                }]
+            },
+
+                options: {
+
+        responsive: true,
+
+        maintainAspectRatio: false,
+
+                        plugins: {
+
+            legend: {
+
+                position:
+                    window.innerWidth < 768
+                    ? 'bottom'
+                    : 'right',
+
+                maxWidth:
+                    window.innerWidth < 768
+                    ? 280
+                    : 400,
+
+                     labels: {
+
+            color: function () {
+
+                return document.body.classList.contains("dark-mode")
+                    ? "#e2e8f0"
+                    : "#1f2937";
+
+            },
+
+            usePointStyle: true,
+
+            pointStyle: "rect",
+
+            boxWidth: 12,
+
+            padding: 18,
+
+            font: {
+                size: window.innerWidth < 768 ? 11 : 13
+            }
+        }
+            }
+        }
+            }
+        });
+
+                //////////////////////////////////////////////////////
+        // GRAFICO PASTEL TIENDAS
+        //////////////////////////////////////////////////////
+
+        const tiendasLabelsOriginal =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PastelTiendasLabels));
+
+        const tiendasValores =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PastelTiendasValores));
+
+        const totalTiendas =
+        tiendasValores.reduce((a,b)=>a+b,0);
+
+        const tiendasLabels =
+        tiendasLabelsOriginal.map((nombre,index)=>{
+
+            let total =
+                tiendasValores[index];
+
+            let porcentaje =
+                totalTiendas === 0
+                ? 0
+                : ((total / totalTiendas)*100).toFixed(1);
+
+            return `${nombre} ($${total.toFixed(2)}) ${porcentaje}%`;
+
+        });
+
+        const ctxTiendas =
+        document.getElementById("chartTiendas");
+
+        new Chart(ctxTiendas,{
+
+            type:"pie",
+
+            data:{
+
+                labels:tiendasLabels,
+
+                datasets:[{
+
+                    data:tiendasValores,
+
+                    backgroundColor:[
+
+                        '#3b82f6',
+                        '#22c55e',
+                        '#f59e0b',
+                        '#ef4444',
+                        '#8b5cf6',
+                        '#06b6d4',
+                        '#ec4899',
+                        '#84cc16',
+                        '#f97316',
+                        '#14b8a6'
+
+                    ]
+
+                }]
+            },
+
+            options:{
+
+                responsive:true,
+
+                maintainAspectRatio:false,
+
+                plugins:{
+
+                    legend:{
+
+                        position:
+                            window.innerWidth < 768
+                            ? "bottom"
+                            : "right",
+
+                        maxWidth:
+                            window.innerWidth < 768
+                            ? 280
+                            : 400,
+
+                        labels:{
+
+                            color:function(){
+
+                                return document.body.classList.contains("dark-mode")
+
+                                ? "#e2e8f0"
+
+                                : "#1f2937";
+
+                            },
+
+                            usePointStyle:true,
+
+                            pointStyle:"rect",
+
+                            boxWidth:12,
+
+                            padding:18,
+
+                            font:{
+
+                                size:
+                                window.innerWidth < 768
+                                ? 11
+                                : 13
+
+                            }
+                        }
+                    }
+                }
+            }
+
+        });
+
+
+
 
 
                 //////////////////////////////////////////////////////
@@ -939,6 +1406,10 @@
 
             window.location = '/Home/Index';
         }
+
+
+             
+
     </script>
 
 }

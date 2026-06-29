@@ -361,6 +361,12 @@ namespace SistemaFacturacionUI.Controllers
             // PRODUCTOS MAS VENDIDOS
             //////////////////////////////////////////////////////
 
+            //////////////////////////////////////////////////////
+            // PRODUCTOS MAS VENDIDOS
+            //////////////////////////////////////////////////////
+
+      
+
             var productosMasVendidos =
 
                 (from d in _context.FacturaDetalle
@@ -370,17 +376,21 @@ namespace SistemaFacturacionUI.Controllers
 
                  where f.Estado != "Cancelada"
 
-&&
+                 &&
 
-(
-    !filtroActivo
+                 (
+                     filtroActivo
 
-    ||
+                     ?
 
-    (f.FechaRegistro >= inicio
-     &&
-     f.FechaRegistro <= fin)
-)
+                     (f.FechaRegistro >= inicio
+                      &&
+                      f.FechaRegistro <= fin)
+
+                     :
+
+                     f.FechaRegistro.Date == hoy
+                 )
 
                  group d by d.IdProducto into g
 
@@ -393,17 +403,12 @@ namespace SistemaFacturacionUI.Controllers
 
                      NombreProducto =
                          _context.Productos
-
-                         .Where(p =>
-                             p.IdProducto == g.Key)
-
+                         .Where(p => p.IdProducto == g.Key)
                          .Select(p => p.Nombre)
-
                          .FirstOrDefault()
                  })
 
-                 .OrderByDescending(x =>
-                     x.CantidadVendida)
+                 .OrderByDescending(x => x.CantidadVendida)
 
                  .Take(10)
 
@@ -412,9 +417,142 @@ namespace SistemaFacturacionUI.Controllers
             ViewBag.ProductosMasVendidos =
                 productosMasVendidos;
 
+            ViewBag.PastelProductosLabels =
+    productosMasVendidos
+    .Select(x => x.NombreProducto)
+    .ToList();
+
+            ViewBag.PastelProductosValores =
+                productosMasVendidos
+                .Select(x => x.CantidadVendida)
+                .ToList();
+
             ViewBag.VentasUsuariosTotal = ventasUsuariosTotal;
 
             ViewBag.VentasUsuariosHoy = ventasUsuariosHoy;
+
+
+
+            //////////////////////////////////////////////////////
+            // PASTEL VENTAS POR TIENDA
+            //////////////////////////////////////////////////////
+
+            var ventasTiendas =
+
+            _context.Facturas
+
+            .Where(f =>
+
+                f.Estado != "Cancelada"
+
+                &&
+
+                !string.IsNullOrWhiteSpace(f.Tienda)
+
+                &&
+
+                (
+
+                    filtroActivo
+
+                    ?
+
+                    (f.FechaRegistro >= inicio &&
+                     f.FechaRegistro <= fin)
+
+                    :
+
+                    f.FechaRegistro.Date == hoy
+
+                )
+
+            )
+
+            .AsEnumerable()
+
+            .GroupBy(x => x.Tienda.Trim().ToUpper())
+
+            .Select(g => new
+            {
+                Tienda = g.First().Tienda.Trim(),
+
+                Total = g.Sum(x => x.Total)
+            })
+
+            .OrderByDescending(x => x.Total)
+
+            .ToList();
+
+            ViewBag.PastelTiendasLabels =
+            ventasTiendas
+            .Select(x => x.Tienda)
+            .ToList();
+
+            ViewBag.PastelTiendasValores =
+            ventasTiendas
+            .Select(x => x.Total)
+            .ToList();
+
+
+            //////////////////////////////////////////////////////
+            // GRAFICO PASTEL USUARIOS
+            //////////////////////////////////////////////////////
+
+            var ventasPastelUsuarios =
+
+            _context.Facturas
+
+            .Where(x =>
+
+                x.Estado != "Cancelada"
+
+                &&
+
+                x.Usuario != null
+
+                &&
+
+                (
+
+                    filtroActivo
+
+                    ?
+
+                    (x.FechaRegistro >= inicio &&
+                     x.FechaRegistro <= fin)
+
+                    :
+
+                    x.FechaRegistro.Date == hoy
+
+                )
+
+            )
+
+            .GroupBy(x => x.Usuario.Usuario1)
+
+            .Select(g => new
+            {
+                Usuario = g.Key,
+
+                Total = g.Sum(x => x.Total)
+            })
+
+            .OrderByDescending(x => x.Total)
+
+            .ToList();
+
+            ViewBag.PastelUsuariosLabels =
+            ventasPastelUsuarios
+            .Select(x => x.Usuario)
+            .ToList();
+
+            ViewBag.PastelUsuariosValores =
+            ventasPastelUsuarios
+            .Select(x => x.Total)
+            .ToList();
+
+            
 
 
 
