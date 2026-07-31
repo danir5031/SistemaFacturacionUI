@@ -126,6 +126,7 @@
 
                 <!-- <img src="~/img/loo.png"
              class="logo" />-->
+
                 <img src="~/img/tao2.png"
                      class="logo" />
 
@@ -133,9 +134,9 @@
 
             <div class="center">
 
-                <!--<h3 class="titulo">
-                TAO
-        </h3>-->
+                <h3 class="titulo">
+                    TAO
+                </h3>
 
             </div>
 
@@ -200,6 +201,12 @@
                         @(Model.Usuario != null
                             ? Model.Usuario.Usuario1
                             : "-")
+                        <span style="margin-left:10px;">
+                            <b>Tienda:</b>
+                            @(string.IsNullOrWhiteSpace(Model.Tienda)
+                                ? "-"
+                                : Model.Tienda.ToUpper())
+                        </span>
                     </td>
                 </tr>
 

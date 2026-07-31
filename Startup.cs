@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,9 +29,20 @@ namespace SistemaFacturacionUI
             // 🔥 SESSION
             services.AddSession(options =>
             {
-                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                // La sesión expira tras 6 horas SIN actividad
+                options.IdleTimeout = TimeSpan.FromHours(8);
+
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
+
+                // Nombre personalizado de la cookie
+                options.Cookie.Name = "SistemaFacturacion.Session";
+
+                // Solo HTTPS cuando exista
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+
+                // Protección CSRF
+                options.Cookie.SameSite = SameSiteMode.Lax;
             });
         }
 

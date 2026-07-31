@@ -2,6 +2,7 @@
 using SistemaFacturacionUI.Models;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
+using System;
 
 namespace SistemaFacturacionUI.Controllers
 {
@@ -46,6 +47,23 @@ namespace SistemaFacturacionUI.Controllers
 
             ViewBag.Error = "Usuario o contraseña incorrectos";
             return View();
+        }
+
+        [HttpPost]
+        public IActionResult KeepAlive()
+        {
+            // Si existe sesión la renovamos
+            if (HttpContext.Session.GetString("usuario") != null)
+            {
+                HttpContext.Session.SetString(
+                    "ultimaActividad",
+                    DateTime.Now.ToString()
+                );
+
+                return Ok();
+            }
+
+            return Unauthorized();
         }
 
         // 🔥 LOGOUT

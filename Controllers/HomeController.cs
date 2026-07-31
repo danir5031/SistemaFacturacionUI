@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SistemaFacturacionUI.Models;
 using System;
@@ -22,334 +23,220 @@ namespace SistemaFacturacionUI.Controllers
         }
 
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-        public IActionResult Index(DateTime? fechaInicio,
-    DateTime? fechaFin)
+        public  IActionResult Index(DateTime? fechaInicio, DateTime? fechaFin)
         {
             var usuario = HttpContext.Session.GetString("usuario");
             var rol = HttpContext.Session.GetString("rol");
 
-            //////////////////////////////////////////////////////
-            // LOGIN
-            //////////////////////////////////////////////////////
-
             if (usuario == null)
-            {
                 return RedirectToAction("Index", "Login");
-            }
-
-            //////////////////////////////////////////////////////
-            // SOLO ADMIN
-            //////////////////////////////////////////////////////
 
             if (rol != "ADMIN")
-            {
                 return RedirectToAction("Index", "Empleado");
-            }
 
-            //////////////////////////////////////////////////////
-            // FILTRO FECHAS
-            //////////////////////////////////////////////////////
-
-            DateTime inicio =
-                fechaInicio ?? DateTime.Today;
-
-            DateTime fin =
-                fechaFin ?? DateTime.Today;
-
-
-            fin = fin.Date
-                .AddDays(1)
-                .AddSeconds(-1);
-
-
-            //////////////////////////////////////////////////////
-            // FILTRO ACTIVO
-            //////////////////////////////////////////////////////
+            DateTime inicio = fechaInicio ?? DateTime.Today;
+            DateTime fin = (fechaFin ?? DateTime.Today)
+                            .Date
+                            .AddDays(1)
+                            .AddSeconds(-1);
 
             bool filtroActivo =
                 fechaInicio.HasValue &&
                 fechaFin.HasValue;
 
             //////////////////////////////////////////////////////
-            // FACTURAS FILTRADAS
-            //////////////////////////////////////////////////////
-
-            var facturasFiltro = _context.Facturas
-
-                .Where(x =>
-                    x.Estado != "Cancelada")
-
-                .ToList();
-
-            if (filtroActivo)
-            {
-                facturasFiltro =
-                    facturasFiltro
-
-                    .Where(x =>
-                        x.FechaRegistro >= inicio
-                        &&
-                        x.FechaRegistro <= fin)
-
-                    .ToList();
-            }
-
-
-
-            
-            //////////////////////////////////////////////////////
-            // FACTURAS VALIDAS
+            // CARGAR TODO UNA SOLA VEZ
             //////////////////////////////////////////////////////
 
             var facturas = _context.Facturas
+                .AsNoTracking()
                 .Where(x => x.Estado != "Cancelada")
                 .ToList();
 
+            var facturasFiltro = filtroActivo
+                ? facturas
+                    .Where(x =>
+                        x.FechaRegistro >= inicio &&
+                        x.FechaRegistro <= fin)
+                    .ToList()
+                : facturas
+                    .Where(x => x.FechaRegistro.Date == DateTime.Today)
+                    .ToList();
+
+            var detalles = _context.FacturaDetalle
+                .AsNoTracking()
+                .ToList();
+
+            var productos = _context.Productos
+                .AsNoTracking()
+                .ToDictionary(x => x.IdProducto);
+
+            var clientes = _context.Clientes
+                .AsNoTracking()
+                .ToList();
+
+            var usuarios = _context.Usuarios
+                .AsNoTracking()
+                .ToList();
+
             //////////////////////////////////////////////////////
-            // VENTAS
+            // DICCIONARIO FACTURA -> DETALLES
             //////////////////////////////////////////////////////
 
-            decimal ventasTotales =
-    facturasFiltro.Sum(x => x.Total);
+            var detallesPorFactura = detalles
+                .GroupBy(x => x.IdFactura)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.ToList());
 
             //////////////////////////////////////////////////////
-            // GASTOS ENVIO
+            // DICCIONARIO PRODUCTO -> NOMBRE
             //////////////////////////////////////////////////////
 
-            decimal gastosEnvio =
-    facturasFiltro.Sum(x => x.Envio);
+            var nombresProductos = productos.Values
+                .ToDictionary(
+                    x => x.IdProducto,
+                    x => x.Nombre);
 
             //////////////////////////////////////////////////////
-            // COSTOS PRODUCTOS
+            // DICCIONARIO USUARIO
+            //////////////////////////////////////////////////////
+
+            var usuariosPorId = usuarios
+                .ToDictionary(
+                    x => x.IdUsuario,
+                    x => x.Usuario1);
+
+            //////////////////////////////////////////////////////
+            // COSTO PRODUCTOS
             //////////////////////////////////////////////////////
 
             decimal costoProductos = 0;
 
-            var detalles = _context.FacturaDetalle.ToList();
-
             foreach (var factura in facturasFiltro)
             {
-                var detallesFactura =
-                    _context.FacturaDetalle
+                if (!detallesPorFactura.ContainsKey(factura.IdFactura))
+                    continue;
 
-                    .Where(x =>
-                        x.IdFactura == factura.IdFactura)
-
-                    .ToList();
-
-                foreach (var d in detallesFactura)
+                foreach (var d in detallesPorFactura[factura.IdFactura])
                 {
-                    var producto =
-                        _context.Productos
-
-                        .FirstOrDefault(x =>
-                            x.IdProducto == d.IdProducto);
-
-                    if (producto != null)
+                    if (productos.TryGetValue(d.IdProducto, out var producto))
                     {
                         costoProductos +=
-                            producto.Costo *
-                            d.Cantidad;
+                            producto.Costo * d.Cantidad;
                     }
                 }
             }
 
             //////////////////////////////////////////////////////
-            // GANANCIA
+            // RESUMEN GENERAL
             //////////////////////////////////////////////////////
+
+            decimal ventasTotales =
+                facturasFiltro.Sum(x => x.Total);
+
+            decimal gastosEnvio =
+                facturasFiltro.Sum(x => x.Envio);
 
             decimal gananciaNeta =
                 ventasTotales
                 - gastosEnvio
                 - costoProductos;
 
-            //////////////////////////////////////////////////////
-            // CLIENTES
-            //////////////////////////////////////////////////////
+            int clientesActivos =
+                clientes.Count(x => x.Activo);
 
-            int clientes =
-                _context.Clientes
-                .Count(x => x.Activo == true);
+            int productosActivos =
+                productos.Values.Count(x => x.Activo);
 
-            //////////////////////////////////////////////////////
-            // PRODUCTOS
-            //////////////////////////////////////////////////////
-
-            int productos =
-                _context.Productos
-                .Count(x => x.Activo == true);
-
-            //////////////////////////////////////////////////////
-            // FACTURAS HOY
-            //////////////////////////////////////////////////////
-
-            int facturasPeriodo;
-
-            if (filtroActivo)
-            {
-                facturasPeriodo =
-                    facturasFiltro.Count();
-            }
-            else
-            {
-                facturasPeriodo =
-                    _context.Facturas
-
-                    .Count(x =>
-                        x.Estado != "Cancelada"
-                        &&
-                        x.FechaRegistro.Date == DateTime.Today);
-            }
-
-            //////////////////////////////////////////////////////
-            // PENDIENTES
-            //////////////////////////////////////////////////////
+            int usuariosActivos =
+                usuarios.Count(x => x.Activo);
 
             int pendientes =
-                _context.Facturas
-                .Count(x =>
-                    x.Estado == "Pendiente");
-
-            //////////////////////////////////////////////////////
-            // STOCK BAJO
-            //////////////////////////////////////////////////////
+                facturas.Count(x => x.Estado == "Pendiente");
 
             int productosBajos =
-                _context.Productos
-                .Count(x =>
-                    x.Stock <= 3
-                    &&
-                    x.Activo == true);
+                productos.Values.Count(x =>
+                    x.Activo &&
+                    x.Stock <= 3);
 
-            //////////////////////////////////////////////////////
-            // USUARIOS
-            //////////////////////////////////////////////////////
+            int facturasPeriodo =
+                facturasFiltro.Count();
 
-            int usuarios =
-                _context.Usuarios
-                .Count(x => x.Activo == true);
-            
+            decimal ventasHoyMonto =
+                facturasFiltro.Sum(x => x.Total);
 
-            //////////////////////////////////////////////////////
-            // HOY
-            //////////////////////////////////////////////////////
+            decimal enviosHoyMonto =
+                facturasFiltro.Sum(x => x.Envio);
+
+            int cantidadVentasHoy =
+                facturasFiltro.Count();
 
             var hoy = DateTime.Today;
 
             //////////////////////////////////////////////////////
-            // VENTAS HOY $
+            // FACTURAS DEL PERIODO
             //////////////////////////////////////////////////////
 
-            decimal ventasHoyMonto =
-    _context.Facturas
-    .Where(x =>
-        x.Estado != "Cancelada"
-        &&
-        x.FechaRegistro >= inicio
-        &&
-        x.FechaRegistro <= fin)
-    .Sum(x => (decimal?)x.Total) ?? 0;
+            var facturasPeriodoLista = filtroActivo
+                ? facturasFiltro
+                : facturas
+                    .Where(x => x.FechaRegistro.Date == hoy)
+                    .ToList();
 
             //////////////////////////////////////////////////////
-            // ENVIOS HOY $
+            // HASHSET FACTURAS
             //////////////////////////////////////////////////////
 
-            decimal enviosHoyMonto =
-    _context.Facturas
-    .Where(x =>
-        x.Estado != "Cancelada"
-        &&
-        x.FechaRegistro >= inicio
-        &&
-        x.FechaRegistro <= fin)
-    .Sum(x => (decimal?)x.Envio) ?? 0;
+            var facturasPeriodoIds =
 
+                facturasPeriodoLista
+
+                    .Select(x => x.IdFactura)
+
+                    .ToHashSet();
+
+
+            cantidadVentasHoy = facturasFiltro.Count();
             //////////////////////////////////////////////////////
-            // CANTIDAD VENTAS HOY
-            //////////////////////////////////////////////////////
-
-            int cantidadVentasHoy;
-
-            if (filtroActivo)
-            {
-                cantidadVentasHoy =
-                    facturasFiltro.Count();
-            }
-            else
-            {
-                cantidadVentasHoy =
-                    _context.Facturas
-
-                    .Count(x =>
-                        x.Estado != "Cancelada"
-                        &&
-                        x.FechaRegistro.Date == DateTime.Today);
-            }
-
-            //////////////////////////////////////////////////////
-            // VENTAS EMPLEADOS
+            // VENTAS POR USUARIO
             //////////////////////////////////////////////////////
 
-            //////////////////////////////////////////////////////
-            // VENTAS EMPLEADOS HOY
-            //////////////////////////////////////////////////////
+            var ventasUsuariosHoy = facturasPeriodoLista
 
-            var ventasUsuariosHoy = _context.Facturas
+                .Where(x => x.IdUsuario != null)
 
-    .Where(x =>
-        x.Estado != "Cancelada"
-        &&
-        x.FechaRegistro >= inicio
-        &&
-        x.FechaRegistro <= fin
-        &&
-        x.Usuario != null)
-
-    .GroupBy(x => x.Usuario.Usuario1)
-
-    .Select(g => new
-    {
-        Usuario = g.Key,
-
-        Ventas = g.Count(),
-
-        Total = g.Sum(x => x.Total)
-    })
-
-    .OrderByDescending(x => x.Ventas)
-
-    .ToList();
-
-            //////////////////////////////////////////////////////
-            // VENTAS TOTALES EMPLEADOS
-            //////////////////////////////////////////////////////
-
-            var ventasUsuariosTotal = _context.Facturas
-
-                .Where(x =>
-    x.Estado != "Cancelada"
-    &&
-    x.Usuario != null
-    &&
-    (
-        !filtroActivo
-
-        ||
-
-        (x.FechaRegistro >= inicio
-         &&
-         x.FechaRegistro <= fin)
-    )
-)
-
-                .GroupBy(x => x.Usuario.Usuario1)
+                .GroupBy(x => usuariosPorId.ContainsKey(x.IdUsuario)
+                                ? usuariosPorId[x.IdUsuario]
+                                : "SIN USUARIO")
 
                 .Select(g => new
                 {
                     Usuario = g.Key,
-
                     Ventas = g.Count(),
+                    Total = g.Sum(x => x.Total)
+                })
 
+                .OrderByDescending(x => x.Ventas)
+
+                .ToList();
+
+            //////////////////////////////////////////////////////
+            // VENTAS TOTALES POR USUARIO
+            //////////////////////////////////////////////////////
+
+            var ventasUsuariosTotal = facturasFiltro
+
+                .Where(x => x.IdUsuario != null)
+
+                .GroupBy(x => usuariosPorId.ContainsKey(x.IdUsuario)
+                                ? usuariosPorId[x.IdUsuario]
+                                : "SIN USUARIO")
+
+                .Select(g => new
+                {
+                    Usuario = g.Key,
+                    Ventas = g.Count(),
                     Total = g.Sum(x => x.Total)
                 })
 
@@ -357,205 +244,121 @@ namespace SistemaFacturacionUI.Controllers
 
                 .ToList();
 
-            //////////////////////////////////////////////////////
-            // PRODUCTOS MAS VENDIDOS
-            //////////////////////////////////////////////////////
+            ViewBag.VentasUsuariosHoy = ventasUsuariosHoy;
+            ViewBag.VentasUsuariosTotal = ventasUsuariosTotal;
 
             //////////////////////////////////////////////////////
             // PRODUCTOS MAS VENDIDOS
             //////////////////////////////////////////////////////
-
-      
 
             var productosMasVendidos =
 
-                (from d in _context.FacturaDetalle
+                detalles
 
-                 join f in _context.Facturas
-                 on d.IdFactura equals f.IdFactura
+.Where(d =>
 
-                 where f.Estado != "Cancelada"
+    facturasPeriodoIds
 
-                 &&
+        .Contains(d.IdFactura))
 
-                 (
-                     filtroActivo
+                .GroupBy(d => d.IdProducto)
 
-                     ?
+                .Select(g => new
+                {
+                    IdProducto = g.Key,
 
-                     (f.FechaRegistro >= inicio
-                      &&
-                      f.FechaRegistro <= fin)
+                    CantidadVendida = g.Sum(x => x.Cantidad),
 
-                     :
+                    NombreProducto =
+                        nombresProductos.ContainsKey(g.Key)
+                            ? nombresProductos[g.Key]
+                            : "SIN NOMBRE"
+                })
 
-                     f.FechaRegistro.Date == hoy
-                 )
+                .OrderByDescending(x => x.CantidadVendida)
 
-                 group d by d.IdProducto into g
+                .Take(10)
 
-                 select new
-                 {
-                     IdProducto = g.Key,
+                .ToList();
 
-                     CantidadVendida =
-                         g.Sum(x => x.Cantidad),
-
-                     NombreProducto =
-                         _context.Productos
-                         .Where(p => p.IdProducto == g.Key)
-                         .Select(p => p.Nombre)
-                         .FirstOrDefault()
-                 })
-
-                 .OrderByDescending(x => x.CantidadVendida)
-
-                 .Take(10)
-
-                 .ToList();
-
-            ViewBag.ProductosMasVendidos =
-                productosMasVendidos;
+            ViewBag.ProductosMasVendidos = productosMasVendidos;
 
             ViewBag.PastelProductosLabels =
-    productosMasVendidos
-    .Select(x => x.NombreProducto)
-    .ToList();
+                productosMasVendidos
+                    .Select(x => x.NombreProducto)
+                    .ToList();
 
             ViewBag.PastelProductosValores =
                 productosMasVendidos
-                .Select(x => x.CantidadVendida)
-                .ToList();
-
-            ViewBag.VentasUsuariosTotal = ventasUsuariosTotal;
-
-            ViewBag.VentasUsuariosHoy = ventasUsuariosHoy;
-
-
+                    .Select(x => x.CantidadVendida)
+                    .ToList();
 
             //////////////////////////////////////////////////////
-            // PASTEL VENTAS POR TIENDA
+            // PASTEL TIENDAS
             //////////////////////////////////////////////////////
 
             var ventasTiendas =
 
-            _context.Facturas
+                facturasPeriodoLista
 
-            .Where(f =>
+                .Where(x =>
+                    !string.IsNullOrWhiteSpace(x.Tienda))
 
-                f.Estado != "Cancelada"
+                .GroupBy(x => x.Tienda.Trim().ToUpper())
 
-                &&
+                .Select(g => new
+                {
+                    Tienda = g.First().Tienda.Trim(),
+                    Total = g.Sum(x => x.Total)
+                })
 
-                !string.IsNullOrWhiteSpace(f.Tienda)
+                .OrderByDescending(x => x.Total)
 
-                &&
-
-                (
-
-                    filtroActivo
-
-                    ?
-
-                    (f.FechaRegistro >= inicio &&
-                     f.FechaRegistro <= fin)
-
-                    :
-
-                    f.FechaRegistro.Date == hoy
-
-                )
-
-            )
-
-            .AsEnumerable()
-
-            .GroupBy(x => x.Tienda.Trim().ToUpper())
-
-            .Select(g => new
-            {
-                Tienda = g.First().Tienda.Trim(),
-
-                Total = g.Sum(x => x.Total)
-            })
-
-            .OrderByDescending(x => x.Total)
-
-            .ToList();
+                .ToList();
 
             ViewBag.PastelTiendasLabels =
-            ventasTiendas
-            .Select(x => x.Tienda)
-            .ToList();
+                ventasTiendas
+                    .Select(x => x.Tienda)
+                    .ToList();
 
             ViewBag.PastelTiendasValores =
-            ventasTiendas
-            .Select(x => x.Total)
-            .ToList();
-
+                ventasTiendas
+                    .Select(x => x.Total)
+                    .ToList();
 
             //////////////////////////////////////////////////////
-            // GRAFICO PASTEL USUARIOS
+            // PASTEL USUARIOS
             //////////////////////////////////////////////////////
 
             var ventasPastelUsuarios =
 
-            _context.Facturas
+                facturasPeriodoLista
 
-            .Where(x =>
+                .Where(x => x.IdUsuario != null)
 
-                x.Estado != "Cancelada"
+                .GroupBy(x => usuariosPorId.ContainsKey(x.IdUsuario)
+                                ? usuariosPorId[x.IdUsuario]
+                                : "SIN USUARIO")
 
-                &&
+                .Select(g => new
+                {
+                    Usuario = g.Key,
+                    Total = g.Sum(x => x.Total)
+                })
 
-                x.Usuario != null
+                .OrderByDescending(x => x.Total)
 
-                &&
-
-                (
-
-                    filtroActivo
-
-                    ?
-
-                    (x.FechaRegistro >= inicio &&
-                     x.FechaRegistro <= fin)
-
-                    :
-
-                    x.FechaRegistro.Date == hoy
-
-                )
-
-            )
-
-            .GroupBy(x => x.Usuario.Usuario1)
-
-            .Select(g => new
-            {
-                Usuario = g.Key,
-
-                Total = g.Sum(x => x.Total)
-            })
-
-            .OrderByDescending(x => x.Total)
-
-            .ToList();
+                .ToList();
 
             ViewBag.PastelUsuariosLabels =
-            ventasPastelUsuarios
-            .Select(x => x.Usuario)
-            .ToList();
+                ventasPastelUsuarios
+                    .Select(x => x.Usuario)
+                    .ToList();
 
             ViewBag.PastelUsuariosValores =
-            ventasPastelUsuarios
-            .Select(x => x.Total)
-            .ToList();
-
-            
-
-
-
+                ventasPastelUsuarios
+                    .Select(x => x.Total)
+                    .ToList();
             //////////////////////////////////////////////////////
             // VIEWBAG
             //////////////////////////////////////////////////////
@@ -565,13 +368,13 @@ namespace SistemaFacturacionUI.Controllers
             ViewBag.CostoProductos = costoProductos;
             ViewBag.GananciaNeta = gananciaNeta;
 
-            ViewBag.Clientes = clientes;
-            ViewBag.Productos = productos;
+            ViewBag.Clientes = clientesActivos;
+            ViewBag.Productos = productosActivos;
 
             ViewBag.FacturasHoy = facturasPeriodo;
             ViewBag.Pendientes = pendientes;
             ViewBag.ProductosBajos = productosBajos;
-            ViewBag.Usuarios = usuarios;
+            ViewBag.Usuarios = usuariosActivos;
 
             //////////////////////////////////////////////////////
             // NUEVOS VIEWBAG
@@ -583,7 +386,29 @@ namespace SistemaFacturacionUI.Controllers
 
             ViewBag.CantidadVentasHoy = cantidadVentasHoy;
 
-            
+            //////////////////////////////////////////////////////
+            // COSTO POR FACTURA (PRECALCULADO)
+            //////////////////////////////////////////////////////
+
+            var costoFactura = detalles
+
+                .GroupBy(d => d.IdFactura)
+
+                .ToDictionary(
+
+                    g => g.Key,
+
+                    g => g.Sum(d =>
+
+                        productos.TryGetValue(d.IdProducto, out var p)
+
+                            ? p.Costo * d.Cantidad
+
+                            : 0
+
+                    )
+
+                );
 
             //////////////////////////////////////////////////////
             // GRAFICA
@@ -598,74 +423,71 @@ namespace SistemaFacturacionUI.Controllers
                 .Select(x => x.ToString("dd/MM"))
                 .ToList();
 
-            ViewBag.VentasSemana = ultimos7Dias
-                .Select(fecha =>
-                    facturas
-                    .Where(x => x.FechaRegistro.Date == fecha.Date)
-                    .Sum(x => x.Total))
-                .ToList();
+            var ventasPorFecha =
 
-            ViewBag.GananciasSemana = ultimos7Dias
-    .Select(fecha =>
-    {
-        //////////////////////////////////////////////////////
-        // FACTURAS DEL DIA
-        //////////////////////////////////////////////////////
+    facturas
 
-        var ventasDia = facturas
-            .Where(x => x.FechaRegistro.Date == fecha.Date)
-            .ToList();
+    .GroupBy(x => x.FechaRegistro.Date)
 
-        //////////////////////////////////////////////////////
-        // TOTAL VENTAS
-        //////////////////////////////////////////////////////
+    .ToDictionary(
 
-        decimal venta = ventasDia.Sum(x => x.Total);
+        g => g.Key,
 
-        //////////////////////////////////////////////////////
-        // TOTAL ENVIO
-        //////////////////////////////////////////////////////
+        g => g.Sum(x => x.Total)
 
-        decimal envio = ventasDia.Sum(x => x.Envio);
+    );
 
-        //////////////////////////////////////////////////////
-        // COSTO PRODUCTOS
-        //////////////////////////////////////////////////////
+            ViewBag.VentasSemana =
 
-        decimal costoProductosDia = 0;
+    ultimos7Dias
 
-        foreach (var factura in ventasDia)
-        {
-            var detallesFactura = _context.FacturaDetalle
-                .Where(x => x.IdFactura == factura.IdFactura)
-                .ToList();
+        .Select(fecha =>
 
-            foreach (var d in detallesFactura)
-            {
-                var producto = _context.Productos
-                    .FirstOrDefault(x =>
-                        x.IdProducto == d.IdProducto);
+            ventasPorFecha.ContainsKey(fecha.Date)
 
-                if (producto != null)
-                {
-                    costoProductosDia +=
-                        producto.Costo * d.Cantidad;
-                }
-            }
-        }
+                ? ventasPorFecha[fecha.Date]
 
-        //////////////////////////////////////////////////////
-        // GANANCIA REAL
-        //////////////////////////////////////////////////////
+                : 0
 
-        decimal gananciaReal =
-            venta
-            - envio
-            - costoProductosDia;
+        )
 
-        return gananciaReal;
-    })
-    .ToList();
+        .ToList();
+
+            ViewBag.GananciasSemana =
+
+     ultimos7Dias
+
+     .Select(fecha =>
+     {
+         var ventasDia = facturas
+
+             .Where(x => x.FechaRegistro.Date == fecha.Date)
+
+             .ToList();
+
+         decimal venta =
+             ventasDia.Sum(x => x.Total);
+
+         decimal envio =
+             ventasDia.Sum(x => x.Envio);
+
+         decimal costo =
+
+             ventasDia.Sum(f =>
+
+                 costoFactura.ContainsKey(f.IdFactura)
+
+                     ? costoFactura[f.IdFactura]
+
+                     : 0
+
+             );
+
+         return venta - envio - costo;
+
+     })
+
+     .ToList();
 
             ViewBag.User = usuario;
             ViewBag.FechaInicio =
@@ -675,7 +497,7 @@ namespace SistemaFacturacionUI.Controllers
     fechaFin ?? DateTime.Today;
 
             ViewBag.FechaFin =
-                fin.ToString("yyyy-MM-dd");
+    fechaFinVista.ToString("yyyy-MM-dd");
 
             return View();
         }

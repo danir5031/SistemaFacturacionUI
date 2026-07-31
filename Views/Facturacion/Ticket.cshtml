@@ -128,18 +128,19 @@
 
     <div class="center">
         
-            <!-- <img src="~/img/loo.png"
-             class="logo" />-->
-            <img src="~/img/tao2.png"
+            <!-- <img src="~/img/ZEN.png"
+                 class="logo" />-->
+             <img src="~/img/tao2.png"
                  class="logo" />
 
     </div>
 
     <div class="center">
 
-            <!--<h3 class="titulo">
+            <h3 class="titulo">
+                <!--  ZEN | WATCHMAKER -->
                 TAO
-        </h3>-->
+        </h3>
 
     </div>
 
@@ -196,6 +197,12 @@
                     @(Model.Usuario != null
                         ? Model.Usuario.Usuario1
                         : "-")
+                    <span style="margin-left:10px;">
+                        <b>Tienda:</b>
+                        @(string.IsNullOrWhiteSpace(Model.Tienda)
+                            ? "-"
+                            : Model.Tienda.ToUpper())
+                    </span>
                 </td>
             </tr>
 

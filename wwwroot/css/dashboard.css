@@ -1,0 +1,244 @@
+﻿
+
+
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 420px;
+}
+
+@media(max-width:768px) {
+
+    .chart-wrapper {
+        height: 320px;
+    }
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 5px 18px rgba(0,0,0,0.05);
+    transition: .25s;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    max-width: 100%;
+}
+
+    .dashboard-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+
+    .dashboard-card .icon-box {
+        width: 65px;
+        height: 65px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+
+    .dashboard-card h2 {
+        font-size: 34px;
+        font-weight: 700;
+        margin-top: 10px;
+    }
+
+    .dashboard-card p {
+        margin: 0;
+        color: #64748b;
+        font-size: 15px;
+    }
+
+.dashboard-title {
+    font-size: 40px;
+    font-weight: 700;
+}
+
+.dashboard-subtitle {
+    color: #64748b;
+    font-size: 17px;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 18px;
+    padding: 25px;
+    box-shadow: 0 5px 18px rgba(0,0,0,0.05);
+}
+
+.mini-text {
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.status-box {
+    background: white;
+    padding: 20px;
+    border-radius: 18px;
+    box-shadow: 0 5px 18px rgba(0,0,0,0.05);
+    height: 100%;
+}
+
+    .status-box h5 {
+        font-weight: 600;
+    }
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+    .status-item:last-child {
+        border-bottom: none;
+    }
+
+.badge-custom {
+    padding: 7px 12px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+@media (max-width:768px) {
+
+    .row {
+        margin: 0 !important;
+    }
+
+    .col,
+    .col-md-3,
+    .col-md-4,
+    .col-md-6,
+    .col-lg-3,
+    .col-lg-4 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+}
+
+/* =======================================================
+       DARK MODE DASHBOARD
+    ======================================================= */
+
+body.dark-mode .dashboard-card,
+body.dark-mode .chart-card,
+body.dark-mode .status-box {
+    background: #1e293b !important;
+    border: 1px solid #334155;
+    color: white !important;
+}
+
+    body.dark-mode .dashboard-card p,
+    body.dark-mode .dashboard-subtitle,
+    body.dark-mode .mini-text,
+    body.dark-mode .status-item span {
+        color: #cbd5e1 !important;
+    }
+
+    body.dark-mode .dashboard-title,
+    body.dark-mode .dashboard-card h2,
+    body.dark-mode .chart-card h5,
+    body.dark-mode .status-box h5 {
+        color: white !important;
+    }
+
+/* =======================================================
+       CHART
+    ======================================================= */
+
+body.dark-mode canvas {
+    background: transparent !important;
+}
+
+/* =======================================================
+       OVERLAY MOBILE
+    ======================================================= */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: .3s;
+    z-index: 998;
+}
+
+    .overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+/* =======================================================
+       MOBILE FIXES
+    ======================================================= */
+
+@media(max-width:768px) {
+
+    .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .dashboard-title {
+        font-size: 30px !important;
+        line-height: 1.1;
+    }
+
+    .dashboard-subtitle {
+        font-size: 15px;
+    }
+
+    .dashboard-card,
+    .chart-card,
+    .status-box {
+        padding: 18px !important;
+    }
+
+        .dashboard-card h2 {
+            font-size: 28px !important;
+            word-break: break-word;
+        }
+
+    .icon-box {
+        width: 55px !important;
+        height: 55px !important;
+        font-size: 22px !important;
+    }
+
+    .chart-card canvas {
+        max-height: 250px !important;
+    }
+}
+
+.chart-productos {
+    position: relative;
+    height: 450px;
+}
+
+@media(max-width:768px) {
+
+    .chart-productos {
+        height: 650px;
+    }
+
+    #chartProductos {
+        max-height: none !important;
+    }
+}
+

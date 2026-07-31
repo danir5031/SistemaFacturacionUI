@@ -42,8 +42,10 @@ namespace SistemaFacturacionUI.Controllers
             //////////////////////////////////////////////////////
 
             var query = _context.Facturas
-                .Include(x => x.Usuario)
-                .AsQueryable();
+    .Include(x => x.Usuario)
+    .Include(x => x.Detalles)
+        .ThenInclude(d => d.Producto)
+    .AsQueryable();
 
             //////////////////////////////////////////////////////
             // SI NO HAY FILTROS
@@ -138,14 +140,26 @@ namespace SistemaFacturacionUI.Controllers
 
                 query = query.Where(x =>
 
-                    (x.NombreCliente != null &&
-                     x.NombreCliente.ToLower().Contains(buscar))
+    (x.NombreCliente != null &&
+     x.NombreCliente.ToLower().Contains(buscar))
 
-                    ||
+    ||
 
-                    (x.Telefono != null &&
-                     x.Telefono.Contains(buscar))
-                );
+    (x.Telefono != null &&
+     x.Telefono.Contains(buscar))
+
+    ||
+
+    (x.NumeroFactura != null &&
+     x.NumeroFactura.ToLower().Contains(buscar))
+
+    ||
+
+    x.Detalles.Any(d =>
+        d.Producto != null &&
+        d.Producto.Nombre.ToLower().Contains(buscar))
+
+);
             }
 
             //////////////////////////////////////////////////////
@@ -264,6 +278,84 @@ namespace SistemaFacturacionUI.Controllers
             }
         }
 
+
+        //////////////////////////////////////////////////////
+        // VERIFICAR HISTORIAL DEL CLIENTE
+        //////////////////////////////////////////////////////
+
+        [HttpGet]
+        public JsonResult VerificarCliente(string telefono)
+        {
+            if (string.IsNullOrWhiteSpace(telefono))
+                return Json(new
+                {
+                    riesgo = "NINGUNO"
+                });
+
+            var historial = _context.Facturas
+                .Where(x => x.Telefono == telefono)
+                .ToList();
+
+            var canceladas = historial.Count(x => x.Estado == "Cancelada");
+            var completadas = historial.Count(x => x.Estado != "Cancelada");
+
+            string riesgo = "NINGUNO";
+            string color = "success";
+            string mensaje = "";
+
+            if (canceladas >= 4)
+            {
+                riesgo = "ALTO";
+                color = "danger";
+                mensaje = "Este cliente posee varias facturas canceladas.";
+            }
+            else if (canceladas >= 2)
+            {
+                riesgo = "MEDIO";
+                color = "warning";
+                mensaje = "Este cliente tiene múltiples cancelaciones.";
+            }
+            else if (canceladas >= 1)
+            {
+                riesgo = "BAJO";
+                color = "secondary";
+                mensaje = "Este cliente tiene una factura cancelada.";
+            }
+
+            var total = historial.Count();
+
+            double porcentaje = total == 0
+                ? 0
+                : (double)canceladas * 100 / total;
+
+            var ultimaCancelacion = historial
+                .Where(x => x.Estado == "Cancelada")
+                .OrderByDescending(x => x.FechaRegistro)
+                .FirstOrDefault();
+
+            return Json(new
+            {
+                mostrar = canceladas > 0,
+
+                riesgo,
+
+                color,
+
+                mensaje,
+
+                canceladas,
+
+                completadas,
+
+                total,
+
+                porcentaje = Math.Round(porcentaje, 1),
+
+                ultimaCancelacion =
+                    ultimaCancelacion?.FechaRegistro.ToString("dd/MM/yyyy")
+            });
+        }
+
         //////////////////////////////////////////////////////
         // GUARDAR FACTURA
         //////////////////////////////////////////////////////
@@ -340,6 +432,21 @@ namespace SistemaFacturacionUI.Controllers
                     _context.Clientes.Add(cliente);
 
                     _context.SaveChanges();
+                }
+
+                //////////////////////////////////////////////////////
+                // VALIDAR FECHA DE ENVÍO
+                //////////////////////////////////////////////////////
+
+                if (data.FechaEnvio.HasValue)
+                {
+                    var fechaEnvio = data.FechaEnvio.Value.Date;
+                    var hoy = DateTime.Now.Date;
+
+                    if (fechaEnvio < hoy)
+                    {
+                        return Json("No se permiten fechas anteriores al día de hoy.");
+                    }
                 }
 
                 //////////////////////////////////////////////////////
@@ -716,6 +823,17 @@ namespace SistemaFacturacionUI.Controllers
                 factura.Horario = data.Horario ?? "TM";
 
                 factura.HoraExacta = data.HoraExacta ?? "";
+
+                if (data.FechaEnvio.HasValue)
+                {
+                    var fechaEnvio = data.FechaEnvio.Value.Date;
+                    var hoy = DateTime.Now.Date;
+
+                    if (fechaEnvio < hoy)
+                    {
+                        return Json("No se permiten fechas anteriores al día de hoy.");
+                    }
+                }
 
                 factura.FechaEnvio = data.FechaEnvio;
 
@@ -1210,9 +1328,10 @@ namespace SistemaFacturacionUI.Controllers
                 .ToList();
 
             var facturas = _context.Facturas
-                .Include(x => x.Detalles)
-                .Where(x => listaIds.Contains(x.IdFactura))
-                .ToList();
+    .Include(x => x.Detalles)
+    .ToList()              // primero trae las facturas
+    .Where(x => listaIds.Contains(x.IdFactura))
+    .ToList();
 
             using var workbook = new XLWorkbook();
 
@@ -1280,7 +1399,13 @@ namespace SistemaFacturacionUI.Controllers
                 //////////////////////////////////////////////////////
 
                 ws.Cell(fila, 3).Value =
-                    "taosv503@gmail.com";
+                "taosv503@gmail.com";
+
+                //ws.Cell(fila, 3).Value =
+                //"kigoelsalvador@gmail.com";
+
+                //ws.Cell(fila, 3).Value =
+                    //"watchmaker100@outlook.com";
 
                 ws.Cell(fila, 4).Value =
                     f.Direccion;
@@ -1449,6 +1574,8 @@ namespace SistemaFacturacionUI.Controllers
 
             return View("TicketsMasivos", facturas);
         }
+
+
 
         //////////////////////////////////////////////////////
         // BUSCAR CLIENTES

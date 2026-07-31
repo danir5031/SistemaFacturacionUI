@@ -8,6 +8,101 @@
     var rol = Context.Session.GetString("rol");
 }
 <style>
+
+    .productos-tooltip{
+
+    position:relative;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:6px;
+
+    background:#1f2937;
+
+    border:1px solid #374151;
+
+    color:#60a5fa;
+
+    padding:7px 12px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    transition:.2s;
+}
+
+.productos-tooltip:hover{
+
+    background:#334155;
+}
+
+.tooltip-productos{
+
+    display:none;
+
+    position:absolute;
+
+    top:42px;
+
+    left:0;
+
+    width:300px;
+
+    background:#111827;
+
+    border:1px solid #374151;
+
+    border-radius:12px;
+
+    padding:14px;
+
+    box-shadow:0 15px 40px rgba(0,0,0,.35);
+
+    z-index:999999;
+}
+
+.productos-tooltip:hover .tooltip-productos{
+
+    display:block;
+}
+
+.tooltip-titulo{
+
+    font-weight:bold;
+
+    color:#93c5fd;
+
+    margin-bottom:10px;
+
+    border-bottom:1px solid #374151;
+
+    padding-bottom:6px;
+}
+
+.producto-item{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:5px 0;
+
+    color:white;
+}
+
+.cantidad{
+
+    color:#60a5fa;
+
+    font-weight:bold;
+}
     
 </style>
 
@@ -160,7 +255,7 @@
                         <label>Departamento</label>
 
                         <select id="departamento"
-                                class="form-control">
+                                class="form-control" required>
 
                             <option value="">Seleccione</option>
 
@@ -188,7 +283,7 @@
                         <label>Municipio</label>
 
                         <input id="municipio"
-                               class="form-control" />
+                               class="form-control" required />
 
                     </div>
 
@@ -562,6 +657,13 @@
                     <th>Factura</th>
 
                     <th>Cliente</th>
+
+                    @if (rol == "ADMIN")
+{
+    <th style="width:280px;">
+        Productos
+    </th>
+}
                     <th>Teléfono</th>
 
                     <th>Usuario</th>
@@ -628,6 +730,39 @@
                             @f.NombreCliente
 
                         </td>
+
+                       @if (rol == "ADMIN")
+{
+    var lista = f.Detalles.ToList();
+
+    <td>
+
+    <div class="productos-tooltip">
+
+        📦 @lista.Count producto@(lista.Count == 1 ? "" : "s")
+
+        <div class="tooltip-productos">
+
+            <div class="tooltip-titulo">
+                Productos
+            </div>
+
+            @foreach (var p in lista)
+            {
+                <div class="producto-item">
+
+                    <span>• @p.Producto?.Nombre</span>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+</td>
+}
+
                         <!-- TELÉFONO -->
                         <td>
                             @f.Telefono
@@ -822,6 +957,14 @@
         </table>
     </div>
     @{
+
+        var totalCanceladas = Model
+    .Count(x => x.Estado == "Cancelada");
+
+var montoCancelado = Model
+    .Where(x => x.Estado == "Cancelada")
+    .Sum(x => x.Total);
+
     var totalVentas = Model
         .Where(x => x.Estado != "Cancelada")
         .Sum(x => x.Total);
@@ -959,19 +1102,23 @@
             </div>
 
             <!-- CANCELADOS -->
-            <div class="col">
-                <div class="card-box mini-resumen-card py-2 px-2 text-center">
+<div class="col">
+    <div class="card-box mini-resumen-card py-2 px-2 text-center">
 
-                    <small class="d-block">
-                        Cancelados
-                    </small>
+        <small class="d-block">
+            ❌ Cancelados
+        </small>
 
-                    <b class="text-danger">
-                        @Model.Count(x => x.Estado == "Cancelada")
-                    </b>
+        <b class="text-danger" style="color:#dc2626;">
+            $@montoCancelado.ToString("0.00")
+        </b>
 
-                </div>
-            </div>
+        <div style="font-size:11px;color:#9ca3af;">
+            @totalCanceladas factura@(totalCanceladas == 1 ? "" : "s")
+        </div>
+
+    </div>
+</div>
 
             @foreach (var tienda in ventasPorTienda)
             {
@@ -1017,6 +1164,54 @@
 
         </div>
     }
+</div>
+
+<div class="modal fade"
+     id="modalHistorialCliente"
+     tabindex="-1">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+
+                    ⚠ Historial del Cliente
+
+                </h5>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div id="contenidoHistorial"></div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    Cancelar Pedido
+
+                </button>
+
+                <button class="btn btn-success"
+                        id="btnContinuarFactura">
+
+                    Continuar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
 @section Scripts {
@@ -1470,6 +1665,38 @@
                 return;
             }
 
+                    //////////////////////////////////////////////////////
+        // VALIDAR DEPARTAMENTO
+        //////////////////////////////////////////////////////
+
+        let departamento =
+            document.getElementById("departamento").value.trim();
+
+        if (departamento === "")
+        {
+            alert("Debes seleccionar un departamento.");
+
+            document.getElementById("departamento").focus();
+
+            return;
+        }
+
+        //////////////////////////////////////////////////////
+        // VALIDAR MUNICIPIO
+        //////////////////////////////////////////////////////
+
+        let municipio =
+            document.getElementById("municipio").value.trim();
+
+        if (municipio === "")
+        {
+            alert("Debes ingresar el municipio.");
+
+            document.getElementById("municipio").focus();
+
+            return;
+        }
+
             let data = {
                  IdFactura: facturaEditando,
 
@@ -1531,9 +1758,62 @@
 
             console.log(data);
 
+              const fechaSeleccionada =
+    document.getElementById("fechaEnvio").value;
+
+const hoy = new Date();
+
+const fechaHoy =
+    hoy.getFullYear() + "-" +
+    String(hoy.getMonth() + 1).padStart(2, "0") + "-" +
+    String(hoy.getDate()).padStart(2, "0");
+
+if (fechaSeleccionada < fechaHoy)
+{
+    alert("No puedes seleccionar una fecha anterior al día de hoy.");
+    return;
+}
+
+        if (facturaEditando > 0) {
+
+            guardarNormal(data);
+
+            return;
+
+        }
+
+                    fetch("/Facturacion/VerificarCliente?telefono=" + encodeURIComponent(data.Telefono))
+        .then(r => r.json())
+        .then(info => {
+
+            if (!info.mostrar) {
+
+                // AQUÍ va exactamente el fetch original
+                guardarNormal(data);
+
+                return;
+            }
+
+            mostrarHistorial(info);
+
+            document.getElementById("btnContinuarFactura").onclick = function () {
+
+                bootstrap.Modal.getInstance(
+                    document.getElementById("modalHistorialCliente")
+                ).hide();
+
+                guardarNormal(data);
+            };
+
+        });
+        }
+
+
+                 function guardarNormal(data) {
+
             fetch(facturaEditando > 0
-        ? '/Facturacion/ActualizarFactura'
-        : '/Facturacion/GuardarFactura', {
+                ? '/Facturacion/ActualizarFactura'
+                : '/Facturacion/GuardarFactura', {
 
                 method: 'POST',
 
@@ -1544,26 +1824,24 @@
                 body: JSON.stringify(data)
 
             })
-
             .then(res => res.json())
-
             .then(r => {
 
                 console.log(r);
 
-                if (r === true)
-                {
+                if (r === true) {
+
                     alert("Factura guardada correctamente 🔥");
 
                     location.reload();
-                }
-                else
-                {
+
+                } else {
+
                     alert("Error: " + r);
+
                 }
 
             })
-
             .catch(error => {
 
                 console.log(error);
@@ -1571,7 +1849,10 @@
                 alert("Ocurrió un error al guardar");
 
             });
+
         }
+
+
 
         //////////////////////////////////////////////////////
         // MOSTRAR FORM
@@ -2587,9 +2868,91 @@ function procesarMensaje() {
                 "";
         }
 
+                const hoy = new Date();
 
+        const yyyy = hoy.getFullYear();
 
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
 
+        const dd = String(hoy.getDate()).padStart(2, '0');
+
+        const fechaActual = `${yyyy}-${mm}-${dd}`;
+
+        document.getElementById("fechaEnvio").min = fechaActual;
+
+        document.getElementById("fechaEnvio").value = fechaActual;
+
+                let continuarGuardado = null;
+
+                        function mostrarHistorial(info){
+
+            document.getElementById("contenidoHistorial").innerHTML=`
+
+                <div class="text-center">
+
+                    <h4 class="text-${info.color}">
+
+                        ${info.riesgo}
+
+                    </h4>
+
+                </div>
+
+                <hr>
+
+                <div class="row">
+
+                    <div class="col">
+
+                        🟢 Completadas
+
+                        <h4>${info.completadas}</h4>
+
+                    </div>
+
+                    <div class="col">
+
+                        🔴 Canceladas
+
+                        <h4>${info.canceladas}</h4>
+
+                    </div>
+
+                </div>
+
+                <hr>
+
+                <b>Total de pedidos:</b>
+
+                ${info.total}
+
+                <br><br>
+
+                <b>Porcentaje cancelado:</b>
+
+                ${info.porcentaje}%
+
+                <br><br>
+
+                <b>Última cancelación:</b>
+
+                ${info.ultimaCancelacion ?? "-"}
+
+                <br><br>
+
+                <div class="alert alert-${info.color}">
+
+                    ${info.mensaje}
+
+                </div>
+
+            `;
+
+            new bootstrap.Modal(
+                document.getElementById("modalHistorialCliente")
+            ).show();
+
+        }
 
     </script>
 
