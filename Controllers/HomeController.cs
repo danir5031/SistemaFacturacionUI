@@ -107,6 +107,101 @@ namespace SistemaFacturacionUI.Controllers
                     x => x.IdUsuario,
                     x => x.Usuario1);
 
+            var inicioCancelaciones = filtroActivo
+                ? inicio
+                : new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+            var finCancelaciones = fin;
+
+            var cancelaciones = _context.Facturas
+                .AsNoTracking()
+                .Where(x =>
+                    x.Estado == "Cancelada" &&
+                    x.FechaRegistro >= inicioCancelaciones &&
+                    x.FechaRegistro <= finCancelaciones)
+                .ToList();
+
+            var cancelacionesPorUsuario = cancelaciones
+                .Where(x => x.IdUsuario != null)
+                .GroupBy(x => usuariosPorId.ContainsKey(x.IdUsuario)
+                    ? usuariosPorId[x.IdUsuario]
+                    : "SIN USUARIO")
+                .Select(g => new
+                {
+                    Usuario = g.Key,
+                    Cancelaciones = g.Count(),
+                    Total = g.Sum(x => x.Total)
+                })
+                .OrderByDescending(x => x.Cancelaciones)
+                .ToList();
+
+
+            // ============================================
+            // PRODUCTOS MÁS CANCELADOS
+            // ============================================
+
+            var facturasCanceladasIds = cancelaciones
+                .Select(x => x.IdFactura)
+                .ToHashSet();
+
+            var productosCancelados = detalles
+                .Where(d => facturasCanceladasIds.Contains(d.IdFactura))
+                .GroupBy(d => d.IdProducto)
+                .Select(g => new
+                {
+                    IdProducto = g.Key,
+
+                    NombreProducto =
+                        nombresProductos.ContainsKey(g.Key)
+                            ? nombresProductos[g.Key]
+                            : "SIN NOMBRE",
+
+                    CantidadCancelada =
+                        g.Sum(x => x.Cantidad),
+
+                    FacturasCanceladas =
+                        g.Select(x => x.IdFactura)
+                         .Distinct()
+                         .Count()
+                })
+                .OrderByDescending(x => x.CantidadCancelada)
+                .ToList();
+
+
+            // ============================================
+            // CANCELACIONES POR TIENDA
+            // ============================================
+
+            var cancelacionesPorTienda = cancelaciones
+                .Where(x => !string.IsNullOrWhiteSpace(x.Tienda))
+                .GroupBy(x => x.Tienda.Trim().ToUpper())
+                .Select(g => new
+                {
+                    Tienda = g.First().Tienda.Trim(),
+                    Cancelaciones = g.Count(),
+                    Total = g.Sum(x => x.Total)
+                })
+                .OrderByDescending(x => x.Cancelaciones)
+                .ToList();
+
+            ViewBag.CancelacionesPorTienda = cancelacionesPorTienda;
+
+
+            var usuarioMasCancelaciones = cancelacionesPorUsuario.FirstOrDefault();
+
+            ViewBag.ProductosCancelados = productosCancelados;
+
+            ViewBag.TotalCancelaciones = cancelaciones.Count;
+
+            ViewBag.MontoCancelaciones = cancelaciones.Sum(x => x.Total);
+
+            ViewBag.CancelacionesPorUsuario = cancelacionesPorUsuario;
+
+            ViewBag.UsuarioMasCancelaciones =
+                usuarioMasCancelaciones?.Usuario ?? "Ninguno";
+
+            ViewBag.CantidadUsuarioMasCancelaciones =
+                usuarioMasCancelaciones?.Cancelaciones ?? 0;
             //////////////////////////////////////////////////////
             // COSTO PRODUCTOS
             //////////////////////////////////////////////////////

@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
 using SistemaFacturacionUI.Models;
 using System;
 using System.Collections.Generic;
@@ -167,9 +166,15 @@ namespace SistemaFacturacionUI.Controllers
             //////////////////////////////////////////////////////
 
             var facturas = query
-                .OrderByDescending(x => x.FechaRegistro)
-                .Take(300)
-                .ToList();
+    .OrderBy(x =>
+        x.Estado == "Cancelada"
+            ? 2
+            : x.TicketGenerado
+                ? 1
+                : 0)
+    .ThenByDescending(x => x.FechaRegistro)
+    .Take(300)
+    .ToList();
 
             return View(facturas);
         }
@@ -479,11 +484,13 @@ namespace SistemaFacturacionUI.Controllers
                     Direccion =
                         data.Direccion ?? "",
 
-                    Departamento =
-                        data.Departamento ?? "",
+                    Referencia = data.Referencia ?? "",
 
-                    Municipio =
-                        data.Municipio ?? "",
+                    Departamento = data.Departamento ?? "",
+
+                    Municipio = data.Municipio ?? "",
+
+                   // TipoEnvio = data.TipoEnvio ?? "",
 
                     Tienda = data.Tienda ?? "",
 
@@ -808,9 +815,16 @@ namespace SistemaFacturacionUI.Controllers
                 // ACTUALIZAR DATOS
                 //////////////////////////////////////////////////////
 
+                factura.NombreCliente = data.NombreCliente ?? "";
+
                 factura.Telefono = data.Telefono ?? "";
 
                 factura.Direccion = data.Direccion ?? "";
+
+
+                factura.Referencia = data.Referencia ?? "";
+
+                //factura.TipoEnvio = data.TipoEnvio ?? "";
 
                 factura.Departamento = data.Departamento ?? "";
 
@@ -1156,16 +1170,27 @@ namespace SistemaFacturacionUI.Controllers
                     factura.NombreCliente,
                     factura.Telefono,
                     factura.Direccion,
+
+                    factura.Referencia,
+
                     factura.Departamento,
                     factura.Municipio,
+
+                    //factura.TipoEnvio,
+
                     factura.Tienda,
                     factura.Comentario,
+
                     factura.Horario,
                     factura.HoraExacta,
+
                     factura.FechaEnvio,
+
                     factura.Envio,
                     factura.Descuento,
+
                     factura.MetodoPago,
+
                     detalles
                 });
             }
@@ -1341,24 +1366,30 @@ namespace SistemaFacturacionUI.Controllers
             // HEADERS
             //////////////////////////////////////////////////////
 
-            ws.Cell(1, 1).Value = "Nombre";
-            ws.Cell(1, 2).Value = "Telefono";
-            ws.Cell(1, 3).Value = "Email";
-            ws.Cell(1, 4).Value = "Direccion";
-            ws.Cell(1, 5).Value = "Ciudad";
-            ws.Cell(1, 6).Value = "Region";
-            ws.Cell(1, 7).Value = "Pais";
-            ws.Cell(1, 8).Value = "Descripcion";
-            ws.Cell(1, 9).Value = "Peso";
-            ws.Cell(1, 10).Value = "Valor Declarado";
-            ws.Cell(1, 11).Value = "Observaciones";
+            ws.Cell(1, 1).Value = "nombre*";
+            ws.Cell(1, 2).Value = "telefono*";
+            ws.Cell(1, 3).Value = "email";
+            ws.Cell(1, 4).Value = "direccion*";
+            ws.Cell(1, 5).Value = "referencia";
+            ws.Cell(1, 6).Value = "departamento*";
+            ws.Cell(1, 7).Value = "municipio*";
+            ws.Cell(1, 8).Value = "contenido*";
+            ws.Cell(1, 9).Value = "cantidad_bultos";
+            ws.Cell(1, 10).Value = "valor_declarado*";
+            ws.Cell(1, 11).Value = "observaciones";
+            ws.Cell(1, 12).Value = "monto_cod";
+            ws.Cell(1, 13).Value = "id_comercio";
+            ws.Cell(1, 14).Value = "tipo_envio";
+            ws.Cell(1, 15).Value = "agencia_origen";
+            ws.Cell(1, 16).Value = "agencia_destino";
+            ws.Cell(1, 17).Value = "lugar_encuentro";
 
             //////////////////////////////////////////////////////
             // ESTILO HEADER
             //////////////////////////////////////////////////////
 
             var headerRange =
-                ws.Range(1, 1, 1, 11);
+                ws.Range(1, 1, 1, 17);
 
             headerRange.Style.Font.Bold = true;
 
@@ -1410,20 +1441,25 @@ namespace SistemaFacturacionUI.Controllers
                 ws.Cell(fila, 4).Value =
                     f.Direccion;
 
+                // 5. REFERENCIA
                 ws.Cell(fila, 5).Value =
-                    f.Municipio;
+    f.Referencia ?? "";
 
                 ws.Cell(fila, 6).Value =
                     f.Departamento;
 
                 ws.Cell(fila, 7).Value =
-                    "El Salvador";
+                    f.Municipio;
 
                 //ws.Cell(fila, 8).Value =
-                   // "JOYERIA";
+                // "JOYERIA";
 
                 //////////////////////////////////////////////////////
                 // DESCRIPCION PRODUCTOS
+                //////////////////////////////////////////////////////
+
+                //////////////////////////////////////////////////////
+                // CONTENIDO - PRODUCTO + CANTIDAD + VARIANTE
                 //////////////////////////////////////////////////////
 
                 string descripcion = "";
@@ -1441,8 +1477,16 @@ namespace SistemaFacturacionUI.Controllers
                             descripcion += ", ";
                         }
 
-                        descripcion +=
-                            d.Cantidad + " " + producto.Nombre;
+                        string lineaProducto =
+                            $"{d.Cantidad}x {producto.Nombre}";
+
+                        if (!string.IsNullOrWhiteSpace(d.Variante))
+                        {
+                            lineaProducto +=
+                                $" {d.Variante}";
+                        }
+
+                        descripcion += lineaProducto;
                     }
                 }
 
@@ -1465,23 +1509,47 @@ namespace SistemaFacturacionUI.Controllers
                 // OBSERVACIONES + COMENTARIO
                 //////////////////////////////////////////////////////
 
+                // 11. OBSERVACIONES
                 string observacion =
                     "Llamar 30 min antes de la entrega";
 
                 if (!string.IsNullOrWhiteSpace(f.Comentario))
                 {
-                    observacion += " | " + f.Comentario;
+                    observacion +=
+                        " | " + f.Comentario;
                 }
 
                 ws.Cell(fila, 11).Value =
                     observacion;
+
+                ws.Cell(fila, 12).Value =
+                   f.MetodoPago == "Efectivo"
+                   ? f.Total
+                   : 0;
+
+                ws.Cell(fila, 13).Value =
+    "";
+                ws.Cell(fila, 14).Value =
+    "Puerta a puerta";
+
+                // 15. AGENCIA ORIGEN
+                ws.Cell(fila, 15).Value =
+                    "";
+
+                // 16. AGENCIA DESTINO
+                ws.Cell(fila, 16).Value =
+                    "";
+
+                // 17. LUGAR ENCUENTRO
+                ws.Cell(fila, 17).Value =
+                    "";
 
                 //////////////////////////////////////////////////////
                 // ESTILO FILAS
                 //////////////////////////////////////////////////////
 
                 var dataRange =
-                    ws.Range(fila, 1, fila, 11);
+                    ws.Range(fila, 1, fila, 17);
 
                 dataRange.Style.Border.OutsideBorder =
                     XLBorderStyleValues.Thin;
@@ -1638,61 +1706,7 @@ namespace SistemaFacturacionUI.Controllers
         // DTO FACTURA
         //////////////////////////////////////////////////////
 
-        public class FacturaDTO
-    {
-        public int IdFactura { get; set; }
-        public string NombreCliente { get; set; }
-
-        public string Telefono { get; set; }
-
-        public string Direccion { get; set; }
-
-        public string Departamento { get; set; }
-
-        public string Municipio { get; set; }
-
-        public string Comentario { get; set; }
-
-        public string Horario { get; set; }
-        public string? Tienda { get; set; }
-
-        public string HoraExacta { get; set; }
-
-        public DateTime? FechaEnvio { get; set; }
-
-        public decimal Subtotal { get; set; }
-
-        public decimal Envio { get; set; }
-
-        public decimal Descuento { get; set; }
-
-        public decimal Total { get; set; }
-
-        public string MetodoPago { get; set; }
-
-        public string Estado { get; set; }
-
-        public List<DetalleDTO> Detalles { get; set; }
-    }
-
-    //////////////////////////////////////////////////////
-    // DTO DETALLE
-    //////////////////////////////////////////////////////
-
-    public class DetalleDTO
-    {
-        public int IdProducto { get; set; }
-
-        public int Cantidad { get; set; }
-
-        public decimal Precio { get; set; }
-        public string? Tienda { get; set; }
-
-
-        public int? IdVariante { get; set; }
-
-        public string Variante { get; set; }
-    }
+        
 
 
 }

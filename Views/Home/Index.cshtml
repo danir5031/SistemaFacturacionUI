@@ -554,6 +554,245 @@
 
     </div>
 
+    <!-- TARJETAS ACTUALES DEL DASHBOARD -->
+
+    <!-- NUEVO REPORTE DE CANCELACIONES -->
+
+    <div class="row mt-4 g-3 cancelaciones-cards">
+
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm border-0 cancelacion-card h-100">
+                <div class="card-body">
+                    <h6>Cancelaciones del período</h6>
+
+                    <h2 class="fw-bold">
+                        @ViewBag.TotalCancelaciones
+                    </h2>
+
+                    <small>
+                        Facturas canceladas
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm border-0 cancelacion-card h-100">
+                <div class="card-body">
+                    <h6> Monto cancelado</h6>
+
+                    <h2 class="fw-bold">
+                        $@Convert.ToDecimal(ViewBag.MontoCancelaciones).ToString("N2")
+                    </h2>
+
+                    <small>
+                        Total de facturas canceladas
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm border-0 cancelacion-card h-100">
+                <div class="card-body">
+                    <h6>Usuario con más cancelaciones</h6>
+
+                    <h2 class="fw-bold">
+                        @ViewBag.UsuarioMasCancelaciones
+                    </h2>
+
+                    <small>
+                        @ViewBag.CantidadUsuarioMasCancelaciones cancelaciones
+                    </small>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-body">
+
+            <h5 class="fw-bold mb-3">
+                Cancelaciones por usuario
+            </h5>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle cancelaciones-table">
+
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Cancelaciones</th>
+                            <th>Monto cancelado</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @if (ViewBag.CancelacionesPorUsuario != null &&
+                             ViewBag.CancelacionesPorUsuario.Count > 0)
+                        {
+                            foreach (var item in ViewBag.CancelacionesPorUsuario)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            @item.Usuario
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        @item.Cancelaciones
+                                    </td>
+
+                                    <td>
+                                        $@Convert.ToDecimal(item.Total).ToString("N2")
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3"
+                                    class="text-center text-muted">
+                                    No hay cancelaciones en este período.
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">
+                    Cancelaciones por Tienda
+                </h5>
+
+                <span class="badge bg-danger">
+                    Canceladas
+                </span>
+            </div>
+
+            <div class="cancelaciones-tiendas">
+
+                @if (ViewBag.CancelacionesPorTienda != null &&
+                     ViewBag.CancelacionesPorTienda.Count > 0)
+                {
+                    foreach (var item in ViewBag.CancelacionesPorTienda)
+                    {
+                        <div class="status-item">
+
+                            <span>
+                                <strong>@item.Tienda</strong>
+                            </span>
+
+                            <div class="d-flex align-items-center gap-2">
+
+                                <span class="badge-custom bg-danger text-white">
+                                    @item.Cancelaciones
+                                </span>
+
+                                <span class="text-muted">
+                                    $@Convert.ToDecimal(item.Total).ToString("N2")
+                                </span>
+
+                            </div>
+
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center text-muted py-3">
+                        No hay cancelaciones por tienda en este período.
+                    </div>
+                }
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">
+                    Productos más cancelados
+                </h5>
+
+                <span class="badge bg-danger">
+                    Cancelaciones
+                </span>
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle cancelaciones-table">
+
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Unidades canceladas</th>
+                            <th>Facturas</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @if (ViewBag.ProductosCancelados != null &&
+                             ViewBag.ProductosCancelados.Count > 0)
+                        {
+                            foreach (var item in ViewBag.ProductosCancelados)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            @item.NombreProducto
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        @item.CantidadCancelada
+                                    </td>
+
+                                    <td>
+                                        @item.FacturasCanceladas
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3"
+                                    class="text-center text-muted">
+                                    No hay productos cancelados en este período.
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+
     <div class="col-12">
 
         <div class="chart-card">

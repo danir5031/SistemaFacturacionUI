@@ -481,7 +481,184 @@
         }
         }
 
+            /* ==========================================
+               CANCELACIONES
+               ========================================== */
+
+            .cancelaciones-cards {
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            .cancelacion-card {
+                border-radius: 10px;
+                overflow: hidden;
+            }
+
+                .cancelacion-card .card-body {
+                    padding: 20px;
+                }
+
+                .cancelacion-card h6 {
+                    color: #344054;
+                    font-weight: 500;
+                    margin-bottom: 10px;
+                }
+
+                .cancelacion-card h2 {
+                    color: #111827;
+                    margin-bottom: 8px;
+                }
+
+                .cancelacion-card small {
+                    color: #667085;
+                }
+
+
+            /* ==========================================
+               MODO OSCURO
+               ========================================== */
+
+            body.dark-mode .cancelacion-card,
+            .dark-mode .cancelacion-card {
+                background-color: #1e293b !important;
+                border: 1px solid #334155 !important;
+            }
+
+                body.dark-mode .cancelacion-card h6,
+                .dark-mode .cancelacion-card h6 {
+                    color: #e2e8f0 !important;
+                }
+
+                body.dark-mode .cancelacion-card h2,
+                .dark-mode .cancelacion-card h2 {
+                    color: #ffffff !important;
+                }
+
+                body.dark-mode .cancelacion-card small,
+                .dark-mode .cancelacion-card small {
+                    color: #cbd5e1 !important;
+                }
+
+
+            /* ==========================================
+               TABLA DE CANCELACIONES EN MODO OSCURO
+               ========================================== */
+
+            body.dark-mode .cancelaciones-table,
+            .dark-mode .cancelaciones-table {
+                color: #ffffff;
+            }
+
+                body.dark-mode .cancelaciones-table th,
+                .dark-mode .cancelaciones-table th {
+                    color: #ffffff !important;
+                }
+
+                body.dark-mode .cancelaciones-table td,
+                .dark-mode .cancelaciones-table td {
+                    color: #e2e8f0 !important;
+                }
+
+
+            /* ==========================================
+               TELÉFONO
+               ========================================== */
+
+            @@media (max-width: 767px) {
+
+                .cancelaciones-cards {
+                    row-gap: 16px !important;
+                }
+
+                .cancelacion-card {
+                    margin-bottom: 0 !important;
+                }
+
+                    .cancelacion-card .card-body {
+                        padding: 18px;
+                    }
+
+                    .cancelacion-card h2 {
+                        font-size: 30px;
+                    }
+            }
+
+
+            /* =========================================
+   BUSCADOR DE MUNICIPIOS - MODO OSCURO
+   ========================================= */
+
+/* Caja principal */
+.choices {
+    width: 100%;
+}
+
+/* Campo seleccionado */
+.choices__inner {
+    background-color: #020617 !important;
+    border: 1px solid #334155 !important;
+    color: #ffffff !important;
+    min-height: 40px;
+    border-radius: 6px !important;
+}
+
+/* Texto dentro del campo */
+.choices__inner .choices__item {
+    color: #ffffff !important;
+}
+
+/* MENÚ DESPLEGABLE */
+.choices__list--dropdown,
+.choices__list[aria-expanded="true"] {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #1e293b !important;
+    z-index: 9999 !important;
+}
+
+/* Campo de búsqueda */
+.choices__list--dropdown .choices__input {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    border: 1px solid #94a3b8 !important;
+}
+
+/* Placeholder del buscador */
+.choices__list--dropdown .choices__input::placeholder {
+    color: #64748b !important;
+}
+
+/* Opciones */
+.choices__list--dropdown .choices__item {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+}
+
+/* Cuando pasas el mouse */
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+/* Opción seleccionada */
+.choices__list--dropdown .choices__item--choice.is-selected {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+/* Flecha */
+.choices[data-type*="select-one"]::after {
+    border-color: #94a3b8 transparent transparent transparent !important;
+}
+
+.choices[data-type*="select-one"].is-open::after {
+    border-color: transparent transparent #94a3b8 transparent !important;
+}
+
     </style>
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 </head>
 
 <body>

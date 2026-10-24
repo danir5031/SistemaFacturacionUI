@@ -27,7 +27,8 @@ namespace SistemaFacturacionUI.Controllers
 
     string categoria = "",
 
-    string stock = "",
+    int? stockMin = null,
+    int? stockMax = null,
 
     string estado = "",
 
@@ -99,29 +100,21 @@ namespace SistemaFacturacionUI.Controllers
                     x.Disponible == disponible);
             }
 
+
             //////////////////////////////////////////////////////
-            // STOCK
+            // STOCK DINÁMICO
             //////////////////////////////////////////////////////
 
-            if (!string.IsNullOrWhiteSpace(stock))
+            if (stockMin.HasValue)
             {
-                if (stock == "bajo")
-                {
-                    query = query.Where(x => x.Stock < 5);
-                }
+                query = query.Where(x =>
+                    x.Stock >= stockMin.Value);
+            }
 
-                if (stock == "medio")
-                {
-                    query = query.Where(x =>
-                        x.Stock >= 5 &&
-                        x.Stock <= 20);
-                }
-
-                if (stock == "alto")
-                {
-                    query = query.Where(x =>
-                        x.Stock > 20);
-                }
+            if (stockMax.HasValue)
+            {
+                query = query.Where(x =>
+                    x.Stock <= stockMax.Value);
             }
 
             //////////////////////////////////////////////////////
@@ -141,7 +134,18 @@ namespace SistemaFacturacionUI.Controllers
             //////////////////////////////////////////////////////
 
             query = query
-                .OrderByDescending(x => x.FechaRegistro);
+                .OrderByDescending(x => x.Stock)
+    .ThenByDescending(x => x.FechaRegistro);
+
+            //////////////////////////////////////////////////////
+            // MÁXIMO STOCK DISPONIBLE
+            //////////////////////////////////////////////////////
+
+            int maxStockDisponible =
+                _context.Productos
+                    .Where(x => x.Activo)
+                    .Select(x => (int?)x.Stock)
+                    .Max() ?? 0;
 
             //////////////////////////////////////////////////////
             // TOTAL
@@ -174,7 +178,9 @@ namespace SistemaFacturacionUI.Controllers
 
             ViewBag.Buscar = buscar;
             ViewBag.Categoria = categoria;
-            ViewBag.Stock = stock;
+            ViewBag.StockMin = stockMin;
+            ViewBag.StockMax = stockMax;
+            ViewBag.MaxStock = maxStockDisponible;
             ViewBag.Estado = estado;
             ViewBag.Fecha = fecha?.ToString("yyyy-MM-dd");
 

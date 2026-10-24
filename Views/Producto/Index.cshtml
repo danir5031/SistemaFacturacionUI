@@ -247,6 +247,160 @@
                 font-size: 15px;
             }
     }
+
+    /* ==============================
+   FILTROS
+================================ */
+
+.filtros-productos {
+    row-gap: 15px;
+}
+
+.catalogo-fila {
+    margin-top: -5px;
+}
+
+.catalogo-btn {
+    min-height: 44px;
+    border-radius: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+
+/* ==============================
+   STOCK
+================================ */
+
+.stock-values {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.stock-values small {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 11px;
+}
+
+.stock-range-unico {
+    position: relative;
+    height: 25px;
+    margin-top: 8px;
+}
+
+.stock-track {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 10px;
+    height: 5px;
+    background: #d9d9d9;
+    border-radius: 10px;
+}
+
+.stock-track-activo {
+    position: absolute;
+    top: 10px;
+    height: 5px;
+    background: #1478ff;
+    border-radius: 10px;
+    left: 8px;
+    right: 8px;
+}
+
+.stock-range-unico input[type="range"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+
+    width: 100%;
+    height: 25px;
+
+    margin: 0;
+
+    background: transparent;
+
+    pointer-events: none;
+
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.stock-range-unico input[type="range"]::-webkit-slider-runnable-track {
+    background: transparent;
+}
+
+.stock-range-unico input[type="range"]::-moz-range-track {
+    background: transparent;
+}
+
+.stock-range-unico input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+
+    width: 16px;
+    height: 16px;
+
+    border-radius: 50%;
+    background: #1478ff;
+
+    cursor: pointer;
+
+    pointer-events: auto;
+
+    margin-top: -1px;
+}
+
+.stock-range-unico input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+
+    border-radius: 50%;
+    border: none;
+
+    background: #1478ff;
+
+    cursor: pointer;
+
+    pointer-events: auto;
+}
+
+
+/* ==============================
+   SOLO TELÉFONO
+================================ */
+
+@@media (max-width: 767px) {
+
+    .filtros-productos {
+        margin-left: 0;
+        margin-right: 0;
+        row-gap: 15px;
+    }
+
+    .filtros-productos > div {
+        width: 100%;
+    }
+
+    .catalogo-fila {
+        margin-top: 5px;
+    }
+
+    .catalogo-fila > div {
+        width: 100%;
+    }
+
+    .catalogo-btn {
+        margin-top: 5px;
+    }
+
+}
+
 </style>
 
 <div class="d-flex justify-content-between align-items-center">
@@ -265,59 +419,112 @@
             </a>
         </div>
     }
-</div>
+    </div>
 
-<div class="card-box mt-3">
+    <div class="card-box mt-3">
 
-    <!-- 🔥 FILTROS -->
-    <div class="row mb-3">
+    <!-- FILTROS -->
+    <div class="row mb-3 filtros-productos">
 
-        <div class="col-md-4">
-            <input id="buscador" value="@ViewBag.Buscar" class="form-control"
+        <!-- BUSCADOR -->
+        <div class="col-md-3">
+            <input id="buscador"
+                   value="@ViewBag.Buscar"
+                   class="form-control"
                    placeholder="Buscar por nombre o categoría..."
-                   onkeyup="filtrarConDelay()"  />
+                   onkeyup="filtrarConDelay()" />
         </div>
 
+        <!-- CATEGORÍA -->
         <div class="col-md-2">
-            <select id="filtroCategoria" class="form-control" onchange="filtrarServidor()">
+            <select id="filtroCategoria"
+                    class="form-control"
+                    onchange="filtrarServidor()">
+
                 <option value="">Categoría</option>
+
                 @foreach (var cat in ViewBag.Categorias)
                 {
                     <option value="@cat"
                             selected="@(ViewBag.Categoria == cat ? "selected" : null)">
-
                         @cat
-
                     </option>
                 }
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <select id="filtroStock"
-                    class="form-control"
-                    onchange="filtrarServidor()">
-
-                <option value="">Stock</option>
-
-                <option value="bajo"
-                        selected="@(ViewBag.Stock == "bajo" ? "selected" : null)">
-                    Bajo (&lt;5)
-                </option>
-
-                <option value="medio"
-                        selected="@(ViewBag.Stock == "medio" ? "selected" : null)">
-                    Medio (5-20)
-                </option>
-
-                <option value="alto"
-                        selected="@(ViewBag.Stock == "alto" ? "selected" : null)">
-                    Alto (&gt;20)
-                </option>
 
             </select>
         </div>
 
+        <!-- STOCK -->
+        <div class="col-md-3">
+
+            <div class="stock-filter">
+
+                <label class="stock-filter-title">
+                    Stock
+                </label>
+
+                <div class="stock-values">
+
+                    <div>
+                        <small>Mínimo</small>
+
+                        <input type="number"
+                               id="stockMin"
+                               class="form-control"
+                               min="0"
+                               max="@ViewBag.MaxStock"
+                               value="@(ViewBag.StockMin ?? 0)"
+                               oninput="actualizarStockDesdeInput()" />
+                    </div>
+
+                    <div>
+                        <small>Máximo</small>
+
+                        <input type="number"
+                               id="stockMax"
+                               class="form-control"
+                               min="0"
+                               max="@ViewBag.MaxStock"
+                               value="@(ViewBag.StockMax ?? ViewBag.MaxStock)"
+                               oninput="actualizarStockDesdeInput()" />
+                    </div>
+
+                </div>
+
+                <div class="stock-range-unico">
+
+    <div class="stock-track"></div>
+
+    <div id="stockTrackActivo"
+         class="stock-track-activo"></div>
+
+    <input type="range"
+           id="stockRangeMin"
+           min="0"
+           max="@ViewBag.MaxStock"
+           value="@(ViewBag.StockMin ?? 0)"
+           oninput="actualizarDesdeRange()" />
+
+    <input type="range"
+           id="stockRangeMax"
+           min="0"
+           max="@ViewBag.MaxStock"
+           value="@(ViewBag.StockMax ?? ViewBag.MaxStock)"
+           oninput="actualizarDesdeRange()" />
+
+</div>
+
+                <button type="button"
+                        class="btn btn-primary btn-sm w-100 mt-2"
+                        onclick="filtrarServidor()">
+                    Aplicar stock
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- ESTADO -->
         <div class="col-md-2">
             <select id="filtroEstado"
                     class="form-control"
@@ -338,6 +545,7 @@
             </select>
         </div>
 
+        <!-- FECHA -->
         <div class="col-md-2">
             <input type="date"
                    id="filtroFecha"
@@ -347,6 +555,29 @@
         </div>
 
     </div>
+
+
+    <!-- BOTÓN CATÁLOGO -->
+    <div class="row catalogo-fila">
+
+        <div class="col-md-3">
+
+            <a href="@Url.Action("Index", "Catalogo")"
+               target="_blank"
+               class="btn btn-success w-100 catalogo-btn">
+
+                <i class="bi bi-shop"></i>
+
+                <span>Ver catálogo</span>
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
     <div class="table-responsive d-none d-md-block">
         <!--<div class="table-responsive">-->
         <!--<table class="table align-middle">-->
@@ -722,10 +953,8 @@
                         <li class="page-item">
 
                             <a class="page-link"
-                                   href="/Producto?pagina=@(ViewBag.PaginaActual - 1)&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stock=@ViewBag.Stock&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
-
+                               href="/Producto?pagina=@(ViewBag.PaginaActual - 1)&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stockMin=@ViewBag.StockMin&stockMax=@ViewBag.StockMax&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
                                 Anterior
-
                             </a>
 
                         </li>
@@ -737,10 +966,8 @@
                         <li class="page-item @(i == ViewBag.PaginaActual ? "active" : "")">
 
                             <a class="page-link"
-                                   href="/Producto?pagina=@i&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stock=@ViewBag.Stock&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
-
+                               href="/Producto?pagina=@i&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stockMin=@ViewBag.StockMin&stockMax=@ViewBag.StockMax&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
                                 @i
-
                             </a>
 
                         </li>
@@ -752,10 +979,8 @@
                         <li class="page-item">
 
                             <a class="page-link"
-                                   href="/Producto?pagina=@(ViewBag.PaginaActual + 1)&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stock=@ViewBag.Stock&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
-
+                               href="/Producto?pagina=@(ViewBag.PaginaActual + 1)&buscar=@ViewBag.Buscar&categoria=@ViewBag.Categoria&stockMin=@ViewBag.StockMin&stockMax=@ViewBag.StockMax&estado=@ViewBag.Estado&fecha=@ViewBag.Fecha">
                                 Siguiente
-
                             </a>
 
                         </li>
@@ -1390,8 +1615,11 @@ function eliminar(id){
             let categoria =
                 document.getElementById("filtroCategoria").value;
 
-            let stock =
-                document.getElementById("filtroStock").value;
+            let stockMin =
+                document.getElementById("stockMin").value;
+
+            let stockMax =
+                document.getElementById("stockMax").value;
 
             let estado =
                 document.getElementById("filtroEstado").value;
@@ -1406,7 +1634,8 @@ function eliminar(id){
             let url =
                 `/Producto?buscar=${encodeURIComponent(buscar)}`
                 + `&categoria=${encodeURIComponent(categoria)}`
-                + `&stock=${encodeURIComponent(stock)}`
+                + `&stockMin=${encodeURIComponent(stockMin)}`
+                + `&stockMax=${encodeURIComponent(stockMax)}`
                 + `&estado=${encodeURIComponent(estado)}`
                 + `&fecha=${encodeURIComponent(fecha)}`;
 
@@ -1416,6 +1645,77 @@ function eliminar(id){
 
             window.location.href = url;
         }
+
+        //////////////////////////////////////////////////////
+// STOCK DINÁMICO
+//////////////////////////////////////////////////////
+
+function actualizarDesdeRange() {
+
+    let min =
+        document.getElementById("stockRangeMin").value;
+
+    let max =
+        document.getElementById("stockRangeMax").value;
+
+    // Evitar que mínimo supere al máximo
+    if (parseInt(min) > parseInt(max)) {
+        min = max;
+
+        document.getElementById("stockRangeMin").value = max;
+    }
+
+    document.getElementById("stockMin").value = min;
+    document.getElementById("stockMax").value = max;
+}
+
+
+        function actualizarStockDesdeInput() {
+
+            let min =
+                parseInt(document.getElementById("stockMin").value);
+
+            let max =
+                parseInt(document.getElementById("stockMax").value);
+
+            let limite =
+                parseInt(document.getElementById("stockRangeMax").max);
+
+            if (isNaN(min))
+                min = 0;
+
+            if (isNaN(max))
+                max = limite;
+
+    // Límites
+    if (min < 0)
+        min = 0;
+
+    if (max < 0)
+        max = 0;
+
+    if (min > limite)
+        min = limite;
+
+    if (max > limite)
+        max = limite;
+
+    // Evitar mínimo mayor al máximo
+    if (min > max) {
+        max = min;
+
+        if (max > limite)
+            max = limite;
+
+        document.getElementById("stockMax").value = max;
+    }
+
+    document.getElementById("stockMin").value = min;
+    document.getElementById("stockMax").value = max;
+
+    document.getElementById("stockRangeMin").value = min;
+    document.getElementById("stockRangeMax").value = max;
+}
 
                 //////////////////////////////////////////////////////
         // TOGGLE

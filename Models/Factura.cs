@@ -69,5 +69,9 @@ namespace SistemaFacturacionUI.Models
         public virtual List<FacturaDetalle> Detalles { get; set; }
 
         public string Tienda { get; set; }
+
+        public string? Referencia { get; set; }
+
+        //public string? TipoEnvio { get; set; }
     }
 }
