@@ -7,6 +7,8 @@ namespace SistemaFacturacionUI.Models
     {
         public int IdFactura { get; set; }
 
+        public Guid? IdSolicitud { get; set; }
+
         public string NombreCliente { get; set; }
 
         public string Telefono { get; set; }

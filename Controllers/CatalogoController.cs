@@ -26,7 +26,8 @@ namespace SistemaFacturacionUI.Controllers
                 .Where(x =>
                     x.Activo &&
                     x.Disponible &&
-                    x.Stock > 0
+                    x.Stock > 0 &&
+                    x.MostrarEnCatalogo
                 )
                 .AsQueryable();
 
@@ -48,15 +49,16 @@ namespace SistemaFacturacionUI.Controllers
             }
 
             var productos = query
-    .OrderByDescending(x => x.Stock)
-    .ThenByDescending(x => x.FechaRegistro)
-    .ToList();
+                .OrderByDescending(x => x.Stock)
+                .ThenByDescending(x => x.FechaRegistro)
+                .ToList();
 
             var categorias = _context.Productos
                 .Where(x =>
                     x.Activo &&
                     x.Disponible &&
                     x.Stock > 0 &&
+                    x.MostrarEnCatalogo &&
                     x.Categoria != null &&
                     x.Categoria != ""
                 )
@@ -87,6 +89,47 @@ namespace SistemaFacturacionUI.Controllers
             }
 
             return NotFound();
+        }
+
+        // ==========================================
+        // DETALLE PÚBLICO DEL PRODUCTO
+        // ==========================================
+
+        [HttpGet]
+        public IActionResult ObtenerProducto(int id)
+        {
+            var producto = _context.Productos
+                .Include(x => x.Variantes)
+                .FirstOrDefault(x =>
+                    x.IdProducto == id &&
+                    x.Activo &&
+                    x.Disponible &&
+                    x.Stock > 0 &&
+                    x.MostrarEnCatalogo
+                );
+
+            if (producto == null)
+                return NotFound();
+
+            return Json(new
+            {
+                idProducto = producto.IdProducto,
+                nombre = producto.Nombre,
+                categoria = producto.Categoria,
+                descripcion = producto.Descripcion,
+                precioVenta = producto.PrecioVenta,
+
+                variantes = producto.Variantes
+                    .Where(x =>
+                        x.Activo &&
+                        x.Stock > 0
+                    )
+                    .Select(x => new
+                    {
+                        nombreVariante = x.NombreVariante
+                    })
+                    .ToList()
+            });
         }
     }
 }

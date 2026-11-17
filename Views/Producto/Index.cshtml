@@ -745,6 +745,7 @@
                                     @(item.Disponible ? "Disponible" : "No disponible")
                                 </span>
                             </td>
+                            
 
                             @if (rol == "ADMIN")
                             {
@@ -1112,6 +1113,17 @@
                     <label>Producto disponible para la venta</label>
                 </div>
 
+                <div class="form-check form-switch mt-3">
+    <input class="form-check-input"
+           type="checkbox"
+           id="mostrarEnCatalogo"
+           checked>
+
+    <label class="form-check-label" for="mostrarEnCatalogo">
+        Mostrar en catálogo
+    </label>
+</div>
+
             </div>
 
 
@@ -1277,6 +1289,7 @@ function limpiar(){
     document.getElementById("stock").value="";
     document.getElementById("imagenUrl").value="";
     document.getElementById("disponible").checked=true;
+    document.getElementById("mostrarEnCatalogo").checked = true;
             document.getElementById("previewImagen").src = "https://via.placeholder.com/150";
 
                     //////////////////////////////////////////////////////
@@ -1347,6 +1360,9 @@ function limpiar(){
                 document.getElementById("imagenUrl").value = p.imagenUrl || "";
 
                 document.getElementById("disponible").checked = p.disponible;
+
+                document.getElementById("mostrarEnCatalogo").checked =
+    p.mostrarEnCatalogo;
 
                 //////////////////////////////////////////////////////
                 // IMAGEN
@@ -1532,6 +1548,10 @@ function guardarProducto(){
     formData.append("Stock",document.getElementById("stock").value);
     formData.append("ImagenUrl",document.getElementById("imagenUrl").value);
     formData.append("Disponible",document.getElementById("disponible").checked);
+    formData.append(
+    "MostrarEnCatalogo",
+    document.getElementById("mostrarEnCatalogo").checked
+);
 
     let file=document.getElementById("imagenFile").files[0];
 

@@ -16,5 +16,7 @@ namespace SistemaFacturacionUI.Models
         public DbSet<FacturaDetalle> FacturaDetalle { get; set; }
         public DbSet<ProductoVariante> ProductoVariantes { get; set; }
 
+        public DbSet<FacturaHistorial> FacturaHistorial { get; set; }
+
     }
 }

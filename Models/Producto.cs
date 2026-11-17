@@ -28,6 +28,8 @@ namespace SistemaFacturacionUI.Models
         public bool Disponible { get; set; }
         public bool Activo { get; set; } = true;
         public DateTime FechaRegistro { get; set; }
+
+        public bool MostrarEnCatalogo { get; set; } = true;
         public virtual ICollection<ProductoVariante> Variantes
         { get; set; } = new List<ProductoVariante>();
     }

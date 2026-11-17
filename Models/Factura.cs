@@ -10,6 +10,8 @@ namespace SistemaFacturacionUI.Models
         [Key]
         public int IdFactura { get; set; }
 
+        public Guid IdSolicitud { get; set; }
+
         [StringLength(100)]
         public string NumeroFactura { get; set; }
 
@@ -71,6 +73,8 @@ namespace SistemaFacturacionUI.Models
         public string Tienda { get; set; }
 
         public string? Referencia { get; set; }
+
+
 
         //public string? TipoEnvio { get; set; }
     }

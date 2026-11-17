@@ -19,6 +19,48 @@ namespace SistemaFacturacionUI.Controllers
             _context = context;
         }
 
+        private void RegistrarHistorial(
+    int idFactura,
+    int idUsuario,
+    string tipoAccion,
+    string descripcion,
+    string usuarioActual,
+    bool permitirSuperAdmin = false)
+        {
+            // El superadmin no genera historial de creación ni edición
+            if (usuarioActual == "admin" && !permitirSuperAdmin)
+                return;
+
+            _context.FacturaHistorial.Add(new FacturaHistorial
+            {
+                IdFactura = idFactura,
+                IdUsuario = idUsuario,
+                Fecha = DateTime.Now,
+                TipoAccion = tipoAccion,
+                Descripcion = descripcion
+            });
+        }
+
+        [HttpGet]
+        public JsonResult ObtenerHistorialFactura(int id)
+        {
+            var historial = _context.FacturaHistorial
+                .Where(x => x.IdFactura == id)
+                .Include(x => x.Usuario)
+                .OrderByDescending(x => x.Fecha)
+                .Select(x => new
+                {
+                    idHistorial = x.IdHistorial,
+                    fecha = x.Fecha.ToString("dd/MM/yyyy HH:mm"),
+                    usuario = x.Usuario.Usuario1,
+                    tipoAccion = x.TipoAccion,
+                    descripcion = x.Descripcion
+                })
+                .ToList();
+
+            return Json(historial);
+        }
+
         //////////////////////////////////////////////////////
         // INDEX
         //////////////////////////////////////////////////////
@@ -384,6 +426,25 @@ namespace SistemaFacturacionUI.Controllers
                 if (data.Detalles == null || data.Detalles.Count == 0)
                     return Json("Debe agregar productos");
 
+
+                //////////////////////////////////////////////////////
+                // EVITAR FACTURA DUPLICADA
+                //////////////////////////////////////////////////////
+
+                if (!data.IdSolicitud.HasValue || data.IdSolicitud == Guid.Empty)
+                    return Json("Solicitud inválida");
+
+                var facturaExistente = _context.Facturas
+                    .FirstOrDefault(x => x.IdSolicitud == data.IdSolicitud.Value);
+
+                if (facturaExistente != null)
+                {
+                    // La factura ya fue creada anteriormente.
+                    // Esto ocurre cuando el usuario vuelve a presionar
+                    // Guardar porque la respuesta tardó en llegar.
+                    return Json(true);
+                }
+
                 //////////////////////////////////////////////////////
                 // USUARIO
                 //////////////////////////////////////////////////////
@@ -460,6 +521,8 @@ namespace SistemaFacturacionUI.Controllers
 
                 var factura = new Factura
                 {
+
+                    IdSolicitud = data.IdSolicitud.Value,
                     NumeroFactura =
                         "FAC-" + DateTime.Now.Ticks,
 
@@ -661,6 +724,13 @@ namespace SistemaFacturacionUI.Controllers
                     }
                 }
 
+                RegistrarHistorial(
+    factura.IdFactura,
+    userDb.IdUsuario,
+    "CREACION",
+    "Factura creada",
+    usuario
+);
                 //////////////////////////////////////////////////////
                 // GUARDAR
                 //////////////////////////////////////////////////////
@@ -715,7 +785,252 @@ namespace SistemaFacturacionUI.Controllers
                     _context.Usuarios
                     .FirstOrDefault(x => x.Usuario1 == usuario);
 
-               
+                var cambios = new List<string>();
+
+                // Guardar valores anteriores
+                var nombreAnterior = factura.NombreCliente;
+                var telefonoAnterior = factura.Telefono;
+                var direccionAnterior = factura.Direccion;
+                var referenciaAnterior = factura.Referencia;
+                var departamentoAnterior = factura.Departamento;
+                var municipioAnterior = factura.Municipio;
+                var tiendaAnterior = factura.Tienda;
+                var comentarioAnterior = factura.Comentario;
+                var horarioAnterior = factura.Horario;
+                var horaExactaAnterior = factura.HoraExacta;
+                var fechaEnvioAnterior = factura.FechaEnvio;
+                var envioAnterior = factura.Envio;
+                var descuentoAnterior = factura.Descuento;
+                var subtotalAnterior = factura.Subtotal;
+                var totalAnterior = factura.Total;
+                var metodoPagoAnterior = factura.MetodoPago;
+
+
+                //////////////////////////////////////////////////////
+                // DETECTAR CAMBIOS
+                //////////////////////////////////////////////////////
+
+                if (nombreAnterior != (data.NombreCliente ?? ""))
+                {
+                    cambios.Add($"Cliente: {nombreAnterior} → {data.NombreCliente}");
+                }
+
+                if (telefonoAnterior != (data.Telefono ?? ""))
+                {
+                    cambios.Add($"Teléfono: {telefonoAnterior} → {data.Telefono}");
+                }
+
+                if (direccionAnterior != (data.Direccion ?? ""))
+                {
+                    cambios.Add($"Dirección: {direccionAnterior} → {data.Direccion}");
+                }
+
+                if (referenciaAnterior != (data.Referencia ?? ""))
+                {
+                    cambios.Add($"Referencia: {referenciaAnterior} → {data.Referencia}");
+                }
+
+                if (departamentoAnterior != (data.Departamento ?? ""))
+                {
+                    cambios.Add($"Departamento: {departamentoAnterior} → {data.Departamento}");
+                }
+
+                if (municipioAnterior != (data.Municipio ?? ""))
+                {
+                    cambios.Add($"Municipio: {municipioAnterior} → {data.Municipio}");
+                }
+
+                if (tiendaAnterior != (data.Tienda ?? ""))
+                {
+                    cambios.Add($"Tienda: {tiendaAnterior} → {data.Tienda}");
+                }
+
+                if (comentarioAnterior != (data.Comentario ?? ""))
+                {
+                    cambios.Add($"Comentario: {comentarioAnterior} → {data.Comentario}");
+                }
+
+                if (horarioAnterior != (data.Horario ?? "TM"))
+                {
+                    cambios.Add($"Horario: {horarioAnterior} → {data.Horario}");
+                }
+
+                if (horaExactaAnterior != (data.HoraExacta ?? ""))
+                {
+                    cambios.Add($"Hora: {horaExactaAnterior} → {data.HoraExacta}");
+                }
+
+                if (fechaEnvioAnterior?.Date != data.FechaEnvio?.Date)
+                {
+                    cambios.Add(
+                        $"Fecha envío: " +
+                        $"{fechaEnvioAnterior?.ToString("dd/MM/yyyy") ?? "Sin fecha"} → " +
+                        $"{data.FechaEnvio?.ToString("dd/MM/yyyy") ?? "Sin fecha"}"
+                    );
+                }
+
+                if (envioAnterior != data.Envio)
+                {
+                    cambios.Add($"Envío: ${envioAnterior:0.00} → ${data.Envio:0.00}");
+                }
+
+                if (descuentoAnterior != data.Descuento)
+                {
+                    cambios.Add($"Descuento: ${descuentoAnterior:0.00} → ${data.Descuento:0.00}");
+                }
+
+                if (subtotalAnterior != data.Subtotal)
+                {
+                    cambios.Add($"Subtotal: ${subtotalAnterior:0.00} → ${data.Subtotal:0.00}");
+                }
+
+                if (totalAnterior != data.Total)
+                {
+                    cambios.Add($"Total: ${totalAnterior:0.00} → ${data.Total:0.00}");
+                }
+
+                if (metodoPagoAnterior != (data.MetodoPago ?? "Efectivo"))
+                {
+                    cambios.Add(
+                        $"Pago: {metodoPagoAnterior} → {data.MetodoPago ?? "Efectivo"}"
+                    );
+                }
+
+                //////////////////////////////////////////////////////
+                // DETECTAR CAMBIOS EN PRODUCTOS
+                //////////////////////////////////////////////////////
+
+                var detallesAnteriores = factura.Detalles
+                    .Select(d => new
+                    {
+                        d.IdProducto,
+                        d.IdVariante,
+                        d.Variante,
+                        d.Cantidad
+                    })
+                    .ToList();
+
+                var detallesNuevos = data.Detalles
+                    .Select(d => new
+                    {
+                        d.IdProducto,
+                        d.IdVariante,
+                        d.Variante,
+                        d.Cantidad
+                    })
+                    .ToList();
+
+
+                // PRODUCTOS AGREGADOS
+                foreach (var nuevo in detallesNuevos)
+                {
+                    var anterior = detallesAnteriores.FirstOrDefault(x =>
+                        x.IdProducto == nuevo.IdProducto &&
+                        x.IdVariante == nuevo.IdVariante
+                    );
+
+                    if (anterior == null)
+                    {
+                        var producto = _context.Productos
+                            .FirstOrDefault(x => x.IdProducto == nuevo.IdProducto);
+
+                        string nombreProducto = producto?.Nombre ?? "Producto";
+
+                        if (!string.IsNullOrWhiteSpace(nuevo.Variante))
+                        {
+                            nombreProducto += $" ({nuevo.Variante})";
+                        }
+
+                        cambios.Add(
+                            $"Agregado: {nombreProducto} x{nuevo.Cantidad}"
+                        );
+                    }
+                }
+
+
+                // PRODUCTOS ELIMINADOS
+                foreach (var anterior in detallesAnteriores)
+                {
+                    var nuevo = detallesNuevos.FirstOrDefault(x =>
+                        x.IdProducto == anterior.IdProducto &&
+                        x.IdVariante == anterior.IdVariante
+                    );
+
+                    if (nuevo == null)
+                    {
+                        var producto = _context.Productos
+                            .FirstOrDefault(x => x.IdProducto == anterior.IdProducto);
+
+                        string nombreProducto = producto?.Nombre ?? "Producto";
+
+                        if (!string.IsNullOrWhiteSpace(anterior.Variante))
+                        {
+                            nombreProducto += $" ({anterior.Variante})";
+                        }
+
+                        cambios.Add(
+                            $"Eliminado: {nombreProducto} x{anterior.Cantidad}"
+                        );
+                    }
+                }
+
+
+                // CANTIDADES MODIFICADAS
+                foreach (var nuevo in detallesNuevos)
+                {
+                    var anterior = detallesAnteriores.FirstOrDefault(x =>
+                        x.IdProducto == nuevo.IdProducto &&
+                        x.IdVariante == nuevo.IdVariante
+                    );
+
+                    if (anterior != null &&
+                        anterior.Cantidad != nuevo.Cantidad)
+                    {
+                        var producto = _context.Productos
+                            .FirstOrDefault(x => x.IdProducto == nuevo.IdProducto);
+
+                        string nombreProducto = producto?.Nombre ?? "Producto";
+
+                        if (!string.IsNullOrWhiteSpace(nuevo.Variante))
+                        {
+                            nombreProducto += $" ({nuevo.Variante})";
+                        }
+
+                        cambios.Add(
+                            $"Cantidad: {nombreProducto} {anterior.Cantidad} → {nuevo.Cantidad}"
+                        );
+                    }
+                }
+
+
+                // VARIANTES MODIFICADAS
+                foreach (var nuevo in detallesNuevos)
+                {
+                    var anterior = detallesAnteriores.FirstOrDefault(x =>
+                        x.IdProducto == nuevo.IdProducto
+                    );
+
+                    if (anterior != null &&
+                        anterior.IdVariante != nuevo.IdVariante)
+                    {
+                        var producto = _context.Productos
+                            .FirstOrDefault(x => x.IdProducto == nuevo.IdProducto);
+
+                        string nombreProducto = producto?.Nombre ?? "Producto";
+
+                        string varianteAnterior = string.IsNullOrWhiteSpace(anterior.Variante)
+                            ? "Sin variante"
+                            : anterior.Variante;
+
+                        string varianteNueva = string.IsNullOrWhiteSpace(nuevo.Variante)
+                            ? "Sin variante"
+                            : nuevo.Variante;
+
+                        cambios.Add(
+                            $"Variante: {nombreProducto} {varianteAnterior} → {varianteNueva}"
+                        );
+                    }
+                }
 
                 //////////////////////////////////////////////////////
                 // DEVOLVER STOCK ANTERIOR
@@ -973,6 +1288,25 @@ namespace SistemaFacturacionUI.Controllers
                 }
 
                 //////////////////////////////////////////////////////
+                // GUARDAR HISTORIAL
+                //////////////////////////////////////////////////////
+                if (cambios.Count > 0)
+                {
+                    var descripcionCambios = string.Join(
+                        "\n",
+                        cambios.Select(x => "• " + x)
+                    );
+
+                    RegistrarHistorial(
+    factura.IdFactura,
+    userDb.IdUsuario,
+    "EDICION",
+    descripcionCambios,
+    usuario
+);
+                }
+
+                //////////////////////////////////////////////////////
                 // GUARDAR
                 //////////////////////////////////////////////////////
 
@@ -994,7 +1328,7 @@ namespace SistemaFacturacionUI.Controllers
         //////////////////////////////////////////////////////
 
         [HttpPost]
-        public JsonResult CancelarFactura(int id)
+        public JsonResult CancelarFactura(int id, string motivo)
         {
             try
             {
@@ -1010,6 +1344,16 @@ namespace SistemaFacturacionUI.Controllers
 
                 if (factura.Estado == "Cancelada")
                     return Json("La factura ya está cancelada");
+                if (string.IsNullOrWhiteSpace(motivo))
+                    return Json("Debes indicar el motivo de cancelación.");
+
+                var usuario = HttpContext.Session.GetString("usuario");
+
+                var userDb = _context.Usuarios
+                    .FirstOrDefault(x => x.Usuario1 == usuario);
+
+                if (userDb == null)
+                    return Json("Usuario no encontrado");
 
                 //////////////////////////////////////////////////////
                 // OBTENER DETALLES
@@ -1072,7 +1416,18 @@ namespace SistemaFacturacionUI.Controllers
 
                 factura.Estado = "Cancelada";
 
+                RegistrarHistorial(
+    factura.IdFactura,
+    userDb.IdUsuario,
+    "CANCELACION",
+    motivo.Trim(),
+    usuario,
+    true
+);
+
                 _context.SaveChanges();
+
+                
 
                 return Json(true);
             }
@@ -1282,6 +1637,16 @@ namespace SistemaFacturacionUI.Controllers
                 }
 
                 //////////////////////////////////////////////////////
+                // ELIMINAR HISTORIAL DE LA FACTURA
+                //////////////////////////////////////////////////////
+
+                var historialFactura = _context.FacturaHistorial
+                    .Where(x => x.IdFactura == id)
+                    .ToList();
+
+                _context.FacturaHistorial.RemoveRange(historialFactura);
+
+                //////////////////////////////////////////////////////
                 // ELIMINAR DETALLES
                 //////////////////////////////////////////////////////
 
@@ -1436,7 +1801,7 @@ namespace SistemaFacturacionUI.Controllers
                 //"kigoelsalvador@gmail.com";
 
                 //ws.Cell(fila, 3).Value =
-                    //"watchmaker100@outlook.com";
+                   // "watchmaker100@outlook.com";
 
                 ws.Cell(fila, 4).Value =
                     f.Direccion;
@@ -1695,7 +2060,7 @@ namespace SistemaFacturacionUI.Controllers
             return Json(clientes);
         }
 
-
+        
 
 
 

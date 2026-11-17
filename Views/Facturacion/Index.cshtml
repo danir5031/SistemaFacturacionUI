@@ -103,6 +103,19 @@
 
     font-weight:bold;
 }
+
+/* =====================================================
+   USUARIO DEL HISTORIAL
+   ===================================================== */
+
+.historial-usuario {
+    color: #64748b;
+    font-weight: 500;
+}
+
+body.dark-mode .historial-usuario {
+    color: #cbd5e1 !important;
+}
     
 </style>
 
@@ -953,6 +966,8 @@
 
                                 </a>
 
+                                
+
                                 <!-- EDITAR -->
                                 <button class="btn btn-sm btn-warning"
                                         onclick="editarFactura(@f.IdFactura)">
@@ -960,20 +975,28 @@
                                     ✏️
 
                                 </button>
-
-                                <!-- CANCELAR -->
-                                @if (rol == "ADMIN")
-                                {
-                                    @if (f.Estado != "Cancelada")
+                                @if (f.Estado != "Cancelada")
                                     {
                                         <button class="btn btn-sm btn-danger"
                                                 onclick="cancelarFactura(@f.IdFactura)"
                                                 title="Cancelar factura">
 
-                                            🗑️
+                                            🗑️ 
 
                                         </button>
                                     }
+
+                                <!-- CANCELAR -->
+                                @if (rol == "ADMIN")
+                                {
+                                    <button class="btn btn-sm btn-info"
+        onclick="verHistorialFactura(@f.IdFactura)"
+        title="Ver historial">
+
+    🕘
+
+</button>
+                                    
                                 }
 
                                 @if (Context.Session.GetString("usuario") == "admin")
@@ -1559,6 +1582,57 @@ var montoCancelado = Model
 
 </style>
 
+<!-- ===================================================== -->
+<!-- MODAL HISTORIAL DE FACTURA -->
+<!-- ===================================================== -->
+
+<div class="modal fade"
+     id="modalHistorialFactura"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+                    🕘 Historial de factura
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div id="contenidoHistorialFactura">
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    Cerrar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -1977,7 +2051,7 @@ var montoCancelado = Model
             }
         }
 
-
+        let idSolicitudFactura = null;
 
         //////////////////////////////////////////////////////
         // GUARDAR FACTURA
@@ -1985,193 +2059,264 @@ var montoCancelado = Model
 
         function confirmarFactura() {
 
-                    const btn = document.getElementById("btnGuardarFactura");
+    const btn = document.getElementById("btnGuardarFactura");
 
-        if (btn.disabled)
-            return;
+    // Evitar doble clic
+    if (btn.disabled)
+        return;
 
-        btn.disabled = true;
-        btn.innerHTML = `
-        <span class="spinner-border spinner-border-sm"></span>
-         Guardando...
-        `;
+    // =====================================================
+    // PRODUCTOS
+    // =====================================================
 
-            let detalles = [];
+    let detalles = [];
 
-            document.querySelectorAll(".cantidad").forEach(input => {
+    document.querySelectorAll(".cantidad").forEach(input => {
 
-                        detalles.push({
-
+        detalles.push({
             IdProducto: parseInt(input.dataset.id),
-
             IdVariante: parseInt(input.dataset.variante) || null,
-
             Variante: input.dataset.nombrevariante || "",
-
             Cantidad: parseInt(input.value),
-
             Precio: parseFloat(input.dataset.precio)
-
         });
 
-            });
+    });
 
-            if (detalles.length === 0)
-            {
-                alert("Agrega productos");
-                return;
-            }
+    if (detalles.length === 0) {
 
-                    //////////////////////////////////////////////////////
-        // VALIDAR DEPARTAMENTO
-        //////////////////////////////////////////////////////
+        alert("Agrega productos");
 
-        let departamento =
-            document.getElementById("departamento").value.trim();
+        return;
+    }
 
-        if (departamento === "")
-        {
-            alert("Debes seleccionar un departamento.");
 
-            document.getElementById("departamento").focus();
+    // =====================================================
+    // DEPARTAMENTO
+    // =====================================================
 
-            return;
+    let departamento =
+        document.getElementById("departamento").value.trim();
+
+    if (departamento === "") {
+
+        alert("Debes seleccionar un departamento.");
+
+        document.getElementById("departamento").focus();
+
+        return;
+    }
+
+
+    // =====================================================
+    // MUNICIPIO
+    // =====================================================
+
+    let municipio =
+        document.getElementById("municipio").value.trim();
+
+    if (municipio === "") {
+
+        alert("Debes ingresar el municipio.");
+
+        document.getElementById("municipio").focus();
+
+        return;
+    }
+
+
+    // =====================================================
+    // FECHA
+    // =====================================================
+
+    const fechaSeleccionada =
+        document.getElementById("fechaEnvio").value;
+
+    const hoy = new Date();
+
+    const fechaHoy =
+        hoy.getFullYear() + "-" +
+        String(hoy.getMonth() + 1).padStart(2, "0") + "-" +
+        String(hoy.getDate()).padStart(2, "0");
+
+
+    if (fechaSeleccionada && fechaSeleccionada < fechaHoy) {
+
+        alert("No puedes seleccionar una fecha anterior al día de hoy.");
+
+        return;
+    }
+
+
+    // =====================================================
+    // GENERAR ID ÚNICO DE LA SOLICITUD
+    // =====================================================
+
+    if (facturaEditando === 0 && idSolicitudFactura === null) {
+
+        if (window.crypto &&
+            typeof window.crypto.randomUUID === "function") {
+
+            idSolicitudFactura =
+                window.crypto.randomUUID();
+
+        } else {
+
+            // Compatibilidad si el sitio está en HTTP
+            idSolicitudFactura =
+                'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+                .replace(/[xy]/g, function (c) {
+
+                    const r =
+                        Math.random() * 16 | 0;
+
+                    const v =
+                        c === 'x'
+                            ? r
+                            : (r & 0x3 | 0x8);
+
+                    return v.toString(16);
+                });
         }
+    }
 
-        //////////////////////////////////////////////////////
-        // VALIDAR MUNICIPIO
-        //////////////////////////////////////////////////////
 
-        let municipio =
-            document.getElementById("municipio").value.trim();
+    // =====================================================
+    // DATOS
+    // =====================================================
 
-        if (municipio === "")
-        {
-            alert("Debes ingresar el municipio.");
+    let data = {
 
-            document.getElementById("municipio").focus();
+        IdFactura: facturaEditando,
 
-            return;
-        }
+        IdSolicitud:
+            facturaEditando === 0
+                ? idSolicitudFactura
+                : null,
 
-      /* let tipoEnvio =
-    document.getElementById("tipoEnvio").value.trim();
+        NombreCliente:
+            document.getElementById("nombreCliente").value,
 
-if (tipoEnvio === "")
-{
-    alert("Debes seleccionar el tipo de envío.");
+        Telefono:
+            document.getElementById("telefono").value,
 
-    document.getElementById("tipoEnvio").focus();
+        Direccion:
+            document.getElementById("direccion").value,
 
-    return;
-}*/
+        Referencia:
+            document.getElementById("referencia").value,
 
-            let data = {
-                 IdFactura: facturaEditando,
+        Departamento:
+            document.getElementById("departamento").value,
 
-                NombreCliente:
-                    document.getElementById("nombreCliente").value,
+        Municipio:
+            document.getElementById("municipio").value,
 
-                Telefono:
-                    document.getElementById("telefono").value,
+        Tienda:
+            document.getElementById("tienda").value,
 
-                Direccion:
-                    document.getElementById("direccion").value,
+        Comentario:
+            document.getElementById("comentario").value,
 
-                Referencia:
-                    document.getElementById("referencia").value,
+        Horario:
+            document.getElementById("horario").value,
 
-               // TipoEnvio:
-                    //document.getElementById("tipoEnvio").value,
+        HoraExacta:
+            document.getElementById("horaExacta").value,
 
-                Departamento:
-                    document.getElementById("departamento").value,
+        FechaEnvio:
+            fechaSeleccionada,
 
-                Municipio:
-                    document.getElementById("municipio").value,
+        Subtotal:
+            subtotalGlobal,
 
-                Tienda:
-                    document.getElementById("tienda").value,
+        Envio:
+            parseFloat(
+                document.getElementById("envio").value
+            ) || 0,
 
-                Comentario:
-                    document.getElementById("comentario").value,
+        Descuento:
+            parseFloat(
+                document.getElementById("valorDescuento").value
+            ) || 0,
 
-                Horario:
-                    document.getElementById("horario").value,
+        Total:
+            parseFloat(
+                document.getElementById("totalFinal")
+                    .innerText
+                    .replace("$", "")
+            ),
 
-                HoraExacta:
-                    document.getElementById("horaExacta").value,
+        MetodoPago:
+            metodoPago,
 
-                FechaEnvio:
-                    document.getElementById("fechaEnvio").value,
+        Estado:
+            "Completada",
 
-                Subtotal:
-                    subtotalGlobal,
+        Detalles:
+            detalles
+    };
 
-                Envio:
-                    parseFloat(document.getElementById("envio").value) || 0,
 
-                Descuento:
-                    parseFloat(document.getElementById("valorDescuento").value) || 0,
+    console.log("Factura a guardar:", data);
 
-                Total:
-                    parseFloat(
-                        document.getElementById("totalFinal")
-                        .innerText
-                        .replace("$", "")
-                    ),
 
-                MetodoPago:
-                    metodoPago,
+    // =====================================================
+    // AHORA SÍ BLOQUEAMOS EL BOTÓN
+    // =====================================================
 
-                Estado:
-                    "Completada",
+    btn.disabled = true;
 
-                Detalles:
-                    detalles
-            };
+    btn.innerHTML = `
+        <span class="spinner-border spinner-border-sm"></span>
+        Guardando...
+    `;
 
-            console.log(data);
 
-              const fechaSeleccionada =
-    document.getElementById("fechaEnvio").value;
+    // =====================================================
+    // EDICIÓN
+    // =====================================================
 
-const hoy = new Date();
+    if (facturaEditando > 0) {
 
-const fechaHoy =
-    hoy.getFullYear() + "-" +
-    String(hoy.getMonth() + 1).padStart(2, "0") + "-" +
-    String(hoy.getDate()).padStart(2, "0");
+        guardarNormal(data);
 
-if (fechaSeleccionada < fechaHoy)
-{
-    alert("No puedes seleccionar una fecha anterior al día de hoy.");
-    return;
-}
+        return;
+    }
 
-        if (facturaEditando > 0) {
+
+    // =====================================================
+    // VERIFICAR HISTORIAL DEL CLIENTE
+    // =====================================================
+
+    fetch(
+        "/Facturacion/VerificarCliente?telefono=" +
+        encodeURIComponent(data.Telefono)
+    )
+
+    .then(r => {
+
+        if (!r.ok)
+            throw new Error("Error al verificar cliente.");
+
+        return r.json();
+    })
+
+    .then(info => {
+
+        if (!info.mostrar) {
 
             guardarNormal(data);
 
             return;
-
         }
 
-                    fetch("/Facturacion/VerificarCliente?telefono=" + encodeURIComponent(data.Telefono))
-        .then(r => r.json())
-        .then(info => {
 
-            if (!info.mostrar) {
+        mostrarHistorial(info);
 
-                // AQUÍ va exactamente el fetch original
-                guardarNormal(data);
 
-                return;
-            }
-
-            mostrarHistorial(info);
-
-            document.getElementById("btnContinuarFactura").onclick = function () {
+        document.getElementById("btnContinuarFactura").onclick =
+            function () {
 
                 bootstrap.Modal.getInstance(
                     document.getElementById("modalHistorialCliente")
@@ -2179,59 +2324,127 @@ if (fechaSeleccionada < fechaHoy)
 
                 guardarNormal(data);
             };
+    })
 
-        });
-        }
+    .catch(error => {
+
+        console.error(error);
+
+        alert(
+            "No se pudo verificar el historial del cliente."
+        );
+
+        btn.disabled = false;
+
+        btn.innerHTML =
+            "Confirmar e Imprimir Factura";
+    });
+}
 
 
                  function guardarNormal(data) {
 
-            fetch(facturaEditando > 0
-                ? '/Facturacion/ActualizarFactura'
-                : '/Facturacion/GuardarFactura', {
+    const btn =
+        document.getElementById("btnGuardarFactura");
 
-                method: 'POST',
 
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+    const controlador =
+        facturaEditando > 0
+            ? "/Facturacion/ActualizarFactura"
+            : "/Facturacion/GuardarFactura";
 
-                body: JSON.stringify(data)
 
-            })
-            .then(res => res.json())
-            .then(r => {
+    const controller =
+        new AbortController();
 
-                console.log(r);
+    const timeout =
+        setTimeout(() => {
+            controller.abort();
+        }, 60000);
 
-                if (r === true) {
 
-                    alert("Factura guardada correctamente 🔥");
+    fetch(controlador, {
 
-                    location.reload();
+        method: "POST",
 
-                } else {
+        headers: {
+            "Content-Type": "application/json"
+        },
 
-                    alert("Error: " + r);
+        body: JSON.stringify(data),
 
-                            btn.disabled = false;
-        btn.innerHTML = "Confirmar e Imprimir Factura";
+        signal: controller.signal
+    })
 
-                }
+    .then(res => {
 
-            })
-            .catch(error => {
+        clearTimeout(timeout);
 
-                console.log(error);
+        if (!res.ok)
+            throw new Error(
+                "El servidor respondió con un error."
+            );
 
-                alert("Ocurrió un error al guardar");
+        return res.json();
+    })
 
-                        btn.disabled = false;
-        btn.innerHTML = "Confirmar e Imprimir Factura";
+    .then(r => {
 
-            });
+        console.log("Respuesta:", r);
 
+
+        if (r === true) {
+
+            alert(
+                "Factura guardada correctamente 🔥"
+            );
+
+            location.reload();
+
+            return;
         }
+
+
+        alert(
+            "Error: " + r
+        );
+
+
+        btn.disabled = false;
+
+        btn.innerHTML =
+            "Confirmar e Imprimir Factura";
+    })
+
+    .catch(error => {
+
+        clearTimeout(timeout);
+
+        console.error(error);
+
+
+        if (error.name === "AbortError") {
+
+            alert(
+                "El servidor está tardando demasiado. " +
+                "La solicitud puede seguir procesándose. " +
+                "Puedes esperar unos segundos antes de intentar nuevamente."
+            );
+
+        } else {
+
+            alert(
+                "Ocurrió un error al guardar la factura."
+            );
+        }
+
+
+        btn.disabled = false;
+
+        btn.innerHTML =
+            "Confirmar e Imprimir Factura";
+    });
+}
 
 
 
@@ -2257,6 +2470,7 @@ if (fechaSeleccionada < fechaHoy)
 
     if (facturaEditando === 0)
     {
+        idSolicitudFactura = null;
         document.getElementById("lecturaInteligente")
             .style.display = "block";
                     document.getElementById("buscarClienteBox")
@@ -2274,6 +2488,7 @@ if (fechaSeleccionada < fechaHoy)
         function cancelar() {
 
             facturaEditando = 0;
+            idSolicitudFactura = null;
             document.getElementById("nombreCliente").readOnly = false;
 
             //////////////////////////////////////////////////////
@@ -2451,45 +2666,165 @@ if (fechaSeleccionada < fechaHoy)
                 encodeURIComponent(texto);
         }
 
+        //////////////////////////////////////////////////////
+// HISTORIAL DE FACTURA
+//////////////////////////////////////////////////////
+
+function verHistorialFactura(id) {
+
+    const contenido =
+        document.getElementById("contenidoHistorialFactura");
+
+    contenido.innerHTML = `
+        <div class="text-center p-4">
+            <div class="spinner-border text-primary"
+                 role="status">
+            </div>
+
+            <div class="mt-2">
+                Cargando historial...
+            </div>
+        </div>
+    `;
+
+    const modal = new bootstrap.Modal(
+        document.getElementById("modalHistorialFactura")
+    );
+
+    modal.show();
+
+    fetch('/Facturacion/ObtenerHistorialFactura?id=' + id)
+        .then(res => res.json())
+        .then(historial => {
+
+            if (!historial || historial.length === 0) {
+
+                contenido.innerHTML = `
+                    <div class="text-center text-muted p-4">
+                        No hay historial para esta factura.
+                    </div>
+                `;
+
+                return;
+            }
+
+            let html = "";
+
+            historial.forEach(item => {
+
+                let icono = "📝";
+
+                if (item.tipoAccion === "CREACION")
+                    icono = "🟢";
+
+                if (item.tipoAccion === "EDICION")
+                    icono = "✏️";
+
+                if (item.tipoAccion === "CANCELACION")
+                    icono = "🔴";
+
+                html += `
+                    <div class="border rounded p-3 mb-2">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <strong>
+                                ${icono}
+                                ${item.tipoAccion}
+                            </strong>
+
+                            <small class="text-muted">
+                                ${item.fecha}
+                            </small>
+
+                        </div>
+
+                        <div class="mt-2"
+     style="white-space: pre-line;">
+    ${item.descripcion}
+</div>
+
+                        <div class="mt-2 historial-usuario">
+    👤 ${item.usuario}
+</div>
+
+                    </div>
+                `;
+            });
+
+            contenido.innerHTML = html;
+
+        })
+        .catch(error => {
+
+            console.error(error);
+
+            contenido.innerHTML = `
+                <div class="alert alert-danger">
+                    No se pudo cargar el historial.
+                </div>
+            `;
+        });
+}
+
                 //////////////////////////////////////////////////////
         // CANCELAR FACTURA
         //////////////////////////////////////////////////////
 
         function cancelarFactura(id) {
 
-            if (!confirm("¿Deseas cancelar esta factura?"))
-                return;
+    if (!confirm("¿Deseas cancelar esta factura?"))
+        return;
 
-            fetch('/Facturacion/CancelarFactura?id=' + id, {
+    const motivo = prompt(
+        "Indica el motivo de cancelación:\n\n" +
+        "Ejemplos:\n" +
+        "• Cliente no recibió\n" +
+        "• Cliente no lo quiere\n" +
+        "• Cliente canceló pedido\n" +
+        "• Error en factura\n\n" +
+        "Escribe el motivo:"
+    );
 
-                method: 'POST'
+    if (motivo === null)
+        return;
 
-            })
+    if (motivo.trim() === "") {
+        alert("Debes indicar el motivo de cancelación.");
+        return;
+    }
 
-            .then(res => res.json())
-
-            .then(r => {
-
-                if (r === true)
-                {
-                    alert("Factura cancelada correctamente");
-
-                    location.reload();
-                }
-                else
-                {
-                    alert(r);
-                }
-
-            })
-
-            .catch(error => {
-
-                console.log(error);
-
-                alert("Ocurrió un error");
-            });
+    fetch(
+        '/Facturacion/CancelarFactura?id=' +
+        id +
+        '&motivo=' +
+        encodeURIComponent(motivo.trim()),
+        {
+            method: 'POST'
         }
+    )
+    .then(res => res.json())
+    .then(r => {
+
+        if (r === true) {
+
+            alert("Factura cancelada correctamente");
+
+            location.reload();
+        }
+        else {
+
+            alert(r);
+        }
+
+    })
+    .catch(error => {
+
+        console.log(error);
+
+        alert("Ocurrió un error");
+    });
+}
 
                 //////////////////////////////////////////////////////
         // ELIMINAR DEFINITIVAMENTE

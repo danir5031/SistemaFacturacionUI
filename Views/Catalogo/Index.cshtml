@@ -11,11 +11,13 @@
 
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Catálogo - TAO</title>
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           rel="stylesheet">
@@ -25,431 +27,467 @@
 
     <style>
 
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #f6f6f6;
-            font-family: Arial, sans-serif;
-            color: #222;
-            margin: 0;
-        }
-
-        /* =========================
-           ENCABEZADO
-        ========================= */
-
-        .catalogo-header {
-            background: #111;
-            color: white;
-            padding: 28px 20px;
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .catalogo-logo {
-            font-size: 38px;
-            font-weight: 800;
-            letter-spacing: 4px;
-        }
-
-        .catalogo-slogan {
-            font-size: 14px;
-            opacity: .85;
-            margin-top: 2px;
-        }
-
-
-        /* =========================
-           CONTENEDOR
-        ========================= */
-
-        .catalogo-container {
-            width: 94%;
-            max-width: 1500px;
-            margin: auto;
-        }
-
-
-        /* =========================
-           BUSCADOR
-        ========================= */
-
-        .buscador {
-            max-width: 700px;
-            margin: 0 auto 24px auto;
-        }
-
-        .buscador input {
-            height: 52px;
-            border-radius: 30px 0 0 30px;
-            padding: 10px 20px;
-            border: 1px solid #ddd;
-            font-size: 16px;
-        }
-
-        .buscador input:focus {
-            box-shadow: none;
-            border-color: #111;
-        }
-
-        .buscador button {
-            height: 52px;
-            border-radius: 0 30px 30px 0;
-            padding: 0 25px;
-        }
-
-
-        /* =========================
-           CATEGORÍAS
-        ========================= */
-
-        .categorias-contenedor {
-            width: 100%;
-            overflow-x: auto;
-            overflow-y: hidden;
-            margin-bottom: 30px;
-            padding: 3px 3px 10px 3px;
-
-            scrollbar-width: thin;
-        }
-
-        .categorias {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            width: max-content;
-            min-width: 100%;
-        }
-
-        .categoria-btn {
-            flex: 0 0 auto;
-            border: 1px solid #222;
-            background: white;
-            color: #222;
-            border-radius: 25px;
-            padding: 10px 20px;
-            text-decoration: none;
-            font-size: 15px;
-            white-space: nowrap;
-            transition: all .2s ease;
-        }
-
-        .categoria-btn:hover {
-            background: #111;
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        .categoria-activa {
-            background: #111;
-            color: white;
-        }
-
-
-        /* =========================
-           GRID DE PRODUCTOS
-        ========================= */
-
-        .productos-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 24px;
-            padding-bottom: 40px;
-        }
-
-
-        /* =========================
-           TARJETA
-        ========================= */
-
-        .producto-card {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid #e8e8e8;
-            height: 100%;
-            cursor: pointer;
-
-            display: flex;
-            flex-direction: column;
-
-            transition: transform .25s ease,
-                        box-shadow .25s ease;
-        }
-
-        .producto-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 30px rgba(0,0,0,.12);
-        }
-
-
-        /* =========================
-           IMAGEN
-        ========================= */
-
-        .producto-imagen-container {
-            width: 100%;
-            height: 300px;
-            background: #fff;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            overflow: hidden;
-        }
-
-        .producto-imagen {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            padding: 15px;
-
-            transition: transform .3s ease;
-        }
-
-        .producto-card:hover .producto-imagen {
-            transform: scale(1.03);
-        }
-
-
-        /* =========================
-           INFORMACIÓN
-        ========================= */
-
-        .producto-info {
-            padding: 16px 18px 20px 18px;
-
-            display: flex;
-            flex-direction: column;
-
-            flex-grow: 1;
-        }
-
-        .producto-nombre {
-            font-size: 17px;
-            font-weight: 600;
-            line-height: 1.4;
-
-            min-height: 48px;
-
-            margin-bottom: 8px;
-        }
-
-        .producto-precio {
-            font-size: 22px;
-            font-weight: bold;
-            color: #111;
-
-            margin-top: auto;
-        }
-
-
-        /* =========================
-           SIN PRODUCTOS
-        ========================= */
-
-        .sin-productos {
-            text-align: center;
-            padding: 80px 20px;
-        }
-
-        .sin-productos i {
-            font-size: 60px;
-            color: #aaa;
-        }
-
-
-        /* =========================
-           MODAL PRODUCTO
-        ========================= */
-
-        .modal-producto .modal-content {
-            border: none;
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        .modal-producto .modal-body {
-            padding: 0;
-        }
-
-        .modal-producto-contenido {
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            min-height: 500px;
-        }
-
-        .modal-imagen-container {
-            background: #f8f8f8;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            padding: 30px;
-        }
-
-        .modal-imagen {
-            width: 100%;
-            height: 480px;
-            object-fit: contain;
-        }
-
-        .modal-informacion {
-            padding: 50px 40px;
-
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .modal-nombre {
-            font-size: 30px;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-
-        .modal-categoria {
-            color: #777;
-            font-size: 15px;
-            margin-bottom: 20px;
-        }
-
-        .modal-precio {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 30px;
-        }
-
-        .btn-cerrar-modal {
-            position: absolute;
-            right: 15px;
-            top: 15px;
-
-            width: 40px;
-            height: 40px;
-
-            border-radius: 50%;
-            border: none;
-
-            background: rgba(0,0,0,.7);
-            color: white;
-
-            font-size: 20px;
-
-            z-index: 10;
-        }
-
-
-        /* =========================
-           TABLET
-        ========================= */
-
-        @@media (max-width: 1100px) {
-
-            .productos-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
+            * {
+                box-sizing: border-box;
             }
 
-            .producto-imagen-container {
-                height: 270px;
-            }
-        }
-
-
-        /* =========================
-           TABLET PEQUEÑA
-        ========================= */
-
-        @@media (max-width: 800px) {
-
-            .productos-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 16px;
+            body {
+                background: #f6f6f6;
+                font-family: Arial, sans-serif;
+                color: #222;
+                margin: 0;
             }
 
-            .producto-imagen-container {
-                height: 240px;
-            }
 
-            .modal-producto-contenido {
-                grid-template-columns: 1fr;
-            }
-
-            .modal-imagen {
-                height: 350px;
-            }
-
-            .modal-informacion {
-                padding: 30px;
-            }
-        }
-
-
-        /* =========================
-           CELULAR
-        ========================= */
-
-        @@media (max-width: 500px) {
+            /* =========================
+                       ENCABEZADO
+                    ========================== */
 
             .catalogo-header {
-                padding: 22px 15px;
+                background: #111;
+                color: white;
+                padding: 28px 20px;
+                text-align: center;
+                margin-bottom: 25px;
             }
 
             .catalogo-logo {
-                font-size: 32px;
+                font-size: 38px;
+                font-weight: 800;
+                letter-spacing: 4px;
             }
+
+            .catalogo-slogan {
+                font-size: 14px;
+                opacity: .85;
+                margin-top: 2px;
+            }
+
+
+            /* =========================
+                       CONTENEDOR
+                    ========================== */
 
             .catalogo-container {
                 width: 94%;
+                max-width: 1500px;
+                margin: auto;
             }
+
+
+            /* =========================
+                       BUSCADOR
+                    ========================== */
+
+            .buscador {
+                max-width: 700px;
+                margin: 0 auto 24px auto;
+            }
+
+                .buscador input {
+                    height: 52px;
+                    border-radius: 30px 0 0 30px;
+                    padding: 10px 20px;
+                    border: 1px solid #ddd;
+                    font-size: 16px;
+                }
+
+                    .buscador input:focus {
+                        box-shadow: none;
+                        border-color: #111;
+                    }
+
+                .buscador button {
+                    height: 52px;
+                    border-radius: 0 30px 30px 0;
+                    padding: 0 25px;
+                }
+
+
+            /* =========================
+                       CATEGORÍAS
+                    ========================== */
+
+            .categorias-contenedor {
+                width: 100%;
+                overflow-x: auto;
+                overflow-y: hidden;
+                margin-bottom: 30px;
+                padding: 3px 3px 10px 3px;
+                scrollbar-width: thin;
+            }
+
+            .categorias {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                width: max-content;
+                min-width: 100%;
+            }
+
+            .categoria-btn {
+                flex: 0 0 auto;
+                border: 1px solid #222;
+                background: white;
+                color: #222;
+                border-radius: 25px;
+                padding: 10px 20px;
+                text-decoration: none;
+                font-size: 15px;
+                white-space: nowrap;
+                transition: all .2s ease;
+            }
+
+                .categoria-btn:hover {
+                    background: #111;
+                    color: white;
+                    transform: translateY(-1px);
+                }
+
+            .categoria-activa {
+                background: #111;
+                color: white;
+            }
+
+
+            /* =========================
+                       GRID DE PRODUCTOS
+                    ========================== */
 
             .productos-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 12px;
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 24px;
+                padding-bottom: 40px;
             }
+
+
+            /* =========================
+                       TARJETA
+                    ========================== */
+
+            .producto-card {
+                background: white;
+                border-radius: 16px;
+                overflow: hidden;
+                border: 1px solid #e8e8e8;
+                height: 100%;
+                cursor: pointer;
+                display: flex;
+                flex-direction: column;
+                transition: transform .25s ease, box-shadow .25s ease;
+            }
+
+                .producto-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 12px 30px rgba(0,0,0,.12);
+                }
+
+
+            /* =========================
+                       IMAGEN
+                    ========================== */
 
             .producto-imagen-container {
-                height: 180px;
+                width: 100%;
+                height: 300px;
+                background: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
             }
 
+            .producto-imagen {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                padding: 15px;
+                transition: transform .3s ease;
+            }
+
+            .producto-card:hover
+            .producto-imagen {
+                transform: scale(1.03);
+            }
+
+
+            /* =========================
+                       INFORMACIÓN
+                    ========================== */
+
             .producto-info {
-                padding: 12px;
+                padding: 16px 18px 20px 18px;
+                display: flex;
+                flex-direction: column;
+                flex-grow: 1;
             }
 
             .producto-nombre {
-                font-size: 14px;
-                min-height: 42px;
+                font-size: 17px;
+                font-weight: 600;
+                line-height: 1.4;
+                min-height: 48px;
+                margin-bottom: 8px;
             }
 
             .producto-precio {
-                font-size: 18px;
+                font-size: 22px;
+                font-weight: bold;
+                color: #111;
+                margin-top: auto;
+            }
+
+
+            /* =========================
+                       SIN PRODUCTOS
+                    ========================== */
+
+            .sin-productos {
+                text-align: center;
+                padding: 80px 20px;
+            }
+
+                .sin-productos i {
+                    font-size: 60px;
+                    color: #aaa;
+                }
+
+
+            /* =========================
+                       MODAL PRODUCTO
+                    ========================== */
+
+            .modal-producto .modal-content {
+                border: none;
+                border-radius: 20px;
+                overflow: hidden;
+            }
+
+            .modal-producto .modal-body {
+                padding: 0;
+            }
+
+            .modal-producto-contenido {
+                display: grid;
+                grid-template-columns: 1.2fr 1fr;
+                min-height: 500px;
+            }
+
+
+            /* =========================
+                       IMAGEN DEL MODAL
+                    ========================== */
+
+            .modal-imagen-container {
+                background: #f8f8f8;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 30px;
             }
 
             .modal-imagen {
-                height: 280px;
+                width: 100%;
+                height: 480px;
+                object-fit: contain;
             }
 
+
+            /* =========================
+                       INFORMACIÓN DEL MODAL
+                    ========================== */
+
             .modal-informacion {
-                padding: 25px;
+                padding: 50px 40px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
             }
 
             .modal-nombre {
-                font-size: 24px;
+                font-size: 30px;
+                font-weight: 700;
+                margin-bottom: 20px;
+            }
+
+            .modal-categoria {
+                color: #777;
+                font-size: 15px;
+                margin-bottom: 20px;
             }
 
             .modal-precio {
-                font-size: 27px;
+                font-size: 32px;
+                font-weight: bold;
+                margin-bottom: 30px;
             }
-        }
+
+
+            /* =========================
+                       VARIANTES
+                    ========================== */
+
+            .modal-seccion {
+                margin-top: 10px;
+            }
+
+            .modal-titulo-seccion {
+                font-size: 17px;
+                font-weight: 700;
+                margin-bottom: 12px;
+            }
+
+            .modal-variantes {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .variante-item {
+                background: #f5f5f5;
+                border: 1px solid #ddd;
+                border-radius: 20px;
+                padding: 9px 15px;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+
+            /* =========================
+                       BOTÓN CERRAR
+                    ========================== */
+
+            .btn-cerrar-modal {
+                position: absolute;
+                right: 15px;
+                top: 15px;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                border: none;
+                background: rgba(0,0,0,.7);
+                color: white;
+                font-size: 20px;
+                z-index: 10;
+            }
+
+
+            /* =========================
+                       TABLET
+                    ========================== */
+
+            @@media (max-width: 1100px) {
+
+                .productos-grid {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+
+                .producto-imagen-container {
+                    height: 270px;
+                }
+            }
+
+
+            /* =========================
+                       TABLET PEQUEÑA
+                    ========================== */
+
+            @@media (max-width: 800px) {
+
+                .productos-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 16px;
+                }
+
+                .producto-imagen-container {
+                    height: 240px;
+                }
+
+                .modal-producto-contenido {
+                    grid-template-columns: 1fr;
+                }
+
+                .modal-imagen {
+                    height: 350px;
+                }
+
+                .modal-informacion {
+                    padding: 30px;
+                }
+            }
+
+
+            /* =========================
+                       CELULAR
+                    ========================== */
+
+            @@media (max-width: 500px) {
+
+                .catalogo-header {
+                    padding: 22px 15px;
+                }
+
+                .catalogo-logo {
+                    font-size: 32px;
+                }
+
+                .catalogo-container {
+                    width: 94%;
+                }
+
+                .productos-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 12px;
+                }
+
+                .producto-imagen-container {
+                    height: 180px;
+                }
+
+                .producto-info {
+                    padding: 12px;
+                }
+
+                .producto-nombre {
+                    font-size: 14px;
+                    min-height: 42px;
+                }
+
+                .producto-precio {
+                    font-size: 18px;
+                }
+
+                .modal-imagen {
+                    height: 280px;
+                }
+
+                .modal-informacion {
+                    padding: 25px;
+                }
+
+                .modal-nombre {
+                    font-size: 24px;
+                }
+
+                .modal-precio {
+                    font-size: 27px;
+                }
+            }
 
     </style>
+
+    <title>Catálogo</title>
+
+    <link rel="icon"
+          type="image/png"
+          href="~/img/tao1.png" />
+
 </head>
 
+
 <body>
+
 
     <!-- =========================
          ENCABEZADO
@@ -462,13 +500,14 @@
         </div>
 
         <div class="catalogo-slogan">
-            Sigue tu ritmo
+SIGUE A TU RITMO
         </div>
 
     </div>
 
 
     <div class="catalogo-container">
+
 
         <!-- =========================
              BUSCADOR
@@ -491,6 +530,7 @@
                         class="btn btn-dark">
 
                     <i class="bi bi-search"></i>
+
                     Buscar
 
                 </button>
@@ -508,6 +548,7 @@
 
             <div class="categorias">
 
+
                 <!-- TODOS -->
 
                 <a asp-controller="Catalogo"
@@ -520,9 +561,9 @@
 
 
                 <!-- CATEGORÍAS DINÁMICAS -->
-
                 @foreach (var categoria in categorias)
                 {
+
                     <a asp-controller="Catalogo"
                        asp-action="Index"
                        asp-route-categoria="@categoria"
@@ -531,6 +572,7 @@
                         @categoria
 
                     </a>
+
                 }
 
             </div>
@@ -541,13 +583,14 @@
         <!-- =========================
              PRODUCTOS
         ========================== -->
-
         @if (Model != null && Model.Any())
         {
+
             <div class="productos-grid">
 
                 @foreach (var producto in Model)
                 {
+
                     <div class="producto-card"
                          data-bs-toggle="modal"
                          data-bs-target="#modalProducto"
@@ -556,28 +599,39 @@
                          data-precio="@producto.PrecioVenta.ToString("0.00")"
                          data-categoria="@producto.Categoria">
 
+
                         <!-- IMAGEN -->
 
                         <div class="producto-imagen-container">
 
                             @if (producto.Imagen != null)
                             {
-                                <img src="@Url.Action("VerImagen", "Catalogo", new { id = producto.IdProducto })"
+
+                                <img src="@Url.Action(
+                                                                         "VerImagen",
+                                                                         "Catalogo",
+                                                                         new { id = producto.IdProducto })"
                                      class="producto-imagen"
                                      alt="@producto.Nombre"
                                      loading="lazy" />
+
                             }
                             else if (!string.IsNullOrEmpty(producto.ImagenUrl))
                             {
+
                                 <img src="@producto.ImagenUrl"
                                      class="producto-imagen"
                                      alt="@producto.Nombre"
                                      loading="lazy" />
+
                             }
                             else
                             {
+
                                 <i class="bi bi-image text-secondary"
-                                   style="font-size:60px;"></i>
+                                   style="font-size:60px;">
+                                </i>
+
                             }
 
                         </div>
@@ -588,35 +642,50 @@
                         <div class="producto-info">
 
                             <div class="producto-nombre">
+
                                 @producto.Nombre
+
                             </div>
 
                             <div class="producto-precio">
+
                                 $@producto.PrecioVenta.ToString("0.00")
+
                             </div>
 
                         </div>
 
                     </div>
+
                 }
 
             </div>
+
         }
         else
         {
+
+            <!-- SIN PRODUCTOS -->
+
             <div class="sin-productos">
 
                 <i class="bi bi-box-seam"></i>
 
                 <h3 class="mt-3">
+
                     No encontramos productos
+
                 </h3>
 
                 <p class="text-muted">
-                    Intenta buscar otro producto o selecciona otra categoría.
+
+                    Intenta buscar otro producto
+                    o selecciona otra categoría.
+
                 </p>
 
             </div>
+
         }
 
     </div>
@@ -631,9 +700,14 @@
          tabindex="-1"
          aria-hidden="true">
 
+
         <div class="modal-dialog modal-xl modal-dialog-centered">
 
+
             <div class="modal-content">
+
+
+                <!-- CERRAR -->
 
                 <button type="button"
                         class="btn-cerrar-modal"
@@ -643,11 +717,16 @@
 
                 </button>
 
+
                 <div class="modal-body">
+
 
                     <div class="modal-producto-contenido">
 
-                        <!-- IMAGEN GRANDE -->
+
+                        <!-- =========================
+                             IMAGEN GRANDE
+                        ========================== -->
 
                         <div class="modal-imagen-container">
 
@@ -659,21 +738,54 @@
                         </div>
 
 
-                        <!-- INFORMACIÓN -->
+                        <!-- =========================
+                             INFORMACIÓN
+                        ========================== -->
 
                         <div class="modal-informacion">
+
+
+                            <!-- NOMBRE -->
 
                             <div id="modalNombre"
                                  class="modal-nombre">
                             </div>
 
+
+                            <!-- CATEGORÍA -->
+
                             <div id="modalCategoria"
                                  class="modal-categoria">
                             </div>
 
+
+                            <!-- PRECIO -->
+
                             <div id="modalPrecio"
                                  class="modal-precio">
                             </div>
+
+
+                            <!-- =========================
+                                 VARIANTES
+                            ========================== -->
+
+                            <div id="modalVariantesContainer"
+                                 class="modal-seccion"
+                                 style="display:none;">
+
+                                <div class="modal-titulo-seccion">
+
+                                    Disponibles en:
+
+                                </div>
+
+                                <div id="modalVariantes"
+                                     class="modal-variantes">
+                                </div>
+
+                            </div>
+
 
                         </div>
 
@@ -702,40 +814,179 @@
 
     <script>
 
-        const modalProducto = document.getElementById('modalProducto');
-
-        modalProducto.addEventListener('show.bs.modal', function (event) {
-
-            const tarjeta = event.relatedTarget;
-
-            const id = tarjeta.getAttribute('data-id');
-            const nombre = tarjeta.getAttribute('data-nombre');
-            const precio = tarjeta.getAttribute('data-precio');
-            const categoria = tarjeta.getAttribute('data-categoria');
-
-            const imagen = tarjeta.querySelector('.producto-imagen');
-
-            document.getElementById('modalNombre').textContent = nombre;
-
-            document.getElementById('modalCategoria').textContent =
-                categoria ? "Categoría: " + categoria : "";
-
-            document.getElementById('modalPrecio').textContent =
-                "$" + precio;
+            const modalProducto =
+                document.getElementById('modalProducto');
 
 
-            if (imagen) {
+            modalProducto.addEventListener(
+                'show.bs.modal',
+                function (event) {
 
-                document.getElementById('modalImagen').src =
-                    imagen.src;
+                    const tarjeta =
+                        event.relatedTarget;
 
-                document.getElementById('modalImagen').alt =
-                    nombre;
-            }
 
-        });
+                    const id =
+                        tarjeta.getAttribute('data-id');
+
+
+                    const imagen =
+                        tarjeta.querySelector(
+                            '.producto-imagen'
+                        );
+
+
+                    // ==========================================
+                    // IMAGEN
+                    // ==========================================
+
+                    if (imagen) {
+
+                        document.getElementById(
+                            'modalImagen'
+                        ).src = imagen.src;
+
+                    }
+
+
+                    // ==========================================
+                    // CARGAR PRODUCTO
+                    // ==========================================
+
+                    fetch(
+                        '/Catalogo/ObtenerProducto?id='
+                        + id
+                    )
+
+                    .then(response => {
+
+                        if (!response.ok) {
+
+                            throw new Error(
+                                'No se pudo cargar el producto.'
+                            );
+
+                        }
+
+                        return response.json();
+
+                    })
+
+                    .then(producto => {
+
+
+                        // ==========================================
+                        // NOMBRE
+                        // ==========================================
+
+                        document.getElementById(
+                            'modalNombre'
+                        ).textContent =
+                            producto.nombre;
+
+
+                        // ==========================================
+                        // CATEGORÍA
+                        // ==========================================
+
+                        document.getElementById(
+                            'modalCategoria'
+                        ).textContent =
+
+                            producto.categoria
+                                ? "Categoría: "
+                                  + producto.categoria
+                                : "";
+
+
+                        // ==========================================
+                        // PRECIO
+                        // ==========================================
+
+                        document.getElementById(
+                            'modalPrecio'
+                        ).textContent =
+
+                            "$" +
+                            Number(
+                                producto.precioVenta
+                            ).toFixed(2);
+
+
+                        // ==========================================
+                        // VARIANTES
+                        // ==========================================
+
+                        const contenedorVariantes =
+                            document.getElementById(
+                                'modalVariantesContainer'
+                            );
+
+
+                        const variantes =
+                            document.getElementById(
+                                'modalVariantes'
+                            );
+
+
+                        variantes.innerHTML = "";
+
+
+                        if (
+                            producto.variantes &&
+                            producto.variantes.length > 0
+                        ) {
+
+                            contenedorVariantes.style.display =
+                                "block";
+
+
+                            producto.variantes.forEach(
+                                v => {
+
+                                    const elemento =
+                                        document.createElement(
+                                            "span"
+                                        );
+
+
+                                    elemento.className =
+                                        "variante-item";
+
+
+                                    elemento.textContent =
+                                        v.nombreVariante;
+
+
+                                    variantes.appendChild(
+                                        elemento
+                                    );
+
+                                }
+                            );
+
+                        }
+                        else {
+
+                            contenedorVariantes.style.display =
+                                "none";
+
+                        }
+
+                    })
+
+                    .catch(error => {
+
+                        console.error(error);
+
+                    });
+
+                }
+            );
 
     </script>
 
+
 </body>
+
 </html>

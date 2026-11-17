@@ -285,6 +285,8 @@ namespace SistemaFacturacionUI.Controllers
 
                     db.ImagenUrl = producto.ImagenUrl;
 
+                    db.MostrarEnCatalogo = producto.MostrarEnCatalogo;
+
                     //////////////////////////////////////////////////////
                     // VARIANTES
                     //////////////////////////////////////////////////////
@@ -490,6 +492,7 @@ namespace SistemaFacturacionUI.Controllers
     ? "/Producto/VerImagen/" + producto.IdProducto
     : producto.ImagenUrl,
                 producto.Disponible,
+                producto.MostrarEnCatalogo,
 
                 Variantes = producto.Variantes
                     .Where(x => x.Activo)

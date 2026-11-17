@@ -138,8 +138,8 @@
     <div class="center">
 
             <h3 class="titulo">
-                <!--  ZEN | WATCHMAKER -->
-                TAO
+                 <!--ZEN | WATCHMAKER 
+                <!-- TAO-->
         </h3>
 
     </div>
@@ -325,17 +325,68 @@
 
     <!-- DIRECCIÓN -->
 
-    <div>
+<div>
 
-        <b>Dirección:</b>
+    <b>Dirección:</b>
 
-        <p style="font-size:12px;">
+    <p style="font-size:12px; margin-bottom:5px;">
 
-            @Model.Direccion
+        @Model.Direccion
 
+    </p>
+
+</div>
+
+<!-- REFERENCIA -->
+
+@if (!string.IsNullOrWhiteSpace(Model.Referencia))
+{
+    <div style="font-size:12px; margin-top:5px;">
+
+        <b>Referencia:</b>
+
+        <p style="
+            font-size:12px;
+            margin-top:3px;
+            word-break:break-word;
+        ">
+            @Model.Referencia
         </p>
 
     </div>
+}
+
+<!-- MUNICIPIO | DEPARTAMENTO -->
+
+@if (!string.IsNullOrWhiteSpace(Model.Municipio) ||
+     !string.IsNullOrWhiteSpace(Model.Departamento))
+{
+    <div style="
+        text-align:center;
+        font-size:13px;
+        font-weight:bold;
+        margin:6px 0;
+        text-transform:uppercase;
+    ">
+
+        @(string.IsNullOrWhiteSpace(Model.Municipio)
+            ? ""
+            : Model.Municipio.ToUpper())
+
+        @if (!string.IsNullOrWhiteSpace(Model.Municipio) &&
+             !string.IsNullOrWhiteSpace(Model.Departamento))
+        {
+            <span> | </span>
+        }
+
+        @(string.IsNullOrWhiteSpace(Model.Departamento)
+            ? ""
+            : Model.Departamento)
+            
+    </div>
+}
+
+<!-- COMENTARIO -->
 
     <!-- COMENTARIO -->
     @if (!string.IsNullOrWhiteSpace(Model.Comentario))
