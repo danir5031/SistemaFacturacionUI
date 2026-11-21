@@ -74,6 +74,11 @@ namespace SistemaFacturacionUI.Models
 
         public string? Referencia { get; set; }
 
+        public int? IdTienda { get; set; }
+
+        [ForeignKey("IdTienda")]
+        public virtual Tienda TiendaRelacion { get; set; }
+
 
 
         //public string? TipoEnvio { get; set; }

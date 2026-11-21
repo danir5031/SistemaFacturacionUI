@@ -1,0 +1,1415 @@
+﻿@using SistemaFacturacionUI.Models
+@model List<Empresa>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Empresas";
+
+    var monedas = ViewBag.Monedas as List<Moneda> ?? new List<Moneda>();
+    var empresaMonedas = ViewBag.EmpresaMonedas as List<EmpresaMoneda> ?? new List<EmpresaMoneda>();
+    var tiposCambio = ViewBag.TiposCambio as List<TipoCambio> ?? new List<TipoCambio>();
+    var catalogoMonedas = ViewBag.CatalogoMonedas as List<Moneda>
+    ?? new List<Moneda>();
+}
+
+<style>
+    .empresa-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .empresa-card {
+        background: var(--bs-body-bg, #fff);
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+
+    .empresa-dato {
+        color: #64748b;
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+
+    .empresa-valor {
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+
+    .form-empresa {
+        display: none;
+        margin-bottom: 25px;
+    }
+
+    .empresa-acciones {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    body.dark-mode .empresa-card {
+        background: #1e293b;
+        color: white;
+        border-color: #334155;
+    }
+
+    body.dark-mode .empresa-dato {
+        color: #cbd5e1;
+    }
+
+    body.dark-mode .form-control,
+    body.dark-mode .form-select {
+        background: #020617;
+        color: white;
+        border-color: #334155;
+    }
+
+        body.dark-mode .form-control::placeholder {
+            color: #94a3b8;
+        }
+</style>
+
+<div class="container-fluid">
+
+    <div class="empresa-header">
+        <div>
+            <h2 class="fw-bold mb-1">Gestión de empresas</h2>
+            <p class="text-muted mb-0">
+                Administra las empresas y sus establecimientos.
+            </p>
+        </div>
+
+            <button type="button" class="btn btn-outline-primary"
+                    onclick="abrirFormularioTienda()">
+                <i class="bi bi-shop"></i> Nueva tienda
+            </button>
+
+        <button type="button" class="btn btn-primary"
+                onclick="abrirFormulario()">
+            <i class="bi bi-plus-circle"></i> Nueva empresa
+        </button>
+
+        <button type="button" class="btn btn-outline-primary"
+                onclick="abrirCatalogoMonedas()">
+            <i class="bi bi-currency-exchange"></i>
+            Administrar monedas
+        </button>
+
+    </div>
+
+    <div id="mensajeEmpresa"></div>
+
+    <!-- FORMULARIO DE NUEVA EMPRESA -->
+    <div id="formEmpresa" class="card-box form-empresa">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Registrar empresa</h4>
+
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    onclick="cerrarFormulario()">
+                <i class="bi bi-x-lg"></i> Cerrar
+            </button>
+        </div>
+
+        <form id="formNuevaEmpresa">
+
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nombre de la empresa *</label>
+                    <input type="text" name="Nombre"
+                           class="form-control"
+                           maxlength="150" required
+                           placeholder="Nombre legal de la empresa">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nombre comercial</label>
+                    <input type="text" name="NombreComercial"
+                           class="form-control"
+                           maxlength="150"
+                           placeholder="Nombre comercial">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Identificación fiscal</label>
+                    <input type="text" name="IdentificacionFiscal"
+                           class="form-control"
+                           maxlength="30"
+                           placeholder="NIT u otra identificación">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Teléfono</label>
+                    <input type="text" name="Telefono"
+                           class="form-control"
+                           maxlength="30"
+                           placeholder="Teléfono de contacto">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Correo electrónico</label>
+                    <input type="email" name="Correo"
+                           class="form-control"
+                           maxlength="150"
+                           placeholder="correo@empresa.com">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Dirección</label>
+                    <input type="text" name="Direccion"
+                           class="form-control"
+                           maxlength="300"
+                           placeholder="Dirección de la empresa">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Método contable</label>
+                    <input type="text" class="form-control"
+                           value="Devengado" readonly>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Multimoneda</label>
+                    <select name="PermitirMultimoneda" class="form-select">
+                        <option value="true" selected>Permitida</option>
+                        <option value="false">No permitida</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <button type="button" class="btn btn-secondary"
+                        onclick="cerrarFormulario()">
+                    Cancelar
+                </button>
+
+                <button type="submit" id="btnGuardarEmpresa"
+                        class="btn btn-primary">
+                    <i class="bi bi-save"></i> Guardar empresa
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+
+    
+    <!-- FORMULARIO DE NUEVA TIENDA -->
+    <div id="formTienda" class="card-box form-empresa">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Registrar tienda</h4>
+
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    onclick="cerrarFormularioTienda()">
+                <i class="bi bi-x-lg"></i> Cerrar
+            </button>
+        </div>
+
+        <div id="mensajeTienda"></div>
+
+        <form id="formNuevaTienda">
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Empresa *</label>
+                    <select name="IdEmpresa" class="form-select" required>
+                        <option value="">Selecciona una empresa</option>
+
+                        @foreach (var empresa in Model.Where(e => e.Activa))
+                        {
+                            <option value="@empresa.IdEmpresa">
+                                @empresa.Nombre
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nombre de la tienda *</label>
+                    <input type="text" name="Nombre" class="form-control"
+                           maxlength="100" required
+                           placeholder="Ej. Tienda Central">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Teléfono</label>
+                    <input type="text" name="Telefono" class="form-control"
+                           maxlength="30" placeholder="Teléfono de la tienda">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Dirección</label>
+                    <input type="text" name="Direccion" class="form-control"
+                           maxlength="300" placeholder="Dirección de la tienda">
+                </div>
+
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <button type="button" class="btn btn-secondary"
+                        onclick="cerrarFormularioTienda()">
+                    Cancelar
+                </button>
+
+                <button type="submit" id="btnGuardarTienda"
+                        class="btn btn-primary">
+                    <i class="bi bi-save"></i> Guardar tienda
+                </button>
+            </div>
+        </form>
+    </div>
+
+
+    
+    <!-- FORMULARIO DE EDICIÓN DE TIENDA -->
+    <div id="formEditarTienda" class="card-box form-empresa">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Editar tienda</h4>
+
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    onclick="cerrarEdicionTienda()">
+                <i class="bi bi-x-lg"></i> Cerrar
+            </button>
+        </div>
+
+        <div id="mensajeEditarTienda"></div>
+
+        <form id="formEditarTiendaDatos">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="IdTienda" id="editarIdTienda">
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Empresa *</label>
+                    <select name="IdEmpresa" id="editarIdEmpresa"
+                            class="form-select" required>
+                        <option value="">Selecciona una empresa</option>
+
+                        @foreach (var empresa in Model.Where(e => e.Activa))
+                        {
+                            <option value="@empresa.IdEmpresa">
+                                @empresa.Nombre
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nombre de la tienda *</label>
+                    <input type="text" name="Nombre" id="editarNombreTienda"
+                           class="form-control" maxlength="100" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Teléfono</label>
+                    <input type="text" name="Telefono" id="editarTelefonoTienda"
+                           class="form-control" maxlength="30">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Dirección</label>
+                    <input type="text" name="Direccion" id="editarDireccionTienda"
+                           class="form-control" maxlength="300">
+                </div>
+
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <button type="button" class="btn btn-secondary"
+                        onclick="cerrarEdicionTienda()">
+                    Cancelar
+                </button>
+
+                <button type="submit" id="btnActualizarTienda"
+                        class="btn btn-primary">
+                    <i class="bi bi-save"></i> Actualizar tienda
+                </button>
+            </div>
+        </form>
+    </div>
+
+    
+    <!-- CATALOGO GENERAL DE MONEDAS -->
+    <div id="panelCatalogoMonedas" class="card-box mb-4"
+         style="display:none;">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+            <div>
+                <h4 class="mb-1">
+                    <i class="bi bi-currency-exchange"></i>
+                    Catálogo general de monedas
+                </h4>
+                <p class="text-muted mb-0">
+                    Administra las monedas disponibles para todas las empresas.
+                </p>
+            </div>
+
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    onclick="cerrarCatalogoMonedas()">
+                <i class="bi bi-x-lg"></i> Cerrar
+            </button>
+        </div>
+
+        <div id="mensajeCatalogoMonedas"></div>
+
+        <button type="button" class="btn btn-primary mb-3"
+                onclick="mostrarFormularioMoneda()">
+            <i class="bi bi-plus-circle"></i> Nueva moneda
+        </button>
+
+        <!-- FORMULARIO NUEVA MONEDA -->
+        <div id="formNuevaMoneda" class="card-box mb-4"
+             style="display:none;">
+
+            <h5>Registrar moneda</h5>
+
+            <form id="formGuardarMoneda">
+                @Html.AntiForgeryToken()
+
+                <div class="row">
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Código *</label>
+                        <input type="text" name="Codigo"
+                               class="form-control" maxlength="3"
+                               placeholder="EUR" required>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" name="Nombre"
+                               class="form-control" maxlength="80"
+                               placeholder="Euro" required>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Símbolo *</label>
+                        <input type="text" name="Simbolo"
+                               class="form-control" maxlength="10"
+                               placeholder="€" required>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Decimales</label>
+                        <select name="Decimales" class="form-select">
+                            @for (int i = 0; i <= 6; i++)
+                            {
+                                <option value="@i" selected="@(i == 2)">
+                                    @i
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="text-end">
+                    <button type="button" class="btn btn-secondary"
+                            onclick="document.getElementById('formNuevaMoneda').style.display='none'">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar moneda
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- FORMULARIO EDITAR MONEDA -->
+        <div id="formEditarMoneda" class="card-box mb-4"
+             style="display:none;">
+
+            <h5>Editar moneda</h5>
+
+            <form id="formActualizarMoneda">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="IdMoneda" id="editarMonedaId">
+
+                <div class="row">
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Código *</label>
+                        <input type="text" name="Codigo" id="editarMonedaCodigo"
+                               class="form-control" maxlength="3" required>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" name="Nombre" id="editarMonedaNombre"
+                               class="form-control" maxlength="80" required>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Símbolo *</label>
+                        <input type="text" name="Simbolo" id="editarMonedaSimbolo"
+                               class="form-control" maxlength="10" required>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Decimales</label>
+                        <select name="Decimales" id="editarMonedaDecimales"
+                                class="form-select">
+                            @for (int i = 0; i <= 6; i++)
+                            {
+                                <option value="@i">@i</option>
+                            }
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="text-end">
+                    <button type="button" class="btn btn-secondary"
+                            onclick="document.getElementById('formEditarMoneda').style.display='none'">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Actualizar moneda
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- TABLA DE MONEDAS -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Símbolo</th>
+                        <th>Decimales</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var moneda in catalogoMonedas)
+                    {
+                        <tr>
+                            <td><strong>@moneda.Codigo</strong></td>
+                            <td>@moneda.Nombre</td>
+                            <td>@moneda.Simbolo</td>
+                            <td>@moneda.Decimales</td>
+                            <td>
+                                <span class="badge @(moneda.Activa ? "bg-success" : "bg-secondary")">
+                                    @(moneda.Activa ? "Activa" : "Inactiva")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            onclick="editarMoneda(@moneda.IdMoneda)">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </button>
+
+                                    <button type="button"
+                                            class="btn btn-sm @(moneda.Activa ? "btn-outline-danger" : "btn-outline-success")"
+                                            onclick="cambiarEstadoMoneda(@moneda.IdMoneda)">
+                                        @(moneda.Activa ? "Desactivar" : "Activar")
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+
+                    @if (!catalogoMonedas.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                No hay monedas registradas.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+
+    <!-- LISTADO DE EMPRESAS -->
+    <div class="card-box">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Empresas registradas</h5>
+            <span class="badge bg-primary">
+                @Model.Count empresa(s)
+            </span>
+        </div>
+
+        @if (Model.Any())
+        {
+            foreach (var empresa in Model)
+            {
+                <div class="empresa-card">
+
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+
+                        <div>
+                            <h5 class="fw-bold mb-1">
+                                <i class="bi bi-building"></i>
+                                @empresa.Nombre
+                            </h5>
+
+                            @if (!string.IsNullOrWhiteSpace(empresa.NombreComercial))
+                            {
+                                <div class="text-muted">
+                                    @empresa.NombreComercial
+                                </div>
+                            }
+                        </div>
+
+                        
+                        <div class="empresa-acciones">
+                            <div class="d-flex gap-2 align-items-center flex-wrap">
+
+                                <span class="badge @(empresa.Activa ? "bg-success" : "bg-secondary")">
+                                    @(empresa.Activa ? "Activa" : "Inactiva")
+                                </span>
+
+                                <button type="button"
+                                        class="btn btn-sm @(empresa.Activa ? "btn-outline-danger" : "btn-outline-success")"
+                                        onclick="cambiarEstadoEmpresa(@empresa.IdEmpresa)">
+                                    <i class="bi @(empresa.Activa ? "bi-toggle-off" : "bi-toggle-on")"></i>
+                                    @(empresa.Activa ? "Desactivar" : "Activar")
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary"
+                                        onclick="abrirConfiguracionMonetaria(@empresa.IdEmpresa)">
+                                    <i class="bi bi-currency-exchange"></i>
+                                    Configurar monedas
+                                </button>
+
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    <hr />
+
+                    <div class="row">
+
+                        <div class="col-md-4">
+                            <div class="empresa-dato">Identificación fiscal</div>
+                            <div class="empresa-valor">
+                                @(empresa.IdentificacionFiscal ?? "No registrada")
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="empresa-dato">Teléfono</div>
+                            <div class="empresa-valor">
+                                @(empresa.Telefono ?? "No registrado")
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="empresa-dato">Correo</div>
+                            <div class="empresa-valor">
+                                @(empresa.Correo ?? "No registrado")
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="empresa-dato">Método contable</div>
+                            <div class="empresa-valor">
+                                @empresa.MetodoContable
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="empresa-dato">Multimoneda</div>
+                            <div class="empresa-valor">
+                                @(empresa.PermitirMultimoneda ? "Permitida" : "No permitida")
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="empresa-dato">Tiendas registradas</div>
+                            <div class="empresa-valor">
+                                @(empresa.Tiendas?.Count ?? 0)
+                            </div>
+                        </div>
+
+                        @if (empresa.Tiendas != null && empresa.Tiendas.Any())
+                        {
+                            <div class="col-12 mt-2">
+                                <div class="empresa-dato">Establecimientos</div>
+
+                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                    @foreach (var tienda in empresa.Tiendas)
+                                    {
+
+                                        <div class="d-flex gap-2 align-items-center flex-wrap">
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary"
+                                                    onclick="abrirEdicionTienda(@tienda.IdTienda)">
+                                                <i class="bi bi-shop"></i>
+                                                @tienda.Nombre
+                                                <i class="bi bi-pencil-square ms-1"></i>
+                                            </button>
+
+                                            <button type="button"
+                                                    class="btn btn-sm @(tienda.Activa ? "btn-outline-danger" : "btn-outline-success")"
+                                                    onclick="cambiarEstadoTienda(@tienda.IdTienda)">
+                                                @(tienda.Activa ? "Desactivar" : "Activar")
+                                            </button>
+
+                                        </div>
+
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+
+                    
+                    <!-- PANEL DE CONFIGURACION MONETARIA -->
+                    <div id="monedasEmpresa_@empresa.IdEmpresa"
+                         class="card-box mt-3"
+                         style="display:none;">
+
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                            <div>
+                                <h5 class="mb-1">
+                                    <i class="bi bi-currency-exchange"></i>
+                                    Configuración monetaria
+                                </h5>
+                                <p class="text-muted mb-0">
+                                    Empresa: <strong>@empresa.Nombre</strong>
+                                </p>
+                            </div>
+
+                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                    onclick="cerrarConfiguracionMonetaria(@empresa.IdEmpresa)">
+                                <i class="bi bi-x-lg"></i> Cerrar
+                            </button>
+                        </div>
+
+                        <hr />
+
+                        <!-- MONEDA BASE -->
+                        <h6 class="fw-bold">1. Moneda base</h6>
+
+                        <form class="formMonedaBase mb-4">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="idEmpresa" value="@empresa.IdEmpresa" />
+
+                            <div class="row align-items-end">
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label">Seleccionar moneda base</label>
+                                    <select name="idMoneda" class="form-select" required>
+                                        <option value="">Selecciona una moneda</option>
+                                        @foreach (var moneda in monedas)
+                                        {
+                                            <option value="@moneda.IdMoneda"
+                                                    selected="@(empresa.IdMonedaBase == moneda.IdMoneda)">
+                                                @moneda.Codigo - @moneda.Nombre
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi bi-save"></i> Guardar moneda base
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <hr />
+
+                        <!-- MONEDAS HABILITADAS -->
+                        <h6 class="fw-bold">2. Monedas habilitadas</h6>
+
+                        <div class="mb-3">
+                            @foreach (var relacion in empresaMonedas.Where(x => x.IdEmpresa == empresa.IdEmpresa))
+                            {
+                                <span class="badge @(relacion.Activa ? "bg-success" : "bg-secondary") p-2 me-2 mb-2">
+                                    @relacion.Moneda?.Codigo
+                                    @(relacion.Activa ? "Activa" : "Inactiva")
+                                </span>
+                            }
+
+                            @if (!empresaMonedas.Any(x => x.IdEmpresa == empresa.IdEmpresa && x.Activa))
+                            {
+                                <p class="text-muted">No hay monedas habilitadas.</p>
+                            }
+                        </div>
+
+                        <form class="formHabilitarMoneda mb-4">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="idEmpresa" value="@empresa.IdEmpresa" />
+
+                            <div class="row align-items-end">
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label">Agregar moneda</label>
+                                    <select name="idMoneda" class="form-select" required>
+                                        <option value="">Selecciona una moneda</option>
+
+                                        @foreach (var moneda in monedas.Where(m =>
+                                            m.IdMoneda != empresa.IdMonedaBase &&
+                                            !empresaMonedas.Any(x =>
+                                                x.IdEmpresa == empresa.IdEmpresa &&
+                                                x.IdMoneda == m.IdMoneda &&
+                                                x.Activa)))
+                                        {
+                                            <option value="@moneda.IdMoneda">
+                                                @moneda.Codigo - @moneda.Nombre
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <button type="submit" class="btn btn-outline-primary w-100">
+                                        <i class="bi bi-plus-circle"></i> Habilitar moneda
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <hr />
+
+                        <!-- TIPO DE CAMBIO -->
+                        <h6 class="fw-bold">3. Registrar tipo de cambio</h6>
+
+                        <form class="formTipoCambio mb-4">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="idEmpresa" value="@empresa.IdEmpresa" />
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Moneda extranjera</label>
+                                    <select name="idMoneda" class="form-select" required>
+                                        <option value="">Selecciona una moneda</option>
+
+                                        @foreach (var relacion in empresaMonedas.Where(x =>
+                                            x.IdEmpresa == empresa.IdEmpresa &&
+                                            x.Activa &&
+                                            x.IdMoneda != empresa.IdMonedaBase))
+                                        {
+                                            <option value="@relacion.IdMoneda">
+                                                @relacion.Moneda?.Codigo
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Fecha de vigencia</label>
+                                    <input type="date" name="fechaVigencia"
+                                           class="form-control" required />
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Tipo de cambio</label>
+
+                                    <input type="number" name="tasa"
+                                           class="form-control"
+                                           step="0.000001" min="0.000001"
+                                           placeholder="Ej. 450.000000" required />
+
+                                    <small class="text-muted">
+                                        Indica cuántas unidades de moneda extranjera
+                                        equivalen a 1 unidad de moneda base.
+                                    </small>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Guardar tipo de cambio
+                            </button>
+                        </form>
+
+                        <hr />
+
+                        <!-- HISTORIAL -->
+                        <h6 class="fw-bold">4. Historial de tipos de cambio</h6>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Moneda</th>
+                                        <th>Fecha</th>
+                                        <th>Tipo de cambio</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var tipo in tiposCambio.Where(x => x.IdEmpresa == empresa.IdEmpresa))
+                                    {
+                                        <tr>
+                                            <td>@tipo.Moneda?.Codigo</td>
+                                            <td>@tipo.FechaVigencia.ToString("dd/MM/yyyy")</td>
+                                            <td>@tipo.Tasa.ToString("N6")</td>
+                                        </tr>
+                                    }
+
+                                    @if (!tiposCambio.Any(x => x.IdEmpresa == empresa.IdEmpresa))
+                                    {
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted">
+                                                No hay tipos de cambio registrados.
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
+
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-buildings fs-1 text-muted"></i>
+                <h5 class="mt-3">No hay empresas registradas</h5>
+                <p class="text-muted">
+                    Utiliza el botón Nueva empresa para comenzar.
+                </p>
+            </div>
+        }
+
+    </div>
+
+</div>
+
+<script>
+    function abrirFormulario() {
+        document.getElementById("formEmpresa").style.display = "block";
+        document.getElementById("formEmpresa").scrollIntoView({
+            behavior: "smooth"
+        });
+    }
+
+    function cerrarFormulario() {
+        document.getElementById("formEmpresa").style.display = "none";
+    }
+
+    document.getElementById("formNuevaEmpresa")
+        .addEventListener("submit", async function (e) {
+
+            e.preventDefault();
+
+            const form = this;
+            const boton = document.getElementById("btnGuardarEmpresa");
+            const mensaje = document.getElementById("mensajeEmpresa");
+
+            boton.disabled = true;
+            boton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
+
+            try {
+                const respuesta = await fetch('/Empresas/GuardarEmpresa', {
+                    method: 'POST',
+                    body: new FormData(form)
+                });
+
+                const resultado = await respuesta.json();
+
+                if (!respuesta.ok || !resultado.success) {
+                    let detalle = resultado.mensaje || "No se pudo guardar la empresa.";
+
+                    if (resultado.errores && resultado.errores.length > 0) {
+                        detalle += "<br>" + resultado.errores.join("<br>");
+                    }
+
+                    mensaje.innerHTML = `
+                            <div class="alert alert-danger">${detalle}</div>
+                        `;
+                    return;
+                }
+
+                mensaje.innerHTML = `
+                        <div class="alert alert-success">
+                            ${resultado.mensaje}
+                        </div>
+                    `;
+
+                form.reset();
+
+                setTimeout(() => {
+                    location.reload();
+                }, 800);
+
+            } catch (error) {
+                mensaje.innerHTML = `
+                        <div class="alert alert-danger">
+                            Ocurrió un error al comunicarse con el servidor.
+                        </div>
+                    `;
+            } finally {
+                boton.disabled = false;
+                boton.innerHTML = '<i class="bi bi-save"></i> Guardar empresa';
+            }
+        });
+
+
+        
+    function abrirFormularioTienda() {
+        document.getElementById("formTienda").style.display = "block";
+
+        document.getElementById("formTienda").scrollIntoView({
+            behavior: "smooth"
+        });
+    }
+
+    function cerrarFormularioTienda() {
+        document.getElementById("formTienda").style.display = "none";
+    }
+
+    document.getElementById("formNuevaTienda")
+        .addEventListener("submit", async function (e) {
+
+            e.preventDefault();
+
+            const form = this;
+            const boton = document.getElementById("btnGuardarTienda");
+            const mensaje = document.getElementById("mensajeTienda");
+
+            boton.disabled = true;
+            boton.innerHTML = "Guardando...";
+
+            try {
+                const respuesta = await fetch('/Empresas/GuardarTienda', {
+                    method: 'POST',
+                    body: new FormData(form)
+                });
+
+                const resultado = await respuesta.json();
+
+                if (!respuesta.ok || !resultado.success) {
+                    mensaje.innerHTML = `
+                        <div class="alert alert-danger">
+                            ${resultado.mensaje || "No se pudo registrar la tienda."}
+                        </div>
+                    `;
+                    return;
+                }
+
+                mensaje.innerHTML = `
+                    <div class="alert alert-success">
+                        ${resultado.mensaje}
+                    </div>
+                `;
+
+                form.reset();
+
+                setTimeout(() => location.reload(), 800);
+
+            } catch (error) {
+                mensaje.innerHTML = `
+                    <div class="alert alert-danger">
+                        Error al comunicarse con el servidor.
+                    </div>
+                `;
+            } finally {
+                boton.disabled = false;
+                boton.innerHTML = '<i class="bi bi-save"></i> Guardar tienda';
+            }
+        });
+
+        
+    async function abrirEdicionTienda(id) {
+
+        const mensaje = document.getElementById("mensajeEditarTienda");
+
+        mensaje.innerHTML = "";
+
+        try {
+            const respuesta = await fetch(
+                `/Empresas/ObtenerTienda?id=${id}`
+            );
+
+            if (!respuesta.ok) {
+                throw new Error("No se pudo obtener la información de la tienda.");
+            }
+
+            const tienda = await respuesta.json();
+
+            document.getElementById("editarIdTienda").value = tienda.idTienda;
+            document.getElementById("editarIdEmpresa").value = tienda.idEmpresa;
+            document.getElementById("editarNombreTienda").value = tienda.nombre;
+            document.getElementById("editarTelefonoTienda").value =
+                tienda.telefono || "";
+            document.getElementById("editarDireccionTienda").value =
+                tienda.direccion || "";
+
+            document.getElementById("formEditarTienda").style.display = "block";
+
+            document.getElementById("formEditarTienda").scrollIntoView({
+                behavior: "smooth"
+            });
+
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    function cerrarEdicionTienda() {
+        document.getElementById("formEditarTienda").style.display = "none";
+    }
+
+    document.getElementById("formEditarTiendaDatos")
+        .addEventListener("submit", async function (e) {
+
+            e.preventDefault();
+
+            const form = this;
+            const boton = document.getElementById("btnActualizarTienda");
+            const mensaje = document.getElementById("mensajeEditarTienda");
+
+            boton.disabled = true;
+            boton.innerHTML = "Actualizando...";
+
+            try {
+                const respuesta = await fetch('/Empresas/ActualizarTienda', {
+                    method: 'POST',
+                    body: new FormData(form)
+                });
+
+                const resultado = await respuesta.json();
+
+                if (!respuesta.ok || !resultado.success) {
+                    mensaje.innerHTML = `
+                        <div class="alert alert-danger">
+                            ${resultado.mensaje || "No se pudo actualizar la tienda."}
+                        </div>
+                    `;
+                    return;
+                }
+
+                mensaje.innerHTML = `
+                    <div class="alert alert-success">
+                        ${resultado.mensaje}
+                    </div>
+                `;
+
+                setTimeout(() => location.reload(), 800);
+
+            } catch (error) {
+                mensaje.innerHTML = `
+                    <div class="alert alert-danger">
+                        Error al comunicarse con el servidor.
+                    </div>
+                `;
+            } finally {
+                boton.disabled = false;
+                boton.innerHTML = '<i class="bi bi-save"></i> Actualizar tienda';
+            }
+        });
+
+        
+    function obtenerTokenAntiforgery() {
+        return document.querySelector(
+            'input[name="__RequestVerificationToken"]'
+        ).value;
+    }
+
+    async function cambiarEstadoEmpresa(id) {
+
+        const confirmar = confirm(
+            "¿Deseas cambiar el estado de esta empresa?"
+        );
+
+        if (!confirmar) return;
+
+        const datos = new FormData();
+        datos.append("__RequestVerificationToken", obtenerTokenAntiforgery());
+
+        try {
+            const respuesta = await fetch(
+                `/Empresas/CambiarEstadoEmpresa?id=${id}`,
+                {
+                    method: "POST",
+                    body: datos
+                }
+            );
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok || !resultado.success) {
+                alert(resultado.mensaje || "No se pudo cambiar el estado.");
+                return;
+            }
+
+            alert(resultado.mensaje);
+            location.reload();
+
+        } catch (error) {
+            alert("Error al comunicarse con el servidor.");
+        }
+    }
+
+    async function cambiarEstadoTienda(id) {
+
+        const confirmar = confirm(
+            "¿Deseas cambiar el estado de esta tienda?"
+        );
+
+        if (!confirmar) return;
+
+        const datos = new FormData();
+        datos.append("__RequestVerificationToken", obtenerTokenAntiforgery());
+
+        try {
+            const respuesta = await fetch(
+                `/Empresas/CambiarEstadoTienda?id=${id}`,
+                {
+                    method: "POST",
+                    body: datos
+                }
+            );
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok || !resultado.success) {
+                alert(resultado.mensaje || "No se pudo cambiar el estado.");
+                return;
+            }
+
+            alert(resultado.mensaje);
+            location.reload();
+
+        } catch (error) {
+            alert("Error al comunicarse con el servidor.");
+        }
+    }
+
+    
+    function abrirConfiguracionMonetaria(id) {
+        const panel = document.getElementById("monedasEmpresa_" + id);
+
+        panel.style.display = "block";
+
+        panel.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+
+    function cerrarConfiguracionMonetaria(id) {
+        document.getElementById("monedasEmpresa_" + id).style.display = "none";
+    }
+
+    async function enviarFormularioMonetario(form, url) {
+        const boton = form.querySelector('button[type="submit"]');
+        const original = boton.innerHTML;
+
+        boton.disabled = true;
+        boton.innerHTML = "Guardando...";
+
+        try {
+            const respuesta = await fetch(url, {
+                method: "POST",
+                body: new FormData(form)
+            });
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok || !resultado.success) {
+                alert(resultado.mensaje || "No se pudo completar la operación.");
+                return;
+            }
+
+            alert(resultado.mensaje);
+            location.reload();
+
+        } catch (error) {
+            alert("Error al comunicarse con el servidor.");
+        } finally {
+            boton.disabled = false;
+            boton.innerHTML = original;
+        }
+    }
+
+    document.querySelectorAll(".formMonedaBase").forEach(form => {
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            enviarFormularioMonetario(
+                this,
+                "/Monedas/ConfigurarMonedaBase"
+            );
+        });
+    });
+
+    document.querySelectorAll(".formHabilitarMoneda").forEach(form => {
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            enviarFormularioMonetario(
+                this,
+                "/Monedas/GuardarEmpresaMoneda"
+            );
+        });
+    });
+
+    document.querySelectorAll(".formTipoCambio").forEach(form => {
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            enviarFormularioMonetario(
+                this,
+                "/Monedas/GuardarTipoCambio"
+            );
+        });
+    });
+
+    
+    function abrirCatalogoMonedas() {
+        const panel = document.getElementById("panelCatalogoMonedas");
+        panel.style.display = "block";
+
+        panel.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+
+    function cerrarCatalogoMonedas() {
+        document.getElementById("panelCatalogoMonedas").style.display = "none";
+    }
+
+    function mostrarFormularioMoneda() {
+        document.getElementById("formNuevaMoneda").style.display = "block";
+        document.getElementById("formEditarMoneda").style.display = "none";
+    }
+
+    async function editarMoneda(id) {
+        try {
+            const respuesta = await fetch(`/Monedas/ObtenerMoneda?id=${id}`);
+
+            if (!respuesta.ok) {
+                throw new Error("No se pudo obtener la moneda.");
+            }
+
+            const moneda = await respuesta.json();
+
+            document.getElementById("editarMonedaId").value = moneda.idMoneda;
+            document.getElementById("editarMonedaCodigo").value = moneda.codigo;
+            document.getElementById("editarMonedaNombre").value = moneda.nombre;
+            document.getElementById("editarMonedaSimbolo").value = moneda.simbolo;
+            document.getElementById("editarMonedaDecimales").value = moneda.decimales;
+
+            document.getElementById("formNuevaMoneda").style.display = "none";
+            document.getElementById("formEditarMoneda").style.display = "block";
+
+            document.getElementById("formEditarMoneda").scrollIntoView({
+                behavior: "smooth"
+            });
+
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function enviarOperacionMoneda(form, url) {
+        const mensaje = document.getElementById("mensajeCatalogoMonedas");
+
+        try {
+            const respuesta = await fetch(url, {
+                method: "POST",
+                body: new FormData(form)
+            });
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok || !resultado.success) {
+                mensaje.innerHTML = `
+                    <div class="alert alert-danger">
+                        ${resultado.mensaje || "No se pudo completar la operación."}
+                    </div>`;
+                return;
+            }
+
+            mensaje.innerHTML = `
+                <div class="alert alert-success">
+                    ${resultado.mensaje}
+                </div>`;
+
+            setTimeout(() => location.reload(), 800);
+
+        } catch (error) {
+            mensaje.innerHTML = `
+                <div class="alert alert-danger">
+                    Error al comunicarse con el servidor.
+                </div>`;
+        }
+    }
+
+    document.getElementById("formGuardarMoneda")
+        .addEventListener("submit", function (e) {
+            e.preventDefault();
+            enviarOperacionMoneda(this, "/Monedas/GuardarMoneda");
+        });
+
+    document.getElementById("formActualizarMoneda")
+        .addEventListener("submit", function (e) {
+            e.preventDefault();
+            enviarOperacionMoneda(this, "/Monedas/ActualizarMoneda");
+        });
+
+    async function cambiarEstadoMoneda(id) {
+        if (!confirm("¿Deseas cambiar el estado de esta moneda?")) return;
+
+        const datos = new FormData();
+        datos.append(
+            "__RequestVerificationToken",
+            document.querySelector("#formGuardarMoneda input[name='__RequestVerificationToken']").value
+        );
+
+        try {
+            const respuesta = await fetch(
+                `/Monedas/CambiarEstadoMoneda?id=${id}`,
+                {
+                    method: "POST",
+                    body: datos
+                }
+            );
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok || !resultado.success) {
+                alert(resultado.mensaje || "No se pudo cambiar el estado.");
+                return;
+            }
+
+            alert(resultado.mensaje);
+            location.reload();
+
+        } catch (error) {
+            alert("Error al comunicarse con el servidor.");
+        }
+    }
+
+
+
+</script>

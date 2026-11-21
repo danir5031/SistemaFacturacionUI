@@ -24,6 +24,7 @@ namespace SistemaFacturacionUI.Models
         public string Horario { get; set; }
 
         public string? Tienda { get; set; }
+        public int? IdTienda { get; set; }
 
         public string HoraExacta { get; set; }
 

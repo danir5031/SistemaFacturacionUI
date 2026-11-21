@@ -70,10 +70,19 @@ namespace SistemaFacturacionUI.Controllers
     DateTime? fechaFinRegistro,
     DateTime? fechaRegistro,
     DateTime? fechaEnvio,
+    int? idEmpresa,
+    int? idTienda,
     bool mostrarTodas = false,
     int pagina = 1)
         {
+            // Solo los administradores pueden filtrar por empresa y tienda
             var rol = HttpContext.Session.GetString("rol");
+
+            if (rol != "ADMIN")
+            {
+                idEmpresa = null;
+                idTienda = null;
+            }
 
             if (rol != "ADMIN" && rol != "EMPLEADO")
                 return RedirectToAction("Index", "Login");
@@ -87,6 +96,45 @@ namespace SistemaFacturacionUI.Controllers
     .Include(x => x.Detalles)
         .ThenInclude(d => d.Producto)
     .AsQueryable();
+
+            // FILTRO POR EMPRESA
+            // FILTRO POR EMPRESA
+            if (idEmpresa.HasValue)
+            {
+                query = query.Where(x =>
+                    (
+                        x.IdTienda.HasValue &&
+                        _context.Tiendas.Any(t =>
+                            t.IdTienda == x.IdTienda.Value &&
+                            t.IdEmpresa == idEmpresa.Value
+                        )
+                    )
+                    ||
+                    (
+                        !x.IdTienda.HasValue &&
+                        _context.Tiendas.Any(t =>
+                            t.IdEmpresa == idEmpresa.Value &&
+                            t.Nombre == x.Tienda
+                        )
+                    )
+                );
+            }
+
+            // FILTRO POR TIENDA
+            if (idTienda.HasValue)
+            {
+                query = query.Where(x =>
+                    x.IdTienda == idTienda.Value
+                    ||
+                    (
+                        !x.IdTienda.HasValue &&
+                        _context.Tiendas.Any(t =>
+                            t.IdTienda == idTienda.Value &&
+                            t.Nombre == x.Tienda
+                        )
+                    )
+                );
+            }
 
             //////////////////////////////////////////////////////
             // SI NO HAY FILTROS
@@ -102,6 +150,8 @@ namespace SistemaFacturacionUI.Controllers
             if (!fechaInicioRegistro.HasValue &&
     !fechaFinRegistro.HasValue &&
     !fechaEnvio.HasValue &&
+    !idEmpresa.HasValue &&
+    !idTienda.HasValue &&
     string.IsNullOrWhiteSpace(buscar))
             {
                 var hoy = DateTime.Today;
@@ -218,9 +268,28 @@ namespace SistemaFacturacionUI.Controllers
     .Take(300)
     .ToList();
 
+            ViewBag.TiendasActivas = _context.Tiendas
+    .Include(t => t.Empresa)
+    .Where(t => t.Activa && t.Empresa.Activa)
+    .OrderBy(t => t.Empresa.Nombre)
+    .ThenBy(t => t.Nombre)
+    .ToList();
+
+
+            ViewBag.EmpresasActivas = _context.Empresas
+                .Where(e => e.Activa)
+                .OrderBy(e => e.Nombre)
+                .ToList();
+
+            ViewBag.IdEmpresaSeleccionada = idEmpresa;
+            ViewBag.IdTiendaSeleccionada = idTienda;
+
+
+
             return View(facturas);
         }
 
+        
         //////////////////////////////////////////////////////
         // BUSCAR PRODUCTOS
         //////////////////////////////////////////////////////
@@ -515,6 +584,19 @@ namespace SistemaFacturacionUI.Controllers
                     }
                 }
 
+                // VALIDAR TIENDA SELECCIONADA
+                var tienda = _context.Tiendas
+                    .Include(t => t.Empresa)
+                    .FirstOrDefault(t =>
+                        t.IdTienda == data.IdTienda &&
+                        t.Activa &&
+                        t.Empresa.Activa);
+
+                if (tienda == null)
+                {
+                    return Json("Selecciona una tienda activa de una empresa activa.");
+                }
+
                 //////////////////////////////////////////////////////
                 // FACTURA
                 //////////////////////////////////////////////////////
@@ -553,9 +635,10 @@ namespace SistemaFacturacionUI.Controllers
 
                     Municipio = data.Municipio ?? "",
 
-                   // TipoEnvio = data.TipoEnvio ?? "",
+                    // TipoEnvio = data.TipoEnvio ?? "",
 
-                    Tienda = data.Tienda ?? "",
+                    IdTienda = tienda.IdTienda,
+                    Tienda = tienda.Nombre,
 
                     Comentario =
                         data.Comentario ?? "",
@@ -724,6 +807,8 @@ namespace SistemaFacturacionUI.Controllers
                     }
                 }
 
+
+
                 RegistrarHistorial(
     factura.IdFactura,
     userDb.IdUsuario,
@@ -772,7 +857,18 @@ namespace SistemaFacturacionUI.Controllers
                 if (factura.Estado == "Cancelada")
                     return Json("No se puede editar una factura cancelada");
 
-                
+                // VALIDAR TIENDA SELECCIONADA
+                var tiendaSeleccionada = _context.Tiendas
+                    .Include(t => t.Empresa)
+                    .FirstOrDefault(t =>
+                        t.IdTienda == data.IdTienda &&
+                        t.Activa &&
+                        t.Empresa.Activa);
+
+                if (tiendaSeleccionada == null)
+                {
+                    return Json("Selecciona una tienda activa de una empresa activa.");
+                }
 
                 //////////////////////////////////////////////////////
                 // USUARIO ACTUAL
@@ -795,6 +891,7 @@ namespace SistemaFacturacionUI.Controllers
                 var departamentoAnterior = factura.Departamento;
                 var municipioAnterior = factura.Municipio;
                 var tiendaAnterior = factura.Tienda;
+                var tiendaAnteriorId = factura.IdTienda;
                 var comentarioAnterior = factura.Comentario;
                 var horarioAnterior = factura.Horario;
                 var horaExactaAnterior = factura.HoraExacta;
@@ -840,9 +937,11 @@ namespace SistemaFacturacionUI.Controllers
                     cambios.Add($"Municipio: {municipioAnterior} → {data.Municipio}");
                 }
 
-                if (tiendaAnterior != (data.Tienda ?? ""))
+                if (tiendaAnteriorId != tiendaSeleccionada.IdTienda)
                 {
-                    cambios.Add($"Tienda: {tiendaAnterior} → {data.Tienda}");
+                    cambios.Add(
+                        $"Tienda: {tiendaAnterior ?? "Sin tienda"} → {tiendaSeleccionada.Nombre}"
+                    );
                 }
 
                 if (comentarioAnterior != (data.Comentario ?? ""))
@@ -1145,7 +1244,9 @@ namespace SistemaFacturacionUI.Controllers
 
                 factura.Municipio = data.Municipio ?? "";
 
-                factura.Tienda = data.Tienda ?? "";
+                // factura.Tienda = data.Tienda ?? "";
+                factura.IdTienda = tiendaSeleccionada.IdTienda;
+                factura.Tienda = tiendaSeleccionada.Nombre;
 
                 factura.Comentario = data.Comentario ?? "";
 
@@ -1533,7 +1634,9 @@ namespace SistemaFacturacionUI.Controllers
 
                     //factura.TipoEnvio,
 
+                    factura.IdTienda,
                     factura.Tienda,
+
                     factura.Comentario,
 
                     factura.Horario,
@@ -1575,6 +1678,8 @@ namespace SistemaFacturacionUI.Controllers
                 {
                     return Json("No autorizado");
                 }
+
+
 
                 //////////////////////////////////////////////////////
                 // FACTURA

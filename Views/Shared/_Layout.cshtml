@@ -713,6 +713,13 @@
                     🏠 <span>Dashboard</span>
                 </a>
 
+                <a href="/Empresas"
+                   class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Empresas" ? "active" : "")">
+
+                    🏢 <span>Empresas y tiendas</span>
+
+                </a>
+
                 <a href="/Cliente" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Cliente" ? "active" : "")">
                     👤 <span>Clientes</span>
                 </a>

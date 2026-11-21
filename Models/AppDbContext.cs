@@ -17,6 +17,12 @@ namespace SistemaFacturacionUI.Models
         public DbSet<ProductoVariante> ProductoVariantes { get; set; }
 
         public DbSet<FacturaHistorial> FacturaHistorial { get; set; }
+        public DbSet<Empresa> Empresas { get; set; }
+        public DbSet<Tienda> Tiendas { get; set; }
+
+        public DbSet<Moneda> Monedas { get; set; }
+        public DbSet<EmpresaMoneda> EmpresaMonedas { get; set; }
+        public DbSet<TipoCambio> TiposCambio { get; set; }
 
     }
 }

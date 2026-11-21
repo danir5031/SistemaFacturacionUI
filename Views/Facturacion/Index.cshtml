@@ -341,7 +341,7 @@ body.dark-mode .historial-usuario {
 </div>
 -->
 
-                    <div class="mt-2">
+                    <!--<div class="mt-2">
 
                         <label>🏪 Tienda</label>
 
@@ -350,7 +350,28 @@ body.dark-mode .historial-usuario {
                                maxlength="100"
                                placeholder="Ej. WMK o Zen" />
 
-                    </div>
+                    </div>-->
+
+                    <div class="mt-2">
+
+    <label>🏪 Tienda <span class="text-danger">*</span></label>
+
+    <select id="tienda"
+            class="form-control"
+            required>
+
+        <option value="">Selecciona una tienda</option>
+
+        @foreach (var tienda in ViewBag.TiendasActivas)
+        {
+            <option value="@tienda.IdTienda">
+                @tienda.Empresa.Nombre - @tienda.Nombre
+            </option>
+        }
+
+    </select>
+
+</div>
 
                 </div>
 
@@ -557,6 +578,59 @@ body.dark-mode .historial-usuario {
             </div>
 
         </div>
+
+        @if (rol == "ADMIN")
+{
+    <!-- FILTRO POR EMPRESA -->
+    <div style="min-width:200px;">
+
+        <label class="mb-1 fw-semibold">
+            Empresa
+        </label>
+
+        <select id="filtroEmpresa"
+                class="form-control"
+                onchange="cambiarFiltroEmpresa()">
+
+            <option value="">Todas las empresas</option>
+
+            @foreach (var empresa in ViewBag.EmpresasActivas)
+            {
+                <option value="@empresa.IdEmpresa"
+                        selected="@(ViewBag.IdEmpresaSeleccionada == empresa.IdEmpresa)">
+                    @empresa.Nombre
+                </option>
+            }
+
+        </select>
+
+    </div>
+
+    <!-- FILTRO POR TIENDA -->
+    <div style="min-width:200px;">
+
+        <label class="mb-1 fw-semibold">
+            Tienda
+        </label>
+
+        <select id="filtroTienda"
+                class="form-control"
+                onchange="cambiarFiltroTienda()">
+
+            <option value="">Todas las tiendas</option>
+
+            @foreach (var tienda in ViewBag.TiendasActivas)
+            {
+                <option value="@tienda.IdTienda"
+                        selected="@(ViewBag.IdTiendaSeleccionada == tienda.IdTienda)">
+                    @tienda.Nombre
+                </option>
+            }
+
+        </select>
+
+    </div>
+}
 
         <!-- FECHA ENVÍO -->
         <div style="min-width:180px;">
@@ -2212,8 +2286,11 @@ var montoCancelado = Model
         Municipio:
             document.getElementById("municipio").value,
 
-        Tienda:
-            document.getElementById("tienda").value,
+            IdTienda:
+    parseInt(document.getElementById("tienda").value) || null,
+
+        //Tienda:
+            //document.getElementById("tienda").value,
 
         Comentario:
             document.getElementById("comentario").value,
@@ -2549,9 +2626,47 @@ var montoCancelado = Model
             ).innerText = "Confirmar e Imprimir Factura";
         }
 
+        function cambiarFiltroEmpresa() {
+
+    let empresa = document.getElementById("filtroEmpresa").value;
+
+    let params = new URLSearchParams(window.location.search);
+
+    if (empresa) {
+        params.set("idEmpresa", empresa);
+    } else {
+        params.delete("idEmpresa");
+    }
+
+    // Al cambiar empresa, limpiar tienda seleccionada
+    params.delete("idTienda");
+
+    window.location.href =
+        "/Facturacion?" + params.toString();
+}
+
+
+function cambiarFiltroTienda() {
+
+    let tienda = document.getElementById("filtroTienda").value;
+
+    let params = new URLSearchParams(window.location.search);
+
+    if (tienda) {
+        params.set("idTienda", tienda);
+    } else {
+        params.delete("idTienda");
+    }
+
+    window.location.href =
+        "/Facturacion?" + params.toString();
+}
+
                 //////////////////////////////////////////////////////
         // FILTRAR FACTURAS
         //////////////////////////////////////////////////////
+
+
 
                 function filtrarFacturas() {
 
@@ -2951,8 +3066,11 @@ $('#municipio')
                    // document.getElementById("tipoEnvio").value =
    // f.tipoEnvio || "";
 
-                            document.getElementById("tienda").value =
-            f.tienda || "";
+                           // document.getElementById("tienda").value =
+            //f.tienda || "";
+
+            document.getElementById("tienda").value =
+    f.idTienda || "";
 
                 document.getElementById("comentario").value =
                     f.comentario || "";

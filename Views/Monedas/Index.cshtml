@@ -1,0 +1,399 @@
+﻿@using SistemaFacturacionUI.Models
+@model dynamic
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Configuración de monedas";
+
+    var empresas = ViewBag.Empresas as List<Empresa>;
+    var monedas = ViewBag.Monedas as List<Moneda>;
+    var empresaMonedas = ViewBag.EmpresaMonedas as List<EmpresaMoneda>;
+    var tiposCambio = ViewBag.TiposCambio as List<TipoCambio>;
+}
+
+<style>
+    .moneda-card {
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 18px;
+    }
+
+    .moneda-formulario {
+        display: none;
+        margin-bottom: 22px;
+    }
+
+    .moneda-dato {
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+
+    .moneda-valor {
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+
+    body.dark-mode .moneda-card {
+        background: #1e293b;
+        color: white;
+        border-color: #334155;
+    }
+
+    body.dark-mode .moneda-dato {
+        color: #cbd5e1;
+    }
+
+    body.dark-mode .form-control,
+    body.dark-mode .form-select {
+        background: #020617;
+        color: white;
+        border-color: #334155;
+    }
+</style>
+
+
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Configuración monetaria</h2>
+            <p class="text-muted mb-0">
+                Administra las monedas y tipos de cambio de cada empresa.
+            </p>
+        </div>
+    </div>
+
+    <div id="mensajeMonedas"></div>
+
+    <!-- CONFIGURAR MONEDA BASE -->
+    <div class="card-box mb-4">
+
+        <h5 class="mb-3">
+            <i class="bi bi-currency-exchange"></i>
+            Moneda base por empresa
+        </h5>
+
+        <form id="formMonedaBase">
+            @Html.AntiForgeryToken()
+
+            <div class="row align-items-end">
+
+                <div class="col-md-5 mb-3">
+                    <label class="form-label">Empresa</label>
+                    <select name="idEmpresa" class="form-select" required>
+                        <option value="">Selecciona una empresa</option>
+                        @foreach (var empresa in empresas.Where(e => e.Activa))
+                        {
+                            <option value="@empresa.IdEmpresa">
+                                @empresa.Nombre
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-5 mb-3">
+                    <label class="form-label">Moneda base</label>
+                    <select name="idMoneda" class="form-select" required>
+                        <option value="">Selecciona una moneda</option>
+                        @foreach (var moneda in monedas)
+                        {
+                            <option value="@moneda.IdMoneda">
+                                @moneda.Codigo - @moneda.Nombre
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-save"></i> Guardar
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    <!-- HABILITAR MONEDAS -->
+    <div class="card-box mb-4">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h5 class="mb-0">
+                <i class="bi bi-wallet2"></i>
+                Habilitar monedas
+            </h5>
+
+            <button class="btn btn-outline-primary btn-sm"
+                    type="button"
+                    onclick="mostrarFormulario('formHabilitarMoneda')">
+                <i class="bi bi-plus-circle"></i> Habilitar moneda
+            </button>
+        </div>
+
+        <div id="formHabilitarMoneda" class="moneda-formulario">
+
+            <form id="formNuevaMonedaEmpresa">
+                @Html.AntiForgeryToken()
+
+                <div class="row">
+
+                    <div class="col-md-5 mb-3">
+                        <label class="form-label">Empresa</label>
+                        <select name="idEmpresa" class="form-select" required>
+                            <option value="">Selecciona una empresa</option>
+                            @foreach (var empresa in empresas.Where(e => e.Activa))
+                            {
+                                <option value="@empresa.IdEmpresa">
+                                    @empresa.Nombre
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-5 mb-3">
+                        <label class="form-label">Moneda</label>
+                        <select name="idMoneda" class="form-select" required>
+                            <option value="">Selecciona una moneda</option>
+                            @foreach (var moneda in monedas)
+                            {
+                                <option value="@moneda.IdMoneda">
+                                    @moneda.Codigo - @moneda.Nombre
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-2 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            Habilitar
+                        </button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Empresa</th>
+                        <th>Moneda</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (empresaMonedas != null && empresaMonedas.Any())
+                    {
+                        foreach (var item in empresaMonedas)
+                        {
+                            <tr>
+                                <td>@item.Empresa?.Nombre</td>
+                                <td>
+                                    @item.Moneda?.Codigo -
+                                    @item.Moneda?.Nombre
+                                </td>
+                                <td>
+                                    <span class="badge @(item.Activa ? "bg-success" : "bg-secondary")">
+                                        @(item.Activa ? "Activa" : "Inactiva")
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">
+                                No hay monedas habilitadas.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TIPOS DE CAMBIO -->
+    <div class="card-box mb-4">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h5 class="mb-0">
+                <i class="bi bi-graph-up-arrow"></i>
+                Tipos de cambio
+            </h5>
+
+            <button type="button" class="btn btn-primary btn-sm"
+                    onclick="mostrarFormulario('formTipoCambio')">
+                <i class="bi bi-plus-circle"></i> Nuevo tipo de cambio
+            </button>
+        </div>
+
+        <div id="formTipoCambio" class="moneda-formulario">
+
+            <form id="formNuevoTipoCambio">
+                @Html.AntiForgeryToken()
+
+                <div class="row">
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Empresa</label>
+                        <select name="idEmpresa" class="form-select" required>
+                            <option value="">Selecciona una empresa</option>
+                            @foreach (var empresa in empresas.Where(e => e.Activa))
+                            {
+                                <option value="@empresa.IdEmpresa">
+                                    @empresa.Nombre
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Moneda extranjera</label>
+                        <select name="idMoneda" class="form-select" required>
+                            <option value="">Selecciona una moneda</option>
+                            @foreach (var moneda in monedas)
+                            {
+                                <option value="@moneda.IdMoneda">
+                                    @moneda.Codigo - @moneda.Nombre
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Fecha de vigencia</label>
+                        <input type="date" name="fechaVigencia"
+                               class="form-control" required>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Tipo de cambio</label>
+                        <input type="number" name="tasa"
+                               class="form-control"
+                               step="0.000001" min="0.000001"
+                               required placeholder="Ej. 0.0018">
+                    </div>
+
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar tipo de cambio
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Empresa</th>
+                        <th>Moneda</th>
+                        <th>Fecha de vigencia</th>
+                        <th>Tipo de cambio</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (tiposCambio != null && tiposCambio.Any())
+                    {
+                        foreach (var tipo in tiposCambio)
+                        {
+                            <tr>
+                                <td>@tipo.Empresa?.Nombre</td>
+                                <td>@tipo.Moneda?.Codigo</td>
+                                <td>@tipo.FechaVigencia.ToString("dd/MM/yyyy")</td>
+                                <td>@tipo.Tasa.ToString("N6")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">
+                                No hay tipos de cambio registrados.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    function mostrarFormulario(id) {
+        const elemento = document.getElementById(id);
+        elemento.style.display =
+            elemento.style.display === "block" ? "none" : "block";
+    }
+
+    async function enviarFormulario(form, url) {
+
+        const datos = new FormData(form);
+        const mensaje = document.getElementById("mensajeMonedas");
+
+        try {
+            const respuesta = await fetch(url, {
+                method: "POST",
+                body: datos
+            });
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok || !resultado.success) {
+                mensaje.innerHTML = `
+                        <div class="alert alert-danger">
+                            ${resultado.mensaje || "No se pudo completar la operación."}
+                        </div>
+                    `;
+                return;
+            }
+
+            mensaje.innerHTML = `
+                    <div class="alert alert-success">
+                        ${resultado.mensaje}
+                    </div>
+                `;
+
+            form.reset();
+
+            setTimeout(() => location.reload(), 800);
+
+        } catch (error) {
+            mensaje.innerHTML = `
+                    <div class="alert alert-danger">
+                        Error al comunicarse con el servidor.
+                    </div>
+                `;
+        }
+    }
+
+    document.getElementById("formMonedaBase")
+        .addEventListener("submit", function (e) {
+            e.preventDefault();
+            enviarFormulario(this, "/Monedas/ConfigurarMonedaBase");
+        });
+
+    document.getElementById("formNuevaMonedaEmpresa")
+        .addEventListener("submit", function (e) {
+            e.preventDefault();
+            enviarFormulario(this, "/Monedas/GuardarEmpresaMoneda");
+        });
+
+    document.getElementById("formNuevoTipoCambio")
+        .addEventListener("submit", function (e) {
+            e.preventDefault();
+            enviarFormulario(this, "/Monedas/GuardarTipoCambio");
+        });
+</script>
