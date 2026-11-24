@@ -364,9 +364,11 @@ body.dark-mode .historial-usuario {
 
         @foreach (var tienda in ViewBag.TiendasActivas)
         {
-            <option value="@tienda.IdTienda">
-                @tienda.Empresa.Nombre - @tienda.Nombre
-            </option>
+            <option value="@tienda.IdTienda"
+        data-empresa="@tienda.IdEmpresa"
+        selected="@(ViewBag.IdTiendaSeleccionada == tienda.IdTienda)">
+    @tienda.Nombre
+</option>
         }
 
     </select>
@@ -620,12 +622,14 @@ body.dark-mode .historial-usuario {
             <option value="">Todas las tiendas</option>
 
             @foreach (var tienda in ViewBag.TiendasActivas)
-            {
-                <option value="@tienda.IdTienda"
-                        selected="@(ViewBag.IdTiendaSeleccionada == tienda.IdTienda)">
-                    @tienda.Nombre
-                </option>
-            }
+{
+    <option value="@tienda.IdTienda"
+            data-empresa="@tienda.IdEmpresa"
+            selected="@(ViewBag.IdTiendaSeleccionada == tienda.IdTienda)">
+        @tienda.Nombre
+    </option>
+}
+}
 
         </select>
 
@@ -640,9 +644,10 @@ body.dark-mode .historial-usuario {
             </label>
 
             <input type="date"
-                   id="filtroFechaEnvio"
-                   class="form-control"
-                   onchange="filtrarPorFechaEnvio()" />
+       id="filtroFechaEnvio"
+       class="form-control"
+       value="@ViewBag.FechaEnvioSeleccionada"
+       onchange="filtrarPorFechaEnvio()" />
 
         </div>
 
@@ -657,12 +662,14 @@ body.dark-mode .historial-usuario {
             <div class="d-flex gap-2">
 
                 <input type="date"
-                       id="fechaInicioRegistro"
-                       class="form-control" />
+       id="fechaInicioRegistro"
+       class="form-control"
+       value="@ViewBag.FechaInicioRegistroSeleccionada" />
 
                 <input type="date"
-                       id="fechaFinRegistro"
-                       class="form-control" />
+       id="fechaFinRegistro"
+       class="form-control"
+       value="@ViewBag.FechaFinRegistroSeleccionada" />
 
                 <button class="btn btn-primary"
                         type="button"
@@ -2627,8 +2634,10 @@ var montoCancelado = Model
         }
 
         function cambiarFiltroEmpresa() {
+    const empresa = document.getElementById("filtroEmpresa").value;
 
-    let empresa = document.getElementById("filtroEmpresa").value;
+    // Actualizar las tiendas visibles según la empresa seleccionada
+    actualizarTiendasPorEmpresa();
 
     let params = new URLSearchParams(window.location.search);
 
@@ -2638,11 +2647,33 @@ var montoCancelado = Model
         params.delete("idEmpresa");
     }
 
-    // Al cambiar empresa, limpiar tienda seleccionada
+    // Limpiar la tienda seleccionada al cambiar de empresa
     params.delete("idTienda");
 
-    window.location.href =
-        "/Facturacion?" + params.toString();
+    // Conservar los demás filtros
+    window.location.href = "/Facturacion?" + params.toString();
+}
+
+function actualizarTiendasPorEmpresa() {
+    const empresa = document.getElementById("filtroEmpresa")?.value || "";
+    const filtroTienda = document.getElementById("filtroTienda");
+
+    if (!filtroTienda) return;
+
+    Array.from(filtroTienda.options).forEach((option, index) => {
+        if (index === 0) {
+            option.hidden = false;
+            return;
+        }
+
+        const coincide = !empresa || option.dataset.empresa === empresa;
+        option.hidden = !coincide;
+    });
+
+    // Si la tienda seleccionada no pertenece a la empresa, limpiarla
+    if (filtroTienda.selectedOptions[0]?.hidden) {
+        filtroTienda.value = "";
+    }
 }
 
 
@@ -2758,28 +2789,22 @@ function cambiarFiltroTienda() {
 
         function buscarGeneral() {
 
-            let texto =
-                document.getElementById("buscadorFacturas")
-                .value
-                .trim();
+    let texto = document
+        .getElementById("buscadorFacturas")
+        .value
+        .trim();
 
-            //////////////////////////////////////////////////////
-            // SI VACÍO
-            //////////////////////////////////////////////////////
+    let params = new URLSearchParams(window.location.search);
 
-            if (texto === "")
-            {
-                return;
-            }
+    if (texto) {
+        params.set("buscar", texto);
+    } else {
+        params.delete("buscar");
+    }
 
-            //////////////////////////////////////////////////////
-            // REDIRECT
-            //////////////////////////////////////////////////////
-
-            window.location.href =
-                "/Facturacion?buscar=" +
-                encodeURIComponent(texto);
-        }
+    window.location.href =
+        "/Facturacion?" + params.toString();
+}
 
         //////////////////////////////////////////////////////
 // HISTORIAL DE FACTURA
@@ -3233,44 +3258,35 @@ $('#municipio')
 
         function filtrarPorRangoRegistro() {
 
-            let inicio =
-                document.getElementById("fechaInicioRegistro").value;
+    let inicio = document.getElementById("fechaInicioRegistro").value;
+    let fin = document.getElementById("fechaFinRegistro").value;
 
-            let fin =
-                document.getElementById("fechaFinRegistro").value;
-
-            //////////////////////////////////////////////////////
-            // VALIDAR
-            //////////////////////////////////////////////////////
-
-            if (!inicio || !fin)
-            {
-                alert("Selecciona fecha inicio y fecha fin");
-                return;
-            }
-
-            //////////////////////////////////////////////////////
-            // REDIRECT
-            //////////////////////////////////////////////////////
-
-            window.location.href =
-                "/Facturacion?fechaInicioRegistro=" + inicio +
-                "&fechaFinRegistro=" + fin;
-        }
-
-        function filtrarPorFechaEnvio() {
-
-    let fecha =
-        document.getElementById("filtroFechaEnvio").value;
-
-    if (!fecha)
-    {
-        window.location.href = "/Facturacion";
+    if (!inicio || !fin) {
+        alert("Selecciona fecha inicio y fecha fin");
         return;
     }
 
-    window.location.href =
-        "/Facturacion?fechaEnvio=" + fecha;
+    let params = new URLSearchParams(window.location.search);
+
+    params.set("fechaInicioRegistro", inicio);
+    params.set("fechaFinRegistro", fin);
+
+    window.location.href = "/Facturacion?" + params.toString();
+}
+
+      function filtrarPorFechaEnvio() {
+
+    let fecha = document.getElementById("filtroFechaEnvio").value;
+
+    let params = new URLSearchParams(window.location.search);
+
+    if (fecha) {
+        params.set("fechaEnvio", fecha);
+    } else {
+        params.delete("fechaEnvio");
+    }
+
+    window.location.href = "/Facturacion?" + params.toString();
 }
 
                 //////////////////////////////////////////////////////
@@ -4163,5 +4179,7 @@ function procesarMensaje() {
             .trigger('change');
 
     });
+
+    document.addEventListener("DOMContentLoaded", actualizarTiendasPorEmpresa);
 
     </script>

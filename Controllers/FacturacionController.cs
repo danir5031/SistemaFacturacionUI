@@ -136,33 +136,11 @@ namespace SistemaFacturacionUI.Controllers
                 );
             }
 
-            //////////////////////////////////////////////////////
-            // SI NO HAY FILTROS
-            // MOSTRAR SOLO HOY
-            //////////////////////////////////////////////////////
 
             //////////////////////////////////////////////////////
-            // MOSTRAR SOLO REGISTROS DE HOY
-            // PERO SI EXISTE FILTRO DE ENVIO
-            // MOSTRAR ESA FECHA AUNQUE SEA ANTIGUA
-            //////////////////////////////////////////////////////
-
-            if (!fechaInicioRegistro.HasValue &&
-    !fechaFinRegistro.HasValue &&
-    !fechaEnvio.HasValue &&
-    !idEmpresa.HasValue &&
-    !idTienda.HasValue &&
-    string.IsNullOrWhiteSpace(buscar))
-            {
-                var hoy = DateTime.Today;
-
-                query = query.Where(x =>
-                    x.FechaRegistro.Date == hoy);
-            }
-
-
-            //////////////////////////////////////////////////////
-            // SOLO HOY SI NO HAY FILTROS
+            // FECHA AUTOMÁTICA
+            // EMPRESA O TIENDA: MES ACTUAL
+            // SIN EMPRESA NI TIENDA: SOLO HOY
             //////////////////////////////////////////////////////
 
             if (!fechaInicioRegistro.HasValue &&
@@ -170,11 +148,34 @@ namespace SistemaFacturacionUI.Controllers
                 !fechaEnvio.HasValue &&
                 string.IsNullOrWhiteSpace(buscar))
             {
-                var hoy = DateTime.Today;
+                if (idEmpresa.HasValue || idTienda.HasValue)
+                {
+                    // Mostrar todas las ventas del mes actual
+                    var inicioMes = new DateTime(
+                        DateTime.Today.Year,
+                        DateTime.Today.Month,
+                        1
+                    );
 
-                query = query.Where(x =>
-                    x.FechaRegistro.Date == hoy);
+                    var inicioMesSiguiente = inicioMes.AddMonths(1);
+
+                    query = query.Where(x =>
+                        x.FechaRegistro >= inicioMes &&
+                        x.FechaRegistro < inicioMesSiguiente
+                    );
+                }
+                else
+                {
+                    // Sin filtros de empresa o tienda: mostrar solo hoy
+                    var hoy = DateTime.Today;
+
+                    query = query.Where(x =>
+                        x.FechaRegistro >= hoy &&
+                        x.FechaRegistro < hoy.AddDays(1)
+                    );
+                }
             }
+
 
             //////////////////////////////////////////////////////
             // FILTRO FECHA REGISTRO
@@ -284,7 +285,14 @@ namespace SistemaFacturacionUI.Controllers
             ViewBag.IdEmpresaSeleccionada = idEmpresa;
             ViewBag.IdTiendaSeleccionada = idTienda;
 
+            ViewBag.FechaEnvioSeleccionada =
+    fechaEnvio?.ToString("yyyy-MM-dd");
 
+            ViewBag.FechaInicioRegistroSeleccionada =
+                fechaInicioRegistro?.ToString("yyyy-MM-dd");
+
+            ViewBag.FechaFinRegistroSeleccionada =
+                fechaFinRegistro?.ToString("yyyy-MM-dd");
 
             return View(facturas);
         }
